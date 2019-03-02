@@ -1,0 +1,17 @@
+version: "3.4"
+
+services:
+  php:
+    build:
+      context: .
+      target: prod
+#    depends_on:
+      # - db
+  nginx:
+    image: nginx:1.14-alpine
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./app/public:/app/public
+    # todo move to docker-compose.override.yml
+    ports:
+      - "8098:80"
