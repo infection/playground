@@ -10,10 +10,10 @@ use Symfony\Component\Routing\Annotation\Route;
 class PlaygroundController
 {
     /**
-     * @Route(name="playground_index", path="/hello")
+     * @Route(name="playground_index", path="/")
      */
     public function hello(): Response
     {
-        return new Response('Hello!');
+        return new Response('Hello - <> from volume!');
     }
 }

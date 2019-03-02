@@ -8,10 +8,8 @@ services:
 #    depends_on:
       # - db
   nginx:
-    image: nginx:1.14-alpine
+    image: nginx:1.15-alpine
     volumes:
+      # todo move to dockerfile and skip volume? both lines
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./app/public:/app/public
-    # todo move to docker-compose.override.yml
-    ports:
-      - "8098:80"

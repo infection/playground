@@ -1,0 +1,11 @@
+version: "3.4"
+
+services:
+  php:
+    volumes:
+      - ./app:/app:rw,cached
+
+  nginx:
+    image: nginx:1.15-alpine
+    ports:
+      - "8098:80"
