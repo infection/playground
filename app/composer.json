@@ -58,5 +58,8 @@
             "allow-contrib": false,
             "require": "4.2.*"
         }
+    },
+    "require-dev": {
+        "symfony/maker-bundle": "^1.11"
     }
 }
