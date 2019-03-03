@@ -38,6 +38,8 @@ WORKDIR /app
 
 COPY app .
 
+ARG APP_ENV=prod
+
 RUN mkdir -p var/cache var/logs var/sessions \
     && composer install --prefer-dist --no-dev --no-scripts --no-progress --no-suggest --classmap-authoritative --no-interaction \
     && composer dump-autoload --optimize --classmap-authoritative --no-dev \

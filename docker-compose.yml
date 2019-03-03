@@ -5,11 +5,36 @@ services:
     build:
       context: .
       target: prod
-#    depends_on:
-      # - db
+    depends_on:
+       - db
+    networks:
+       - db
+       - php
+    environment:
+      - APP_ENV=${APP_ENV}
+      - APP_SECRET=${APP_SECRET}
+
   nginx:
     image: nginx:1.15-alpine
+    depends_on:
+      - php
+    networks:
+      - php
     volumes:
       # todo move to dockerfile and skip volume? both lines
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./app/public:/app/public
+
+  db:
+    image: mysql:5.7
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    networks:
+      - db
+
+networks:
+  db:
+  php:
