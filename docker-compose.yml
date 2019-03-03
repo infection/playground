@@ -13,6 +13,7 @@ services:
     environment:
       - APP_ENV=${APP_ENV}
       - APP_SECRET=${APP_SECRET}
+      - DATABASE_URL=${DATABASE_URL}
 
   nginx:
     image: nginx:1.15-alpine

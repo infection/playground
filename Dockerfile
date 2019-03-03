@@ -10,6 +10,7 @@ RUN set -eux \
         zlib-dev \
     && docker-php-ext-install -j$(nproc) \
         intl \
+        pdo_mysql \
         zip \
     && pecl install \
         apcu-5.1.12 \
