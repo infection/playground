@@ -24,7 +24,8 @@ RUN set -eux \
                 | awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
         )" \
     && apk add --no-cache --virtual .api-phpexts-rundeps $runDeps \
-    && apk del .build-deps
+    && apk del .build-deps \
+    && apk add --no-cache make
 
 COPY php/php.ini /usr/local/etc/php/php.ini
 
