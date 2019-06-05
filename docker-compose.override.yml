@@ -9,3 +9,7 @@ services:
     image: nginx:1.15-alpine
     ports:
       - "8098:80"
+
+  db:
+    ports:
+      - "3354:3306"

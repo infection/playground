@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Infection Playground{% endblock %}
+
+{% block body %}
+    {{ include('playground/_form.html.twig') }}
+
+    {% if resultOutput is defined %}
+        <div>
+            <div>Result output:</div>
+            <div>{{ resultOutput }}</div>
+        </div>
+    {% endif %}
+{% endblock %}
