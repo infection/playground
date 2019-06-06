@@ -84,6 +84,9 @@
     "facebook/webdriver": {
         "version": "1.6.0"
     },
+    "hashids/hashids": {
+        "version": "4.0.0"
+    },
     "jdorn/sql-formatter": {
         "version": "v1.2.17"
     },

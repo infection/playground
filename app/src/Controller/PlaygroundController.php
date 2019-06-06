@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Entity\Example;
 use App\Form\CreateExampleType;
 use App\Request\CreateExampleRequest;
+use Hashids\Hashids;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,6 +15,16 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class PlaygroundController extends AbstractController
 {
+    /**
+     * @var Hashids
+     */
+    private $hashids;
+
+    public function __construct(Hashids $hashids)
+    {
+        $this->hashids = $hashids;
+    }
+
     /**
      * @Route(name="playground_index", path="/")
      */
@@ -53,7 +64,7 @@ class PlaygroundController extends AbstractController
             $em->persist($example);
             $em->flush();
 
-            return $this->redirectToRoute('playground_display_example', ['exampleHashId' => $example->getId()]);
+            return $this->redirectToRoute('playground_display_example', ['exampleHashId' => $this->hashids->encode($example->getId())]);
         }
 
         return $this->render('playground/create.html.twig', [
@@ -67,7 +78,7 @@ class PlaygroundController extends AbstractController
     public function displayExample(string $exampleHashId): Response
     {
         /** @var Example|null $example */
-        $example = $this->getDoctrine()->getManager()->find(Example::class, $exampleHashId);
+        $example = $this->getDoctrine()->getManager()->find(Example::class, $this->hashids->decode($exampleHashId)[0]);
 
         if (!$example instanceof Example) {
             throw $this->createNotFoundException();

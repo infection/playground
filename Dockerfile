@@ -12,11 +12,13 @@ RUN set -eux \
         intl \
         pdo_mysql \
         zip \
+        bcmath \
     && pecl install \
         apcu-5.1.12 \
     && pecl clear-cache \
     && docker-php-ext-enable --ini-name 20-apcu.ini apcu \
     && docker-php-ext-enable --ini-name 05-opcache.ini opcache \
+    && docker-php-ext-enable --ini-name 20-bcmath.ini bcmath \
     && runDeps="$( \
             scanelf --needed --nobanner --format '%n#p' --recursive /usr/local/lib/php/extensions \
                 | tr ',' '\n' \
