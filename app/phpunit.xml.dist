@@ -9,7 +9,9 @@
 >
     <php>
         <ini name="error_reporting" value="-1" />
-        <env name="APP_ENV" value="test" />
+        <env name="KERNEL_CLASS" value="App\Kernel" />
+        <env name="APP_ENV" value="test" force="true"/>
+        <env name="APP_DEBUG" value="true" />
         <env name="SHELL_VERBOSITY" value="-1" />
     </php>
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Tests\AutoReview;
+namespace App\Tests\Unit\AutoReview;
 
 use PHPUnit\Framework\TestCase;
 
