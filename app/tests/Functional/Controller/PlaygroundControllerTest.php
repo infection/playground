@@ -15,7 +15,7 @@ class PlaygroundControllerTest extends WebTestCase
         $client->catchExceptions(false);
 
         $client->request('GET', '/');
-        $this->assertEquals(200, $client->getResponse()->getStatusCode());
+        self::assertSame(200, $client->getResponse()->getStatusCode());
 
         $client->submitForm('create_example[Mutate]', [
             'create_example[code]' => 'code',
@@ -23,8 +23,8 @@ class PlaygroundControllerTest extends WebTestCase
             'create_example[config]' => 'config',
         ]);
 
-        $this->assertEquals(200, $client->getResponse()->getStatusCode());
-        $this->assertNotContains('This value should not be blank', $client->getResponse()->getContent());
+        self::assertSame(200, $client->getResponse()->getStatusCode());
+        self::assertNotContains('This value should not be blank', $client->getResponse()->getContent());
     }
 
     public function test_it_fails_with_validation_errors(): void
@@ -41,7 +41,7 @@ class PlaygroundControllerTest extends WebTestCase
             'create_example[config]' => 'config',
         ]);
 
-        $this->assertEquals(200, $client->getResponse()->getStatusCode());
-        $this->assertContains('This value should not be blank', $client->getResponse()->getContent());
+        self::assertSame(200, $client->getResponse()->getStatusCode());
+        self::assertContains('This value should not be blank', $client->getResponse()->getContent());
     }
 }

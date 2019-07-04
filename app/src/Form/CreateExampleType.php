@@ -29,8 +29,7 @@ class CreateExampleType extends AbstractType
             ->add('code')
             ->add('test')
             ->add('config')
-            ->add('Mutate', SubmitType::class)
-        ;
+            ->add('Mutate', SubmitType::class);
     }
 
     public function configureOptions(OptionsResolver $resolver): void
