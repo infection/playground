@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use App\Entity\Example;
 use App\Form\CreateExampleType;
+use App\Infection\Runner;
 use App\Request\CreateExampleRequest;
 use Hashids\Hashids;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,9 +21,15 @@ class PlaygroundController extends AbstractController
      */
     private $hashids;
 
-    public function __construct(Hashids $hashids)
+    /**
+     * @var Runner
+     */
+    private $infectionRunner;
+
+    public function __construct(Hashids $hashids, Runner $infectionRunner)
     {
         $this->hashids = $hashids;
+        $this->infectionRunner = $infectionRunner;
     }
 
     /**
@@ -57,14 +64,24 @@ class PlaygroundController extends AbstractController
                 $createExampleRequest->config
             );
 
-            // todo run infection to get the output
-            $example->updateResultOutput('-- TODO --');
-
             $em = $this->getDoctrine()->getManager();
             $em->persist($example);
             $em->flush();
 
-            return $this->redirectToRoute('playground_display_example', ['exampleHashId' => $this->hashids->encode($example->getId())]);
+            $idHash = $this->hashids->encode($example->getId());
+
+            $output = $this->infectionRunner->run(
+                $idHash,
+                $createExampleRequest->code,
+                $createExampleRequest->test,
+                $createExampleRequest->config
+            );
+
+            $example->updateResultOutput($output);
+
+            $em->flush();
+
+            return $this->redirectToRoute('playground_display_example', ['exampleIdHash' => $idHash]);
         }
 
         return $this->render('playground/create.html.twig', [
@@ -73,12 +90,12 @@ class PlaygroundController extends AbstractController
     }
 
     /**
-     * @Route(name="playground_display_example", path="/r/{exampleHashId}", methods={"GET"})
+     * @Route(name="playground_display_example", path="/r/{exampleIdHash}", methods={"GET"})
      */
-    public function displayExample(string $exampleHashId): Response
+    public function displayExample(string $exampleIdHash): Response
     {
         /** @var Example|null $example */
-        $example = $this->getDoctrine()->getManager()->find(Example::class, $this->hashids->decode($exampleHashId)[0]);
+        $example = $this->getDoctrine()->getManager()->find(Example::class, $this->hashids->decode($exampleIdHash)[0]);
 
         if (!$example instanceof Example) {
             throw $this->createNotFoundException();

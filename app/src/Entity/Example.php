@@ -47,7 +47,7 @@ class Example
      *
      * @var string
      */
-    private $resultOutput;
+    private $resultOutput = '';
 
     /**
      * @ORM\Column(type="datetime_immutable", options={"default"="CURRENT_TIMESTAMP"})
