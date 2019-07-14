@@ -15,6 +15,15 @@ RUN set -eux \
         bcmath \
     && pecl install \
         apcu-5.1.12 \
+    \
+    && git clone --single-branch --branch=v1.0.6 --depth=1 https://github.com/krakjoe/pcov \
+    && cd pcov \
+    && phpize \
+    && ./configure \
+    && make clean install \
+    && echo "extension=pcov.so" > /usr/local/etc/php/conf.d/pcov.ini \
+    && cd .. \
+    \
     && pecl clear-cache \
     && docker-php-ext-enable --ini-name 20-apcu.ini apcu \
     && docker-php-ext-enable --ini-name 05-opcache.ini opcache \
