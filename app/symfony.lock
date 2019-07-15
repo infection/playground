@@ -168,6 +168,9 @@
             "config/packages/sensio_framework_extra.yaml"
         ]
     },
+    "sensiolabs/ansi-to-html": {
+        "version": "v1.1.3"
+    },
     "symfony/browser-kit": {
         "version": "v4.2.4"
     },

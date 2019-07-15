@@ -9,6 +9,7 @@ use App\Form\CreateExampleType;
 use App\Infection\Runner;
 use App\Request\CreateExampleRequest;
 use Hashids\Hashids;
+use SensioLabs\AnsiConverter\AnsiToHtmlConverter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -70,14 +71,14 @@ class PlaygroundController extends AbstractController
 
             $idHash = $this->hashids->encode($example->getId());
 
-            $output = $this->infectionRunner->run(
+            $ansiOutput = $this->infectionRunner->run(
                 $idHash,
                 $createExampleRequest->code,
                 $createExampleRequest->test,
                 $createExampleRequest->config
             );
 
-            $example->updateResultOutput($output);
+            $example->updateResultOutput($ansiOutput);
 
             $em->flush();
 
@@ -105,9 +106,11 @@ class PlaygroundController extends AbstractController
 
         $form = $this->createForm(CreateExampleType::class, $createExampleRequest);
 
+        $converter = new AnsiToHtmlConverter();
+
         return $this->render('playground/index.html.twig', [
             'form' => $form->createView(),
-            'resultOutput' => $example->getResultOutput(),
+            'resultOutput' => $converter->convert($example->getResultOutput()),
         ]);
     }
 }

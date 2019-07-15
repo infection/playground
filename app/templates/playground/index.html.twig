@@ -8,7 +8,9 @@
     {% if resultOutput is defined %}
         <div>
             <div>Result output:</div>
-            <div>{{ resultOutput }}</div>
+            <pre style="background-color: black; overflow: auto; padding: 10px 15px; font-family: monospace;">
+                {{ resultOutput|raw }}
+            </pre>
         </div>
     {% endif %}
 {% endblock %}

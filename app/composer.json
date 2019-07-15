@@ -10,6 +10,7 @@
         "hashids/hashids": "^4.0",
         "ramsey/uuid": "^3.8",
         "sensio/framework-extra-bundle": "^5.2",
+        "sensiolabs/ansi-to-html": "^1.1",
         "symfony/console": "4.2.*",
         "symfony/dotenv": "4.2.*",
         "symfony/flex": "^1.1",
