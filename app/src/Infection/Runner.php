@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-
 namespace App\Infection;
-
 
 use App\Utils\DirectoryCreator;
 use Symfony\Component\Filesystem\Filesystem;
@@ -28,7 +26,7 @@ class Runner
         $this->filesystem = $filesystem;
     }
 
-    public function run(string $idHash, string $config, string $code, string $test): string
+    public function run(string $idHash, string $code, string $test, string $config): string
     {
 //        $rootDir = $this->directoryCreator->create($idHash);
         $rootDir = __DIR__ . '/../../infection-builds/' . $idHash;
@@ -41,12 +39,12 @@ class Runner
 
         $this->filesystem->dumpFile(sprintf('%s/phpunit.xml', $rootDir), $this->getPhpUnitXmlConfig());
 
-        $this->filesystem->dumpFile(sprintf('%s/infection.json', $rootDir), /*$config*/ $this->getConfig());
-        $this->filesystem->dumpFile(sprintf('%s/autoload.php', $rootDir), /*$config*/ $this->getAutoload());
-        $this->filesystem->dumpFile(sprintf('%s/SourceClass.php', $srcDir), /*$code*/ $this->getCode());
-        $this->filesystem->dumpFile(sprintf('%s/SourceClassTest.php', $testsDir), /*$test*/ $this->getTest());
+        $this->filesystem->dumpFile(sprintf('%s/infection.json', $rootDir), $config);
+        $this->filesystem->dumpFile(sprintf('%s/autoload.php', $rootDir), $this->getAutoload());
+        $this->filesystem->dumpFile(sprintf('%s/SourceClass.php', $srcDir), $code);
+        $this->filesystem->dumpFile(sprintf('%s/SourceClassTest.php', $testsDir), $test);
 
-        $process = new Process('../infection.phar -s --ansi --no-progress', $rootDir);
+        $process = new Process(['../infection.phar', '-s', '--ansi', '--no-progress'], $rootDir);
 
         $process->run();
         // TODO file sanitizer
@@ -86,78 +84,6 @@ class Runner
 XML;
     }
 
-    private function getCode(): string
-    {
-        return <<<'PHP'
-<?php
-
-declare(strict_types=1);
-
-namespace Infected;
-
-class SourceClass
-{
-    public function add(int $a, int $b): int
-    {
-        return $a + $b;
-    }
-}
-PHP;
-
-    }
-
-    private function getTest(): string
-    {
-        return <<<'PHP'
-<?php
-
-declare(strict_types=1);
-
-namespace Infected\Tests;
-
-use Infected\SourceClass;
-use PHPUnit\Framework\TestCase;
-
-class SourceClassTest extends TestCase
-{
-    public function test_it_adds_2_numbers(): void
-    {
-        $source = new SourceClass();
-
-        $result = $source->add(1, 2);
-
-        self::assertSame(3, $result);
-    }
-}
-PHP;
-
-    }
-
-    private function getConfig(): string
-    {
-        return <<<'JSON'
-{
-    "bootstrap": "./autoload.php",
-    "timeout": 10,
-    "source": {
-        "directories": [
-            "src"
-        ]
-    },
-    "phpUnit": {
-        "customPath": "..\/phpunit.phar"
-    },
-    "logs": {
-        "text": "infection.log"
-    },
-    "mutators": {
-        "@default": true
-    }
-}
-JSON;
-
-    }
-
     private function getAutoload(): string
     {
         return <<<'PHP'
@@ -176,6 +102,5 @@ $loader->register();
 $loader->addNamespace('Infected', __DIR__ . '/src');
 $loader->addNamespace('Infected\Tests', __DIR__ . '/tests');
 PHP;
-
     }
 }

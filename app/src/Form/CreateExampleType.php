@@ -7,6 +7,7 @@ namespace App\Form;
 use App\Request\CreateExampleRequest;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -26,9 +27,9 @@ class CreateExampleType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('code')
-            ->add('test')
-            ->add('config')
+            ->add('code', TextareaType::class)
+            ->add('test', TextareaType::class)
+            ->add('config', TextareaType::class)
             ->add('Mutate', SubmitType::class);
     }
 
