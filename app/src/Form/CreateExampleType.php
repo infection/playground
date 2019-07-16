@@ -30,7 +30,7 @@ class CreateExampleType extends AbstractType
             ->add('code', TextareaType::class)
             ->add('test', TextareaType::class)
             ->add('config', TextareaType::class)
-            ->add('Mutate', SubmitType::class);
+            ->add('mutate', SubmitType::class, ['label' => 'Mutate']);
     }
 
     public function configureOptions(OptionsResolver $resolver): void

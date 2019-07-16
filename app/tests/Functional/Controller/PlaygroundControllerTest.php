@@ -17,7 +17,7 @@ class PlaygroundControllerTest extends WebTestCase
         $client->request('GET', '/');
         self::assertSame(200, $client->getResponse()->getStatusCode());
 
-        $client->submitForm('create_example[Mutate]', [
+        $client->submitForm('create_example[mutate]', [
             'create_example[code]' => 'code',
             'create_example[test]' => 'test',
             'create_example[config]' => 'config',
@@ -35,7 +35,7 @@ class PlaygroundControllerTest extends WebTestCase
 
         $client->request('GET', '/');
 
-        $client->submitForm('create_example[Mutate]', [
+        $client->submitForm('create_example[mutate]', [
             'create_example[code]' => '',
             'create_example[test]' => 'test',
             'create_example[config]' => 'config',
