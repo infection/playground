@@ -1,0 +1,10 @@
+version: "3.4"
+
+services:
+  php:
+    volumes:
+      - ./app:/app:rw,cached
+      - /app/var/
+      - /app/var/cache/
+      - /app/var/logs/
+      - /app/var/sessions/
