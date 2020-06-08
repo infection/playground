@@ -1,0 +1,134 @@
+;(function () {
+    require.config({ paths: { 'vs': '/js/min/vs' }});
+
+    require(['vs/editor/editor.main'], function() {
+        var codeEditor = initCodeEditor();
+        var testEditor = initTestEditor();
+        var configEditor = initConfigEditor();
+
+        document.getElementById('js-submit').addEventListener(
+            'click',
+            function () {
+                copyValuesFromEditorsToTextAreas(
+                    codeEditor,
+                    testEditor,
+                    configEditor
+                );
+                document.getElementsByName("create_example")[0].submit()
+
+                return false;
+            }
+        )
+    });
+
+    function copyValuesFromEditorsToTextAreas(codeEditor, testEditor, configEditor) {
+        document.getElementById('create_example_code').textContent = codeEditor.getValue();
+        document.getElementById('create_example_test').textContent = testEditor.getValue();
+        document.getElementById('create_example_config').textContent = configEditor.getValue();
+    }
+
+    function initCodeEditor() {
+        var loadedCodeElement = document.getElementById('loaded-code');
+        var code = loadedCodeElement !== null
+            ? loadedCodeElement.dataset.code
+            : [
+                '<?php',
+                '',
+                'declare(strict_types=1);',
+                '',
+                'namespace Infected;',
+                '',
+                'class SourceClass',
+                '{',
+                '    public function add(int $a, int $b): int',
+                '    {',
+                '        return $a + $b;',
+                '    }',
+                '}'
+            ].join('\n');
+
+        var editor = monaco.editor.create(document.getElementById('editor-code'), {
+            minimap: {
+                enabled: false
+            },
+            value: code,
+            language: 'php'
+        });
+
+        return editor;
+    }
+
+    function initTestEditor() {
+        var loadedCodeElement = document.getElementById('loaded-test');
+        var code = loadedCodeElement !== null
+            ? loadedCodeElement.dataset.code
+            : [
+                '<?php',
+                '',
+                'declare(strict_types=1);',
+                '',
+                'namespace Infected\\Tests;',
+                '',
+                'use Infected\\SourceClass;',
+                'use PHPUnit\\Framework\\TestCase;',
+                '',
+                'class SourceClassTest extends TestCase',
+                '{',
+                '    public function test_it_adds_2_numbers(): void',
+                '    {',
+                '        $source = new SourceClass();',
+                '',
+                '        $result = $source->add(1, 2);',
+                '',
+                '        self::assertSame(3, $result);',
+                '    }',
+                '}'
+            ].join('\n')
+
+        var editor = monaco.editor.create(document.getElementById('editor-test'), {
+            minimap: {
+                enabled: false
+            },
+            value: code,
+            language: 'php'
+        });
+
+        return editor;
+    }
+
+    function initConfigEditor() {
+        var loadedCodeElement = document.getElementById('loaded-config');
+        var code = loadedCodeElement !== null
+            ? loadedCodeElement.dataset.code
+            : [
+                '{',
+                '    "bootstrap": "./autoload.php",',
+                '    "timeout": 10,',
+                '    "source": {',
+                '        "directories": [',
+                '            "src"',
+                '        ]',
+                '    },',
+                '    "phpUnit": {',
+                '        "customPath": "..\/phpunit.phar"',
+                '    },',
+                '    "logs": {',
+                '        "text": "infection.log"',
+                '    },',
+                '    "mutators": {',
+                '        "@default": true',
+                '    }',
+                '}'
+            ].join('\n');
+
+        var editor = monaco.editor.create(document.getElementById('editor-config'), {
+            minimap: {
+                enabled: false
+            },
+            value: code,
+            language: 'json'
+        });
+
+        return editor;
+    }
+})();

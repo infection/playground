@@ -111,6 +111,7 @@ class PlaygroundController extends AbstractController
         return $this->render('playground/index.html.twig', [
             'form' => $form->createView(),
             'resultOutput' => $converter->convert($example->getResultOutput()),
+            'example' => $createExampleRequest,
         ]);
     }
 }

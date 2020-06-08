@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace App\Code;
 
 use App\Code\Visitor\ReplaceNamespaceVisitor;
-use Infection\Visitor\CloneVisitor;
-use Infection\Visitor\MutatorVisitor;
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
 use PhpParser\Parser;
 use PhpParser\PrettyPrinter\Standard;
+use Webmozart\Assert\Assert;
 
 final class CodeSanitizer
 {
@@ -37,14 +36,19 @@ final class CodeSanitizer
 
     public function sanitize(string $originalPhpCode): string
     {
+        /** @var Node\Stmt[] $initialNodes */
         $initialNodes = $this->parser->parse($originalPhpCode);
+
+        Assert::notNull($initialNodes);
+
         $filteredNodes = $this->filterNodes($initialNodes);
 
         return $this->prettyPrinter->prettyPrintFile($filteredNodes);
     }
 
     /**
-     * @param Node[] $initialNodes
+     * @param Node\Stmt[] $initialNodes
+     *
      * @return Node[]
      */
     private function filterNodes(array $initialNodes): array

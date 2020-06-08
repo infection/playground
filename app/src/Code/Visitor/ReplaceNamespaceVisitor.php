@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Code\Visitor;
 
-use PhpParser\NodeVisitorAbstract;
 use PhpParser\Node;
+use PhpParser\NodeVisitorAbstract;
 
 final class ReplaceNamespaceVisitor extends NodeVisitorAbstract
 {

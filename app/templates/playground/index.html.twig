@@ -3,6 +3,12 @@
 {% block title %}Infection Playground{% endblock %}
 
 {% block body %}
+    {% if example is defined %}
+        <div id="loaded-code" data-code="{{ example.code }}"></div>
+        <div id="loaded-test" data-code="{{ example.test }}"></div>
+        <div id="loaded-config" data-code="{{ example.config }}"></div>
+    {% endif %}
+
     {{ include('playground/_form.html.twig') }}
 
     {% if resultOutput is defined %}

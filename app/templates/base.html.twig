@@ -7,6 +7,9 @@
     </head>
     <body>
         {% block body %}{% endblock %}
-        {% block javascripts %}{% endblock %}
+        {% block javascripts %}
+            <script type="application/javascript" src="/js/min/vs/loader.js"></script>
+            <script type="application/javascript" src="/js/App.js"></script>
+        {% endblock %}
     </body>
 </html>

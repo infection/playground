@@ -1,3 +1,10 @@
 {{ form_start(form) }}
-    {{ form_widget(form) }}
+    <div style="display: none">
+        {{ form_widget(form) }}
+    </div>
+    <div id="editor-code" style="width:500px;height:400px;border:1px solid grey"></div>
+    <div id="editor-test" style="width:500px;height:400px;border:1px solid grey"></div>
+    <div id="editor-config" style="width:500px;height:400px;border:1px solid grey"></div>
+
+    <button id="js-submit" type="button">Run</button>
 {{ form_end(form) }}
