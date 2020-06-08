@@ -15,6 +15,26 @@ services:
       - APP_SECRET=${APP_SECRET}
       - DATABASE_URL=${DATABASE_URL}
 
+  nodejs:
+    build:
+      context: .
+      target: infection_nodejs
+    image: infection-nodejs:latest
+    depends_on:
+      - php
+    networks:
+      - db
+      - php
+    environment:
+      - PHP_HOST=php
+      - PHP_PORT=9000
+    volumes:
+      - ./app:/srv/app:rw,cached
+      - ./app/public:/srv/app/public:rw,delegated
+    ports:
+      - "35729:35729"
+
+
   nginx:
     image: nginx:1.15-alpine
     depends_on:

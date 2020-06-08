@@ -1,3 +1,5 @@
+ARG NODE_VERSION=10
+
 FROM php:7.2-fpm-alpine as prod
 
 RUN apk add --no-cache \
@@ -62,3 +64,31 @@ RUN mkdir -p var/cache var/logs var/sessions \
     && chown -R www-data var
 
 CMD ["php-fpm"]
+
+FROM node:${NODE_VERSION}-alpine AS infection_nodejs
+
+WORKDIR /srv/app
+
+# prevent the reinstallation of vendors at every changes in the source code
+COPY app/package.json app/yarn.lock ./
+
+RUN set -eux; \
+	yarn install; \
+	yarn cache clean
+
+COPY app/bin bin/
+COPY app/assets assets/
+COPY app/config config/
+COPY app/public public/
+COPY app/templates templates/
+COPY app/src src/
+COPY app/webpack.config.js ./
+
+RUN set -eux; \
+	yarn build
+
+COPY nodejs/docker-nodejs-entrypoint.sh /usr/local/bin/docker-nodejs-entrypoint
+RUN chmod +x /usr/local/bin/docker-nodejs-entrypoint
+
+ENTRYPOINT ["docker-nodejs-entrypoint"]
+CMD ["yarn", "watch"]

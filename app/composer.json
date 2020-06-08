@@ -22,6 +22,7 @@
         "symfony/security-csrf": "^4.0",
         "symfony/test-pack": "^1.0",
         "symfony/validator": "^4.0",
+        "symfony/webpack-encore-bundle": "^1.7",
         "symfony/yaml": "^4.0"
     },
     "config": {
