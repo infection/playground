@@ -12,6 +12,13 @@ Encore
     .setOutputPath('public/build/')
     // public path used by the web server to access the output path
     .setPublicPath('/build')
+    .addStyleEntry('tailwind', './assets/css/tailwind.css')
+    .enablePostCssLoader((options) => {
+        options.config = {
+            // directory where the postcss.config.js file is stored
+            path: './postcss.config.js'
+        };
+    })
     // only needed for CDN's or sub-directory deploy
     //.setManifestKeyPrefix('build/')
 
