@@ -11,7 +11,6 @@
         "nikic/php-parser": "^4.2",
         "ramsey/uuid": "^3.8",
         "sensio/framework-extra-bundle": "^5.2",
-        "sensiolabs/ansi-to-html": "^1.1",
         "symfony/console": "^4.0",
         "symfony/dotenv": "^4.0",
         "symfony/flex": "^1.1",
@@ -23,7 +22,8 @@
         "symfony/test-pack": "^1.0",
         "symfony/validator": "^4.0",
         "symfony/webpack-encore-bundle": "^1.7",
-        "symfony/yaml": "^4.0"
+        "symfony/yaml": "^4.0",
+        "voku/ansi-to-html": "^2.1"
     },
     "config": {
         "preferred-install": {

@@ -9,11 +9,11 @@ use App\Form\CreateExampleType;
 use App\Infection\Runner;
 use App\Request\CreateExampleRequest;
 use Hashids\Hashids;
-use SensioLabs\AnsiConverter\AnsiToHtmlConverter;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use voku\AnsiConverter\AnsiToHtmlConverter;
 
 class PlaygroundController extends AbstractController
 {
@@ -107,6 +107,7 @@ class PlaygroundController extends AbstractController
         $form = $this->createForm(CreateExampleType::class, $createExampleRequest);
 
         $converter = new AnsiToHtmlConverter();
+        $converter->setInvertBackground(true);
 
         return $this->render('playground/index.html.twig', [
             'form' => $form->createView(),

@@ -122,6 +122,7 @@ function initConfigEditor() {
             enabled: false
         },
         value: code,
-        language: 'json'
+        language: 'json',
+        readOnly: true,
     });
 }

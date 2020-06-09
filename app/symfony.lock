@@ -168,9 +168,6 @@
             "config/packages/sensio_framework_extra.yaml"
         ]
     },
-    "sensiolabs/ansi-to-html": {
-        "version": "v1.1.3"
-    },
     "symfony/asset": {
         "version": "v4.3.11"
     },
@@ -446,6 +443,9 @@
     },
     "twig/twig": {
         "version": "v2.6.2"
+    },
+    "voku/ansi-to-html": {
+        "version": "v2.1.0"
     },
     "zendframework/zend-code": {
         "version": "3.3.1"
