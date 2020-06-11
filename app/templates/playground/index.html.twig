@@ -3,20 +3,12 @@
 {% block title %}Infection Playground{% endblock %}
 
 {% block body %}
-    {% if example is defined %}
-        <div id="loaded-code" data-code="{{ example.code }}"></div>
-        <div id="loaded-test" data-code="{{ example.test }}"></div>
-        <div id="loaded-config" data-code="{{ example.config }}"></div>
-    {% endif %}
-
     {{ include('playground/_form.html.twig') }}
 
     {% if resultOutput is defined %}
-        <div>
+        <div class="mt-6 mb-4 p-1 sm:p-4 border  border-gray-200  rounded" style="line-height: 100%;">
             <div>Result output:</div>
-            <pre style="overflow: auto; padding: 10px 15px; font-family: monospace;">
-                {{ resultOutput|raw }}
-            </pre>
+            <pre style="overflow: auto; padding: 10px 15px; font-family: monospace;">{{ resultOutput|raw }}</pre>
         </div>
     {% endif %}
 {% endblock %}

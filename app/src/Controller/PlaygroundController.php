@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Code\CodeSanitizer;
 use App\Entity\Example;
 use App\Form\CreateExampleType;
 use App\Infection\Runner;
@@ -27,10 +28,16 @@ class PlaygroundController extends AbstractController
      */
     private $infectionRunner;
 
-    public function __construct(Hashids $hashids, Runner $infectionRunner)
+    /**
+     * @var CodeSanitizer
+     */
+    private $codeSanitizer;
+
+    public function __construct(Hashids $hashids, Runner $infectionRunner, CodeSanitizer $codeSanitizer)
     {
         $this->hashids = $hashids;
         $this->infectionRunner = $infectionRunner;
+        $this->codeSanitizer = $codeSanitizer;
     }
 
     /**
@@ -59,11 +66,10 @@ class PlaygroundController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $example = new Example(
-                $createExampleRequest->code,
-                $createExampleRequest->test,
-                $createExampleRequest->config
-            );
+            $code = $this->codeSanitizer->sanitize($createExampleRequest->code);
+            $test = $this->codeSanitizer->sanitize($createExampleRequest->test);
+
+            $example = new Example($code, $test, $createExampleRequest->config);
 
             $em = $this->getDoctrine()->getManager();
             $em->persist($example);
@@ -73,8 +79,8 @@ class PlaygroundController extends AbstractController
 
             $ansiOutput = $this->infectionRunner->run(
                 $idHash,
-                $createExampleRequest->code,
-                $createExampleRequest->test,
+                $code,
+                $test,
                 $createExampleRequest->config
             );
 
@@ -87,6 +93,7 @@ class PlaygroundController extends AbstractController
 
         return $this->render('playground/create.html.twig', [
             'form' => $form->createView(),
+            'example' => $createExampleRequest,
         ]);
     }
 

@@ -31,3 +31,6 @@ services:
             - 'infection'
             - 3
             - 'abcdefghijklmnopqrstuvwxyz1234567890'
+
+    App\Code\CodeSanitizer:
+        factory: ['App\Code\CodeSanitizerFactory', 'create']

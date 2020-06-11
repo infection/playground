@@ -447,6 +447,9 @@
     "voku/ansi-to-html": {
         "version": "v2.1.0"
     },
+    "webmozart/assert": {
+        "version": "1.8.0"
+    },
     "zendframework/zend-code": {
         "version": "3.3.1"
     },

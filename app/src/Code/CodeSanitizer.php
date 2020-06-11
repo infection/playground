@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace App\Code;
 
 use App\Code\Visitor\ReplaceNamespaceVisitor;
+use PhpParser\Lexer\Emulative;
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitor\CloningVisitor;
 use PhpParser\Parser;
 use PhpParser\PrettyPrinter\Standard;
-use Webmozart\Assert\Assert;
 
 final class CodeSanitizer
 {
@@ -22,36 +23,46 @@ final class CodeSanitizer
      * @var Standard
      */
     private $prettyPrinter;
+
     /**
      * @var NodeTraverser
      */
     private $nodeTraverser;
 
-    public function __construct(Parser $parser, Standard $prettyPrinter, NodeTraverser $nodeTraverser)
+    /**
+     * @var Emulative
+     */
+    private $lexer;
+
+    public function __construct(Parser $parser, Standard $prettyPrinter, NodeTraverser $nodeTraverser, Emulative $lexer)
     {
         $this->parser = $parser;
         $this->prettyPrinter = $prettyPrinter;
         $this->nodeTraverser = $nodeTraverser;
+        $this->lexer = $lexer;
     }
 
     public function sanitize(string $originalPhpCode): string
     {
-        /** @var Node\Stmt[] $initialNodes */
-        $initialNodes = $this->parser->parse($originalPhpCode);
+        /** @var Node\Stmt[] $initialStmts */
+        $initialStmts = $this->parser->parse($originalPhpCode);
 
-        Assert::notNull($initialNodes);
+        $cloningNodeTraverser = new NodeTraverser();
+        $cloningNodeTraverser->addVisitor(new CloningVisitor());
 
-        $filteredNodes = $this->filterNodes($initialNodes);
+        $newStmts = $cloningNodeTraverser->traverse($initialStmts);
 
-        return $this->prettyPrinter->prettyPrintFile($filteredNodes);
+        $newStmts = $this->replaceNamespace($newStmts);
+
+        return $this->prettyPrinter->printFormatPreserving($newStmts, $initialStmts, $this->lexer->getTokens());
     }
 
     /**
-     * @param Node\Stmt[] $initialNodes
+     * @param Node[] $initialNodes
      *
      * @return Node[]
      */
-    private function filterNodes(array $initialNodes): array
+    private function replaceNamespace(array $initialNodes): array
     {
         $this->nodeTraverser->addVisitor(new ReplaceNamespaceVisitor('Infected'));
 

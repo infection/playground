@@ -4,6 +4,8 @@ parameters:
         container_xml_path: '%rootDir%/../../../var/cache/dev/srcApp_KernelDevDebugContainer.xml'
     autoload_files:
         - ./bin/.phpunit/phpunit-7.5/vendor/autoload.php
+    ignoreErrors:
+        - '#Access to an undefined property Symfony\\Component\\Validator\\Constraint::\$message#'
 
 includes:
     - vendor/phpstan/phpstan-strict-rules/rules.neon

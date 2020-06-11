@@ -47,12 +47,10 @@ class Runner
         $process = new Process(['../infection.phar', '-s', '--ansi', '--no-progress'], $rootDir);
 
         $process->run();
-        // TODO file sanitizer
-        // todo file validator
         // todo download if not present infection/phpunit (cache warmer)?
         // todo remove tmp folder
 
-        return $process->getOutput();
+        return $process->getOutput() . $process->getErrorOutput();
     }
 
     private function getPhpUnitXmlConfig(): string
