@@ -33,8 +33,6 @@ final class CodeValidator
     }
 
     /**
-     * @param string $code
-     *
      * @return Error[]
      */
     public function validate(string $code): array

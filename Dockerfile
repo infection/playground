@@ -1,44 +1,63 @@
 ARG NODE_VERSION=10
 
-FROM php:7.2-fpm-alpine as prod
+FROM php:7.4.5-fpm-alpine as prod
 
+# persistent / runtime deps
 RUN apk add --no-cache \
-        git
+		acl \
+		fcgi \
+		file \
+		gettext \
+		git \
+		ffmpeg \
+	;
 
-RUN set -eux \
-    && apk add --no-cache --virtual .build-deps \
-        $PHPIZE_DEPS \
-        icu-dev \
-        zlib-dev \
-    && docker-php-ext-install -j$(nproc) \
-        intl \
-        pdo_mysql \
-        zip \
-        bcmath \
-    && pecl install \
-        apcu-5.1.12 \
-    \
-    && git clone --single-branch --branch=v1.0.6 --depth=1 https://github.com/krakjoe/pcov \
-    && cd pcov \
-    && phpize \
-    && ./configure \
-    && make clean install \
-    && echo "extension=pcov.so" > /usr/local/etc/php/conf.d/pcov.ini \
-    && cd .. \
-    \
-    && pecl clear-cache \
-    && docker-php-ext-enable --ini-name 20-apcu.ini apcu \
-    && docker-php-ext-enable --ini-name 05-opcache.ini opcache \
-    && docker-php-ext-enable --ini-name 20-bcmath.ini bcmath \
-    && runDeps="$( \
-            scanelf --needed --nobanner --format '%n#p' --recursive /usr/local/lib/php/extensions \
-                | tr ',' '\n' \
-                | sort -u \
-                | awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
-        )" \
-    && apk add --no-cache --virtual .api-phpexts-rundeps $runDeps \
-    && apk del .build-deps \
-    && apk add --no-cache make
+RUN set -eux; \
+	apk add --no-cache --virtual .build-deps \
+		$PHPIZE_DEPS \
+		icu-dev \
+		libzip-dev \
+		mysql-dev \
+		zlib-dev \
+	; \
+	\
+	git clone https://github.com/bematech/libmpdec.git \
+		&& cd libmpdec \
+		&& ./configure \
+		&& make \
+		&& make install \
+		&& cd ..; \
+	\
+	docker-php-ext-configure zip; \
+	docker-php-ext-install -j$(nproc) \
+		intl \
+		pdo_mysql \
+		zip \
+		bcmath \
+	; \
+	pecl install \
+		apcu-5.1.18 \
+		pcov \
+	; \
+	pecl clear-cache; \
+	docker-php-ext-enable \
+		apcu \
+		opcache \
+		bcmath \
+		pcov \
+	; \
+	\
+	runDeps="$( \
+		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local/lib/php/extensions \
+			| tr ',' '\n' \
+			| sort -u \
+			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
+	)"; \
+	apk add --no-cache --virtual .api-phpexts-rundeps $runDeps; \
+	\
+	apk del .build-deps; \
+	apk add make \
+	;
 
 COPY php/php.ini /usr/local/etc/php/php.ini
 

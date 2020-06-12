@@ -26,7 +26,6 @@ class ValidPhpCodeValidator extends ConstraintValidator
 
     /**
      * @param mixed $phpCode
-     * @param Constraint $constraint
      */
     public function validate($phpCode, Constraint $constraint): void
     {
