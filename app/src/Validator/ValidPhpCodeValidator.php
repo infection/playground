@@ -4,20 +4,17 @@ declare(strict_types=1);
 
 namespace App\Validator;
 
-use App\Code\CodeValidator;
+use App\Code\Validator\CodeValidator;
+use App\Code\Validator\Error;
 use function array_map;
 use function implode;
-use PhpParser\Error;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Validator\ConstraintValidator;
 use Webmozart\Assert\Assert;
 
 class ValidPhpCodeValidator extends ConstraintValidator
 {
-    /**
-     * @var CodeValidator
-     */
-    private $codeValidator;
+    private CodeValidator $codeValidator;
 
     public function __construct(CodeValidator $codeValidator)
     {

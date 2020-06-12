@@ -14,20 +14,9 @@ use PhpParser\PrettyPrinter\Standard;
 
 final class CodeSanitizer
 {
-    /**
-     * @var Parser
-     */
-    private $parser;
-
-    /**
-     * @var Standard
-     */
-    private $prettyPrinter;
-
-    /**
-     * @var NodeTraverser
-     */
-    private $nodeTraverser;
+    private Parser $parser;
+    private Standard $prettyPrinter;
+    private NodeTraverser $nodeTraverser;
 
     /**
      * @var Emulative

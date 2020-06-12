@@ -4,17 +4,14 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Code;
 
-use App\Code\CodeValidator;
+use App\Code\Validator\CodeValidator;
+use App\Code\Validator\Error;
 use function array_map;
-use PhpParser\Error;
 use PHPUnit\Framework\TestCase;
 
 final class CodeValidatorTest extends TestCase
 {
-    /**
-     * @var CodeValidator
-     */
-    private $codeValidator;
+    private CodeValidator $codeValidator;
 
     protected function setUp(): void
     {
@@ -176,6 +173,52 @@ PHP
             ,
             [
                 'Syntax error, unexpected EOF on line 9',
+            ],
+        ];
+
+        yield from $this->provideForbiddenFunctionsExamples();
+    }
+
+    private function provideForbiddenFunctionsExamples(): \Generator
+    {
+        foreach (CodeValidator::FORBIDDEN_FUNCTIONS as $function) {
+            yield sprintf('Forbidden function "%s"', $function) => [
+                <<<"PHP"
+<?php
+
+namespace Xyz;
+
+final class Test
+{
+    public function test()
+    {
+        $function('');
+    }
+}
+PHP
+                ,
+                [
+                    sprintf('Function "%s" on line 9 is not allowed to be used in Playground.', $function),
+                ],
+            ];
+        }
+
+        yield 'Backticks' => [
+            <<<'PHP'
+<?php
+
+namespace Xyz;
+
+final class Test
+{
+    public function test()
+    {
+        `rm -rf ./folder`;
+    }
+}
+PHP,
+            [
+                'Using Backticks ("``") is not allowed in Playground.',
             ],
         ];
     }
