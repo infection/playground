@@ -83,6 +83,8 @@ COPY app/public public/
 COPY app/templates templates/
 COPY app/src src/
 COPY app/webpack.config.js ./
+COPY app/postcss.config.js ./
+COPY app/tailwind.config.js ./
 
 RUN set -eux; \
 	yarn build
