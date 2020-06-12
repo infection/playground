@@ -19,7 +19,39 @@ export function initEditors() {
 
             return false;
         }
-    )
+    );
+
+    document.getElementById('copy-url').addEventListener(
+        'click',
+        function () {
+            document.getElementById('copy-btn-text').textContent = 'Copied!'
+            copyUrlToClipboard()
+
+            return false;
+        }
+    );
+}
+
+function copyUrlToClipboard() {
+    let input = document.getElementById('copy-url-input');
+
+    if (!input) {
+        input = document.createElement('input');
+
+        input.id = 'copy-url-input';
+        input.type = 'text';
+        input.style = 'position: absolute; left: -1000px; top: -1000px;';
+
+        document.body.appendChild(input);
+    }
+
+    input.value = window.location.toString();
+
+    input.select();
+    input.setSelectionRange(0, 99999); // For mobile devices
+
+    document.execCommand('copy');
+
 }
 
 function disableButton(button) {
