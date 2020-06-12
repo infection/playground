@@ -6,19 +6,15 @@ namespace App\Infection;
 
 use App\Utils\DirectoryCreator;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
 
 class Runner
 {
-    /**
-     * @var DirectoryCreator
-     */
-    private $directoryCreator;
+    private const PROCESS_TIMEOUT_SEC = 15;
 
-    /**
-     * @var Filesystem
-     */
-    private $filesystem;
+    private DirectoryCreator $directoryCreator;
+    private Filesystem $filesystem;
 
     public function __construct(DirectoryCreator $directoryCreator, Filesystem $filesystem)
     {
@@ -44,13 +40,18 @@ class Runner
         $this->filesystem->dumpFile(sprintf('%s/SourceClass.php', $srcDir), $code);
         $this->filesystem->dumpFile(sprintf('%s/SourceClassTest.php', $testsDir), $test);
 
-        $process = new Process(['../infection.phar', '-s', '--ansi', '--no-progress'], $rootDir);
+        try {
+            $process = new Process(['php', '--define', 'memory_limit=100M', '../infection.phar', '-s', '--ansi', '--no-progress'], $rootDir);
+            $process->setTimeout(self::PROCESS_TIMEOUT_SEC);
 
-        $process->run();
-        // todo download if not present infection/phpunit (cache warmer)?
-        // todo remove tmp folder
+            $process->run();
+            // todo download if not present infection/phpunit (cache warmer)?
+            // todo remove tmp folder
 
-        return $process->getOutput() . $process->getErrorOutput();
+            return $process->getOutput() . $process->getErrorOutput();
+        } catch (ProcessTimedOutException $e) {
+            return sprintf('Infection process exceeded the timeout of %d seconds. Please check your code or report an issue', self::PROCESS_TIMEOUT_SEC);
+        }
     }
 
     private function getPhpUnitXmlConfig(): string
