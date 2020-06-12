@@ -8,6 +8,8 @@ export function initEditors() {
     document.getElementById('js-submit').addEventListener(
         'click',
         function () {
+            disableButton(this);
+
             copyValuesFromEditorsToTextAreas(
                 codeEditor,
                 testEditor,
@@ -18,6 +20,16 @@ export function initEditors() {
             return false;
         }
     )
+}
+
+function disableButton(button) {
+    button.setAttribute('disabled', 'disabled');
+
+    button.classList.add('opacity-50');
+    button.classList.add('cursor-not-allowed');
+    button.classList.remove('hover:bg-teal-500');
+    button.classList.remove('hover:text-white');
+    button.classList.remove('hover:border-transparent');
 }
 
 function copyValuesFromEditorsToTextAreas(codeEditor, testEditor, configEditor) {
