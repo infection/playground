@@ -4,6 +4,8 @@ parameters:
         container_xml_path: '%rootDir%/../../../var/cache/dev/srcApp_KernelDevDebugContainer.xml'
     bootstrapFiles:
         - ./bin/.phpunit/phpunit-7.5/vendor/autoload.php
+    excludes_analyse:
+        - src/Html/Ansi/*
     ignoreErrors:
         - '#Access to an undefined property Symfony\\Component\\Validator\\Constraint::\$message#'
         - '#Method App\\Tests\\Unit\\(.*)::(.*)\(\) return type has no value type specified in iterable type Generator#'

@@ -2,6 +2,7 @@
 
 $finder = \PhpCsFixer\Finder::create()
     ->in(['src', 'tests'])
+    ->exclude(['src/Html/Ansi'])
 ;
 return \PhpCsFixer\Config::create()
     ->setRules([
