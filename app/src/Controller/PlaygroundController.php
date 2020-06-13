@@ -60,7 +60,6 @@ class PlaygroundController extends AbstractController
      */
     public function createExample(Request $request): Response
     {
-        // 4fc08d
         $createExampleRequest = new CreateExampleRequest();
 
         $form = $this->createForm(CreateExampleType::class, $createExampleRequest);

@@ -41,7 +41,7 @@ class Runner
         $this->filesystem->dumpFile(sprintf('%s/SourceClassTest.php', $testsDir), $test);
 
         try {
-            $process = new Process(['php', '--define', 'memory_limit=100M', '../infection.phar', '-s', '--ansi', '--no-progress'], $rootDir);
+            $process = new Process(['php', '--define', 'memory_limit=100M', '../infection.phar', '--log-verbosity=all', '--ansi', '--no-progress'], $rootDir);
             $process->setTimeout(self::PROCESS_TIMEOUT_SEC);
 
             $process->run();

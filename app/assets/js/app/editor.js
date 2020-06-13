@@ -21,15 +21,19 @@ export function initEditors() {
         }
     );
 
-    document.getElementById('copy-url').addEventListener(
-        'click',
-        function () {
-            document.getElementById('copy-btn-text').textContent = 'Copied!'
-            copyUrlToClipboard()
+    const copyUrlButton = document.getElementById('copy-url');
 
-            return false;
-        }
-    );
+    if (copyUrlButton !== null) {
+        copyUrlButton.addEventListener(
+            'click',
+            function () {
+                document.getElementById('copy-btn-text').textContent = 'Copied!'
+                copyUrlToClipboard()
+
+                return false;
+            }
+        );
+    }
 
     window.addEventListener('resize', function() {
         setTimeout(function () {
@@ -161,8 +165,9 @@ function initConfigEditor() {
             '    "phpUnit": {',
             '        "customPath": "..\/phpunit.phar"',
             '    },',
+            '    "tmpDir": ".",',
             '    "logs": {',
-            '        "text": "infection.log"',
+            '        "text": "php://stdout"',
             '    },',
             '    "mutators": {',
             '        "@default": true',
