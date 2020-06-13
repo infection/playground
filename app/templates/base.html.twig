@@ -12,14 +12,11 @@
     <body>
         <nav class="w-full z-20 flex items-center justify-between flex-wrap bg-white py-4 px-2 sm:px-6 border border-gray-200">
             <a href="https://tailwindtemplates.io" class="no-underline flex items-center flex-no-shrink text-white mr-6">
-                <svg class="fill-current text-teal-500 h-8 w-8 mr-2" width="54" height="54" viewBox="0 0 54 54"
-                     xmlns="http://www.w3.org/2000/svg">
-                    <path d="M13.5 22.1c1.8-7.2 6.3-10.8 13.5-10.8 10.8 0 12.15 8.1 17.55 9.45 3.6.9 6.75-.45 9.45-4.05-1.8 7.2-6.3 10.8-13.5 10.8-10.8 0-12.15-8.1-17.55-9.45-3.6-.9-6.75.45-9.45 4.05zM0 38.3c1.8-7.2 6.3-10.8 13.5-10.8 10.8 0 12.15 8.1 17.55 9.45 3.6.9 6.75-.45 9.45-4.05-1.8 7.2-6.3 10.8-13.5 10.8-10.8 0-12.15-8.1-17.55-9.45-3.6-.9-6.75.45-9.45 4.05z"></path>
-                </svg>
-                <span class="font-medium text-xl tracking-tighter text-teal-500">Infection PHP</span>
+                <img class="h-8 w-8 mr-2" src="{{ asset('build/logo.png') }}" alt="Infection logo">
+                <span class="font-medium text-xl tracking-tighter text-green-500">Infection Playground</span>
             </a>
             <div class="block lg:hidden">
-                <button class="flex items-center px-3 py-2 border rounded text-teal-200 border-teal-400 hover:text-teal-600 hover:border-teal-600"
+                <button class="flex items-center px-3 py-2 border rounded text-green-200 border-green-400 hover:text-green-600 hover:border-green-600"
                         onclick="openNav()">
                     <svg class="fill-current h-3 w-3" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><title>
                             Menu</title>
@@ -29,20 +26,16 @@
             </div>
             <div class="w-full hidden flex-grow lg:flex lg:items-center lg:w-auto">
                 <div class="text-sm lg:flex-grow ">
-                    <a href="#responsive-header" class="block mt-4 lg:inline-block text-gray-600 lg:mt-0 hover:text-gray-900 mr-4 no-underline">
-                        Docs
+                    <a href="https://infection.github.io/" class="block mt-4 lg:inline-block text-gray-600 lg:mt-0 hover:text-gray-900 mr-4 no-underline">
+                        Documentation
                     </a>
-                    <a href="#responsive-header"
-                       class="block mt-4 lg:inline-block lg:mt-0 text-gray-600 hover:text-gray-900 mr-4 no-underline">
-                        Examples
-                    </a>
-                    <a href="#responsive-header"
+                    <a href="https://github.com/infection/infection"
                        class="block mt-4 lg:inline-block lg:mt-0 text-gray-600 hover:text-gray-900 no-underline">
-                        Blog
+                        GitHub
                     </a>
                 </div>
                 <div>
-                    <p class="text-gray-500">Github</p>
+                    <p class="text-gray-500">PHP Mutation Testing</p>
                 </div>
             </div>
         </nav>

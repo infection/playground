@@ -19,6 +19,9 @@ Encore
             path: './postcss.config.js'
         };
     })
+    .copyFiles({
+        from: './assets/images',
+    })
     // only needed for CDN's or sub-directory deploy
     //.setManifestKeyPrefix('build/')
 
