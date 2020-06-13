@@ -1,9 +1,9 @@
 import * as monaco from 'monaco-editor';
 
 export function initEditors() {
-    var codeEditor = initCodeEditor();
-    var testEditor = initTestEditor();
-    var configEditor = initConfigEditor();
+    const codeEditor = initCodeEditor();
+    const testEditor = initTestEditor();
+    const configEditor = initConfigEditor();
 
     document.getElementById('js-submit').addEventListener(
         'click',
@@ -30,6 +30,15 @@ export function initEditors() {
             return false;
         }
     );
+
+    window.addEventListener('resize', function() {
+        setTimeout(function () {
+            codeEditor.layout();
+            testEditor.layout();
+            configEditor.layout();
+        }, 50);
+
+    }, true);
 }
 
 function copyUrlToClipboard() {
