@@ -16,45 +16,38 @@ class Example
      * @ORM\Id()
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
-     *
-     * @var int
      */
-    private $id;
+    private int $id;
 
     /**
      * @ORM\Column(type="text")
-     *
-     * @var string
      */
-    private $code;
+    private string $code;
 
     /**
      * @ORM\Column(type="text")
-     *
-     * @var string
      */
-    private $test;
+    private string $test;
 
     /**
      * @ORM\Column(type="text")
-     *
-     * @var string
      */
-    private $config;
+    private string $config;
 
     /**
      * @ORM\Column(type="text")
-     *
-     * @var string
      */
-    private $resultOutput = '';
+    private string $resultOutput = '';
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     */
+    private ?string $jsonLog = null;
 
     /**
      * @ORM\Column(type="datetime_immutable", options={"default"="CURRENT_TIMESTAMP"})
-     *
-     * @var \DateTimeImmutable
      */
-    private $createdAt;
+    private \DateTimeImmutable $createdAt;
 
     public function __construct(string $code, string $test, string $config)
     {
@@ -104,5 +97,15 @@ class Example
     public function updateResultOutput(string $resultOutput): void
     {
         $this->resultOutput = $resultOutput;
+    }
+
+    public function updateJsonLog(?string $jsonLog): void
+    {
+        $this->jsonLog = $jsonLog;
+    }
+
+    public function getJsonLog(): ?string
+    {
+        return $this->jsonLog;
     }
 }

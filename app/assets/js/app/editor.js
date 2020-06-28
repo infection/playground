@@ -1,9 +1,13 @@
 import * as monaco from 'monaco-editor';
 
+let diffEditor;
+
 export function initEditors() {
     const codeEditor = initCodeEditor();
     const testEditor = initTestEditor();
     const configEditor = initConfigEditor();
+
+    processMutantsDetails();
 
     document.getElementById('js-submit').addEventListener(
         'click',
@@ -45,6 +49,120 @@ export function initEditors() {
     }, true);
 }
 
+function processMutantsDetails() {
+    const logElement = document.getElementById('json-log');
+
+    if (logElement === null) {
+        return;
+    }
+
+    const jsonLog = JSON.parse(logElement.dataset.log);
+    const mutants = getAllMutants(jsonLog);
+
+    if (mutants.length === 0) {
+        return;
+    }
+
+    const firstMutant = mutants[0];
+
+    showMutantsTable(mutants)
+    showDiffEditor(firstMutant.mutator);
+    showProcessOutput(firstMutant);
+    highlightRow(document.getElementById('mutants-table').getElementsByTagName('tr')[0]);
+}
+
+function getAllMutants(jsonLog) {
+    return []
+        .concat(
+            jsonLog.escaped.map((mutant) => {
+                return Object.assign({}, mutant, {status: 'escaped'});
+            })
+        )
+        .concat(
+            jsonLog.killed.map((mutant) => {
+                return Object.assign({}, mutant, {status: 'killed'});
+            })
+        )
+        .concat(
+            jsonLog.errored.map((mutant) => {
+                return Object.assign({}, mutant, {status: 'errored'});
+            })
+        )
+        .concat(
+            jsonLog.timeouted.map((mutant) => {
+                return Object.assign({}, mutant, {status: 'timeouted'});
+            })
+        )
+        .concat(
+            jsonLog.uncovered.map((mutant) => {
+                return Object.assign({}, mutant, {status: 'uncovered'});
+            })
+        )
+}
+
+function showMutantsTable(mutants) {
+    const tBody = document.getElementById('mutants-table').getElementsByTagName('tbody')[0];
+
+    const colorsMap = {
+        escaped: 'red',
+        killed: 'green',
+        errored: 'green',
+        timeouted: 'yellow',
+        uncovered: 'red'
+    }
+
+    mutants.forEach((mutant) => {
+        const td1 = document.createElement('td');
+
+        td1.className = 'border-dashed border-t border-gray-200';
+        const span1 = document.createElement('span');
+        span1.className = 'text-gray-700 px-6 py-3 flex items-center';
+        span1.textContent = '[M] ' + mutant.mutator.mutatorName + ', Line: ' + mutant.mutator.originalStartLine;
+        td1.appendChild(span1);
+        const td2 = document.createElement('td');
+
+        td1.className = 'border-dashed border-t border-gray-200';
+        const span2 = document.createElement('span');
+        span2.className = 'rounded py-1 px-3 text-xs font-bold' + ' bg-' + colorsMap[mutant.status] + '-400';
+        span2.textContent = mutant.status;
+        td2.appendChild(span2);
+
+        const tr = document.createElement('tr');
+        tr.appendChild(td1);
+        tr.className = 'cursor-pointer hover:bg-gray-100';
+        tr.appendChild(td2);
+
+        tBody.appendChild(tr);
+
+        tr.addEventListener('click',
+            function () {
+                showDiffEditor(mutant.mutator);
+                showProcessOutput(mutant);
+                unhighlightAllRows(tBody);
+                highlightRow(tr);
+
+                return false;
+            }
+        );
+    });
+}
+
+function unhighlightAllRows() {
+    const rows = document.getElementById('mutants-table').getElementsByTagName('tr');
+
+    rows.forEach((row) => {
+        row.classList.remove('bg-gray-200');
+    });
+}
+
+function highlightRow(row) {
+    row.classList.add('bg-gray-200');
+}
+
+function showProcessOutput(mutant) {
+    document.getElementById('mutant-output').textContent = mutant.processOutput;
+}
+
 function copyUrlToClipboard() {
     let input = document.getElementById('copy-url-input');
 
@@ -72,7 +190,7 @@ function disableButton(button) {
 
     button.classList.add('opacity-50');
     button.classList.add('cursor-not-allowed');
-    button.classList.remove('hover:bg-teal-500');
+    button.classList.remove('hover:bg-green-500');
     button.classList.remove('hover:text-white');
     button.classList.remove('hover:border-transparent');
 }
@@ -81,6 +199,23 @@ function copyValuesFromEditorsToTextAreas(codeEditor, testEditor, configEditor) 
     document.getElementById('create_example_code').textContent = codeEditor.getValue();
     document.getElementById('create_example_test').textContent = testEditor.getValue();
     document.getElementById('create_example_config').textContent = configEditor.getValue();
+}
+
+function showDiffEditor(mutator) {
+    const originalModel = monaco.editor.createModel(mutator.originalSourceCode, 'php');
+    const modifiedModel = monaco.editor.createModel(mutator.mutatedSourceCode, 'php');
+
+    diffEditor = diffEditor ? diffEditor : monaco.editor.createDiffEditor(document.getElementById('editor-diff'), {
+        enableSplitViewResizing: false,
+        // Render the diff inline
+        renderSideBySide: false,
+        readOnly: true
+    });
+
+    diffEditor.setModel({
+        original: originalModel,
+        modified: modifiedModel
+    });
 }
 
 function initCodeEditor() {
@@ -167,7 +302,8 @@ function initConfigEditor() {
             '    },',
             '    "tmpDir": ".",',
             '    "logs": {',
-            '        "text": "php://stdout"',
+            '        "text": "infection.log",',
+            '        "json": "infection.log.json"',
             '    },',
             '    "mutators": {',
             '        "@default": true',

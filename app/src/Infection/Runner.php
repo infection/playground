@@ -8,6 +8,7 @@ use App\Utils\DirectoryCreator;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
+use Webmozart\Assert\Assert;
 
 class Runner
 {
@@ -22,9 +23,8 @@ class Runner
         $this->filesystem = $filesystem;
     }
 
-    public function run(string $idHash, string $code, string $test, string $config): string
+    public function run(string $idHash, string $code, string $test, string $config): RunResult
     {
-//        $rootDir = $this->directoryCreator->create($idHash);
         $rootDir = __DIR__ . '/../../infection-builds/' . $idHash;
 
         $srcDir = sprintf('%s/src', $rootDir);
@@ -48,9 +48,21 @@ class Runner
             // todo download if not present infection/phpunit (cache warmer)?
             // todo remove tmp folder
 
-            return $process->getOutput() . $process->getErrorOutput();
+            $infectionJsonLogPath = sprintf('%s/infection.log.json', $rootDir);
+
+            Assert::fileExists($infectionJsonLogPath,'JSON log file was not created.');
+
+            return new RunResult(
+                $process->getOutput() . $process->getErrorOutput(),
+                file_get_contents($infectionJsonLogPath)
+            );
         } catch (ProcessTimedOutException $e) {
-            return sprintf('Infection process exceeded the timeout of %d seconds. Please check your code or report an issue', self::PROCESS_TIMEOUT_SEC);
+            return RunResult::fromError(
+                sprintf(
+                    'Infection process exceeded the timeout of %d seconds. Please check your code or report an issue',
+                    self::PROCESS_TIMEOUT_SEC
+                )
+            );
         }
     }
 
