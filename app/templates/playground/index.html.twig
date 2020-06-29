@@ -10,7 +10,10 @@
             <pre style="overflow: auto; padding: 10px 15px; font-family: monospace;">{{ resultOutput|raw }}</pre>
         </div>
         {% if jsonLog is defined and jsonLog is not empty %}
-            <div class="px-2 pb-4">
+            <div id="no-mutations-alert" class="hidden bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
+                <span class="block sm:inline">No mutants were generated for provided code and config file.</span>
+            </div>
+            <div id="mutants-log" class="px-2 pb-4">
                 <div class="flex -mx-2">
                     <div class="w-1/3" style="height: 400px; overflow-y: scroll;">
                         <div class="overflow-x-auto bg-white rounded overflow-y-auto relative">

@@ -60,6 +60,8 @@ function processMutantsDetails() {
     const mutants = getAllMutants(jsonLog);
 
     if (mutants.length === 0) {
+        showNoMutantsAlert();
+
         return;
     }
 
@@ -69,6 +71,11 @@ function processMutantsDetails() {
     showDiffEditor(firstMutant.mutator);
     showProcessOutput(firstMutant);
     highlightRow(document.getElementById('mutants-table').getElementsByTagName('tr')[0]);
+}
+
+function showNoMutantsAlert() {
+    document.getElementById('mutants-log').classList.add('hidden');
+    document.getElementById('no-mutations-alert').classList.remove('hidden');
 }
 
 function getAllMutants(jsonLog) {
@@ -317,6 +324,5 @@ function initConfigEditor() {
         },
         value: code,
         language: 'json',
-        readOnly: true,
     });
 }

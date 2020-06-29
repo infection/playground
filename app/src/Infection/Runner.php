@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace App\Infection;
 
 use App\Utils\DirectoryCreator;
+use function file_exists;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
-use Webmozart\Assert\Assert;
-use function file_exists;
 
 class Runner
 {
@@ -53,7 +52,7 @@ class Runner
 
             return new RunResult(
                 $process->getOutput() . $process->getErrorOutput(),
-                file_exists($infectionJsonLogPath) ? file_get_contents($infectionJsonLogPath) : null
+                file_exists($infectionJsonLogPath) ? (string) file_get_contents($infectionJsonLogPath) : null
             );
         } catch (ProcessTimedOutException $e) {
             return RunResult::fromError(

@@ -16,9 +16,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use function file_get_contents;
-use function json_decode;
-use function json_encode;
 
 class PlaygroundController extends AbstractController
 {
@@ -125,7 +122,7 @@ class PlaygroundController extends AbstractController
             'form' => $form->createView(),
             'resultOutput' => $converter->convert($example->getResultOutput()),
             'example' => $createExampleRequest,
-            'jsonLog' => $example->getJsonLog()
+            'jsonLog' => $example->getJsonLog(),
         ]);
     }
 }
