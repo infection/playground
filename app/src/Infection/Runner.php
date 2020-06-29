@@ -9,6 +9,7 @@ use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
 use Symfony\Component\Process\Process;
 use Webmozart\Assert\Assert;
+use function file_exists;
 
 class Runner
 {
@@ -50,11 +51,9 @@ class Runner
 
             $infectionJsonLogPath = sprintf('%s/infection.log.json', $rootDir);
 
-            Assert::fileExists($infectionJsonLogPath,'JSON log file was not created.');
-
             return new RunResult(
                 $process->getOutput() . $process->getErrorOutput(),
-                file_get_contents($infectionJsonLogPath)
+                file_exists($infectionJsonLogPath) ? file_get_contents($infectionJsonLogPath) : null
             );
         } catch (ProcessTimedOutException $e) {
             return RunResult::fromError(
