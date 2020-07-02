@@ -12,7 +12,7 @@ use Symfony\Component\Process\Process;
 
 class Runner
 {
-    private const PROCESS_TIMEOUT_SEC = 20;
+    private const PROCESS_TIMEOUT_SEC = 30;
 
     private DirectoryCreator $directoryCreator;
     private Filesystem $filesystem;
