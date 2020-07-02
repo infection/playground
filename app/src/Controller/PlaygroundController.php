@@ -9,6 +9,7 @@ use App\Entity\Example;
 use App\Form\CreateExampleType;
 use App\Html\Ansi\AnsiToHtmlConverter;
 use App\Html\Ansi\InfectionAnsiHtmlTheme;
+use App\Infection\ConfigBuilder;
 use App\Infection\Runner;
 use App\Request\CreateExampleRequest;
 use Hashids\Hashids;
@@ -19,26 +20,17 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class PlaygroundController extends AbstractController
 {
-    /**
-     * @var Hashids
-     */
-    private $hashids;
+    private Hashids $hashids;
+    private Runner $infectionRunner;
+    private CodeSanitizer $codeSanitizer;
+    private ConfigBuilder $configBuilder;
 
-    /**
-     * @var Runner
-     */
-    private $infectionRunner;
-
-    /**
-     * @var CodeSanitizer
-     */
-    private $codeSanitizer;
-
-    public function __construct(Hashids $hashids, Runner $infectionRunner, CodeSanitizer $codeSanitizer)
+    public function __construct(Hashids $hashids, Runner $infectionRunner, CodeSanitizer $codeSanitizer, ConfigBuilder $configBuilder)
     {
         $this->hashids = $hashids;
         $this->infectionRunner = $infectionRunner;
         $this->codeSanitizer = $codeSanitizer;
+        $this->configBuilder = $configBuilder;
     }
 
     /**
@@ -70,7 +62,9 @@ class PlaygroundController extends AbstractController
             $code = $this->codeSanitizer->sanitize($createExampleRequest->code);
             $test = $this->codeSanitizer->sanitize($createExampleRequest->test);
 
-            $example = new Example($code, $test, $createExampleRequest->config);
+            $originalConfig = $createExampleRequest->config;
+
+            $example = new Example($code, $test, $originalConfig);
 
             $em = $this->getDoctrine()->getManager();
             $em->persist($example);
@@ -82,7 +76,7 @@ class PlaygroundController extends AbstractController
                 $idHash,
                 $code,
                 $test,
-                $createExampleRequest->config
+                $this->configBuilder->build($originalConfig)
             );
 
             $example->updateResultOutput($runResult->getAnsiOutput());

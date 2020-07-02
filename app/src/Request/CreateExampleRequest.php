@@ -28,15 +28,11 @@ class CreateExampleRequest
 
     /**
      * @Assert\NotBlank()
+     * @AppAssert\JsonSchema(schemaFile="infection-config-schema.json")
      *
      * @var string
      */
     public $config;
-
-    /**
-     * @var string
-     */
-    public $resultOutput;
 
     public static function fromEntity(Example $example): self
     {

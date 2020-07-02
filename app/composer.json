@@ -8,6 +8,7 @@
         "ext-ctype": "*",
         "ext-iconv": "*",
         "hashids/hashids": "^4.0",
+        "justinrainbow/json-schema": "^5.2",
         "nikic/php-parser": "^4.5",
         "ramsey/uuid": "^3.8",
         "sensio/framework-extra-bundle": "^5.2",

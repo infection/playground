@@ -7,7 +7,7 @@ parameters:
     excludes_analyse:
         - src/Html/Ansi/*
     ignoreErrors:
-        - '#Access to an undefined property Symfony\\Component\\Validator\\Constraint::\$message#'
+        - '#Access to an undefined property Symfony\\Component\\Validator\\Constraint::\$(.*?)#'
         - '#Method App\\Tests\\Unit\\(.*)::(.*)\(\) return type has no value type specified in iterable type Generator#'
 
 includes:
