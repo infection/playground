@@ -1,0 +1,5 @@
+*
+!.gitignore
+!Psr4AutoloaderClass.php
+!phpunit.phar
+!infection.phar

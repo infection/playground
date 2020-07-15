@@ -14,6 +14,8 @@ services:
       - APP_ENV=${APP_ENV}
       - APP_SECRET=${APP_SECRET}
       - DATABASE_URL=${DATABASE_URL}
+    volumes:
+      - ./app:/app:rw,cached
 
   nodejs:
     build:
@@ -45,6 +47,8 @@ services:
       # todo move to dockerfile and skip volume? both lines
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
       - ./app/public:/app/public
+    ports:
+      - "8098:80"
 
   db:
     image: mysql:5.7
@@ -55,6 +59,8 @@ services:
       - MYSQL_PASSWORD=${DB_PASSWORD}
     networks:
       - db
+    ports:
+      - "3354:3306"
 
 networks:
   db:

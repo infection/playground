@@ -1,0 +1,43 @@
+version: "3.4"
+
+services:
+  php:
+    build:
+      context: .
+      target: prod
+    image: ${DOCKER_REGISTRY}/infection-playground-php:latest
+    depends_on:
+      - db
+    networks:
+      - db
+      - php
+    environment:
+      - APP_ENV=${APP_ENV}
+      - APP_SECRET=${APP_SECRET}
+      - DATABASE_URL=${DATABASE_URL}
+
+  web:
+    build:
+      context: .
+      target: infection_nginx_prod
+    image: ${DOCKER_REGISTRY}/infection-playground-nginx:latest
+    ports:
+      - "8099:80"
+    depends_on:
+      - php
+    networks:
+      - php
+
+  db:
+    image: mysql:5.7
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    networks:
+      - db
+
+networks:
+  db:
+  php:

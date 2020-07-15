@@ -18,6 +18,7 @@
         "symfony/form": "^4.0",
         "symfony/framework-bundle": "^4.4",
         "symfony/orm-pack": "^1.0",
+        "symfony/process": "^4.4",
         "symfony/profiler-pack": "^1.0",
         "symfony/security-csrf": "^4.0",
         "symfony/test-pack": "^1.0",

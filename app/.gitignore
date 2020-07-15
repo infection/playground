@@ -1,5 +1,3 @@
-infection-builds
-
 ###> symfony/framework-bundle ###
 /public/bundles/
 /var/

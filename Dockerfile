@@ -1,5 +1,36 @@
 ARG NODE_VERSION=10
 
+FROM node:${NODE_VERSION}-alpine AS infection_nodejs
+
+WORKDIR /srv/app
+
+# prevent the reinstallation of vendors at every changes in the source code
+COPY app/package.json app/yarn.lock ./
+
+RUN set -eux; \
+	yarn install; \
+	yarn cache clean
+
+COPY app/bin bin/
+COPY app/assets assets/
+COPY app/config config/
+COPY app/public public/
+COPY app/templates templates/
+COPY app/src src/
+COPY app/webpack.config.js ./
+COPY app/postcss.config.js ./
+COPY app/tailwind.config.js ./
+
+RUN set -eux; \
+	yarn build
+
+COPY nodejs/docker-nodejs-entrypoint.sh /usr/local/bin/docker-nodejs-entrypoint
+RUN chmod +x /usr/local/bin/docker-nodejs-entrypoint
+
+ENTRYPOINT ["docker-nodejs-entrypoint"]
+CMD ["yarn", "watch"]
+
+
 FROM php:7.4.5-fpm-alpine as prod
 
 # persistent / runtime deps
@@ -72,6 +103,9 @@ WORKDIR /app
 
 COPY app .
 
+COPY --from=infection_nodejs /srv/app/public/build/manifest.json /app/public/build/manifest.json
+COPY --from=infection_nodejs /srv/app/public/build/entrypoints.json /app/public/build/entrypoints.json
+
 ARG APP_ENV=prod
 
 RUN mkdir -p var/cache var/logs var/sessions \
@@ -80,36 +114,17 @@ RUN mkdir -p var/cache var/logs var/sessions \
     && composer run-script --no-dev post-install-cmd \
     && chmod +x bin/console && sync \
     && composer clear-cache \
-    && chown -R www-data var
+    && chown -R www-data var \
+    && chown -R www-data infection-builds
 
 CMD ["php-fpm"]
 
-FROM node:${NODE_VERSION}-alpine AS infection_nodejs
+# "nginx" production stage
+# depends on the nodjs - copies assets from there
+FROM nginx:1.17-alpine AS infection_nginx_prod
 
-WORKDIR /srv/app
+COPY ./nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf
 
-# prevent the reinstallation of vendors at every changes in the source code
-COPY app/package.json app/yarn.lock ./
+WORKDIR /app/public
 
-RUN set -eux; \
-	yarn install; \
-	yarn cache clean
-
-COPY app/bin bin/
-COPY app/assets assets/
-COPY app/config config/
-COPY app/public public/
-COPY app/templates templates/
-COPY app/src src/
-COPY app/webpack.config.js ./
-COPY app/postcss.config.js ./
-COPY app/tailwind.config.js ./
-
-RUN set -eux; \
-	yarn build
-
-COPY nodejs/docker-nodejs-entrypoint.sh /usr/local/bin/docker-nodejs-entrypoint
-RUN chmod +x /usr/local/bin/docker-nodejs-entrypoint
-
-ENTRYPOINT ["docker-nodejs-entrypoint"]
-CMD ["yarn", "watch"]
+COPY --from=infection_nodejs /srv/app/public ./
