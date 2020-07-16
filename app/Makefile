@@ -25,3 +25,8 @@ phpstan: vendor
 
 validate:
 	composer validate --strict
+
+app-reinstall: vendor
+	bin/console doctrine:database:drop --force --if-exists
+	bin/console doctrine:database:create
+	bin/console doctrine:schema:update --force
