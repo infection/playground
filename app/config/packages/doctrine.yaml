@@ -18,7 +18,7 @@ doctrine:
         host: db
         port: 3306
         user: '%env(resolve:DATABASE_USER)%'
-        password: '%env(resolve:DATABASE_PASSWORD)%'
+        password: '%env(secret:DATABASE_PASSWORD)%'
     orm:
         auto_generate_proxy_classes: true
         naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
