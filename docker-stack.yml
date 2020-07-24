@@ -5,13 +5,17 @@ services:
     image: ${DOCKER_REGISTRY}/infection-playground-php:latest
     depends_on:
       - db
+    secrets:
+      - mysql_password
     networks:
       - db
       - php
     environment:
-      - APP_ENV=${APP_ENV}
+      - APP_ENV=prod
       - APP_SECRET=${APP_SECRET}
-      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_NAME=${DATABASE_NAME}
+      - DATABASE_USER=${DATABASE_USER}
+      - DATABASE_PASSWORD_FILE=/run/secrets/mysql_password
 
   web:
     image: ${DOCKER_REGISTRY}/infection-playground-nginx:latest
@@ -22,13 +26,22 @@ services:
 
   db:
     image: mysql:5.7
+    secrets:
+      - mysql_root_password
+      - mysql_password
     environment:
-      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
-      - MYSQL_DATABASE=${DB_DATABASE}
-      - MYSQL_USER=${DB_USER}
-      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/mysql_root_password
+      - MYSQL_DATABASE=${DATABASE_NAME}
+      - MYSQL_USER=${DATABASE_USER}
+      - MYSQL_PASSWORD_FILE=/run/secrets/mysql_password
     networks:
       - db
+
+secrets:
+  mysql_root_password:
+    file: secrets/mysql_root_password
+  mysql_password:
+    file: secrets/mysql_password
 
 networks:
   db:

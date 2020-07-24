@@ -12,7 +12,7 @@ services:
       - db
       - php
     environment:
-      - APP_ENV=${APP_ENV}
+      - APP_ENV=prod
       - APP_SECRET=${APP_SECRET}
       - DATABASE_NAME=${DATABASE_NAME}
       - DATABASE_USER=${DATABASE_USER}
