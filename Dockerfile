@@ -123,7 +123,7 @@ CMD ["php-fpm"]
 # depends on the nodjs - copies assets from there
 FROM nginx:1.17-alpine AS infection_nginx_prod
 
-COPY ./nginx/conf.d/default.conf /etc/nginx/conf.d/default.conf
+COPY ./nginx/prod/conf.d/default.conf /etc/nginx/conf.d/default.conf
 
 WORKDIR /app/public
 
