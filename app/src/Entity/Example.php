@@ -51,7 +51,7 @@ class Example
     private \DateTimeImmutable $createdAt;
 
     /**
-     * @ORM\Column(type="string", length=32)
+     * @ORM\Column(type="string", length=32, unique=true)
      */
     private string $inputHash;
 
