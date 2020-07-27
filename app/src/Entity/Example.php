@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use function md5;
 
 /**
  * @ORM\Entity()
@@ -49,11 +50,17 @@ class Example
      */
     private \DateTimeImmutable $createdAt;
 
+    /**
+     * @ORM\Column(type="string", length=32)
+     */
+    private string $inputHash;
+
     public function __construct(string $code, string $test, string $config)
     {
         $this->code = $code;
         $this->test = $test;
         $this->config = $config;
+        $this->inputHash = self::hashInput($code, $test, $config);
     }
 
     public function getId(): int
@@ -107,5 +114,15 @@ class Example
     public function getJsonLog(): ?string
     {
         return $this->jsonLog;
+    }
+
+    public function getInputHash(): string
+    {
+        return $this->inputHash;
+    }
+
+    public static function hashInput(string $code, string $test, string $config): string
+    {
+        return md5($code . $test . $config);
     }
 }

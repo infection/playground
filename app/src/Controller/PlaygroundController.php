@@ -11,6 +11,7 @@ use App\Html\Ansi\AnsiToHtmlConverter;
 use App\Html\Ansi\InfectionAnsiHtmlTheme;
 use App\Infection\ConfigBuilder;
 use App\Infection\Runner;
+use App\Repository\ExampleRepository;
 use App\Request\CreateExampleRequest;
 use Hashids\Hashids;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -21,22 +22,34 @@ use Symfony\Component\Routing\Annotation\Route;
 class PlaygroundController extends AbstractController
 {
     private Hashids $hashids;
+
     private Runner $infectionRunner;
+
     private CodeSanitizer $codeSanitizer;
+
     private ConfigBuilder $configBuilder;
 
-    public function __construct(Hashids $hashids, Runner $infectionRunner, CodeSanitizer $codeSanitizer, ConfigBuilder $configBuilder)
+    private ExampleRepository $exampleRepository;
+
+    public function __construct(
+        Hashids $hashids,
+        Runner $infectionRunner,
+        CodeSanitizer $codeSanitizer,
+        ConfigBuilder $configBuilder,
+        ExampleRepository $exampleRepository
+    )
     {
         $this->hashids = $hashids;
         $this->infectionRunner = $infectionRunner;
         $this->codeSanitizer = $codeSanitizer;
         $this->configBuilder = $configBuilder;
+        $this->exampleRepository = $exampleRepository;
     }
 
     /**
      * @Route(name="playground_index", path="/")
      */
-    public function hello(): Response
+    public function index(): Response
     {
         $createExampleRequest = new CreateExampleRequest();
 
@@ -63,6 +76,12 @@ class PlaygroundController extends AbstractController
             $test = $this->codeSanitizer->sanitize($createExampleRequest->test);
 
             $originalConfig = $createExampleRequest->config;
+
+            $existingExample = $this->exampleRepository->findContentByHash(Example::hashInput($code, $test, $originalConfig));
+
+            if ($existingExample instanceof Example) {
+                return $this->redirectToRoute('playground_display_example', ['exampleIdHash' => $this->hashids->encode($existingExample->getId())]);
+            }
 
             $example = new Example($code, $test, $originalConfig);
 

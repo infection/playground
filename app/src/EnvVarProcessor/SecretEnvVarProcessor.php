@@ -37,11 +37,7 @@ class SecretEnvVarProcessor implements EnvVarProcessorInterface
         try {
             return $getEnv($name);
         } catch (EnvNotFoundException $envException) {
-            throw new RuntimeException(
-                sprintf('Environment variable not found: "%s" or "%s"', $name, $fileVar),
-                $envException->getCode(),
-                $envException
-            );
+            throw new RuntimeException(sprintf('Environment variable not found: "%s" or "%s"', $name, $fileVar), $envException->getCode(), $envException);
         }
     }
 }
