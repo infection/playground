@@ -31,6 +31,8 @@ services:
 
   db:
     image: mysql:5.7
+    ports:
+      - "3333:3306"
     secrets:
       - mysql_root_password
       - mysql_password
@@ -41,6 +43,8 @@ services:
       - MYSQL_PASSWORD_FILE=/run/secrets/mysql_password
     networks:
       - db
+    volumes:
+      - db-data:/var/lib/mysql:rw
 
 secrets:
   ssl_certificate:
@@ -55,3 +59,6 @@ secrets:
 networks:
   db:
   php:
+
+volumes:
+  db-data:
