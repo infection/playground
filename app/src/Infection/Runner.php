@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infection;
 
+use App\Code\ClassNameFromCodeExtractor;
 use App\Utils\DirectoryCreator;
 use function file_exists;
 use Symfony\Component\Filesystem\Filesystem;
@@ -17,10 +18,13 @@ class Runner
     private DirectoryCreator $directoryCreator;
     private Filesystem $filesystem;
 
-    public function __construct(DirectoryCreator $directoryCreator, Filesystem $filesystem)
+    private ClassNameFromCodeExtractor $classNameFromCodeExtractor;
+
+    public function __construct(DirectoryCreator $directoryCreator, Filesystem $filesystem, ClassNameFromCodeExtractor $classNameFromCodeExtractor)
     {
         $this->directoryCreator = $directoryCreator;
         $this->filesystem = $filesystem;
+        $this->classNameFromCodeExtractor = $classNameFromCodeExtractor;
     }
 
     public function run(string $idHash, string $code, string $test, string $config): RunResult
@@ -37,7 +41,7 @@ class Runner
 
         $this->filesystem->dumpFile(sprintf('%s/infection.json', $rootDir), $config);
         $this->filesystem->dumpFile(sprintf('%s/autoload.php', $rootDir), $this->getAutoload());
-        $this->filesystem->dumpFile(sprintf('%s/SourceClass.php', $srcDir), $code);
+        $this->filesystem->dumpFile(sprintf('%s/%s.php', $srcDir, $this->classNameFromCodeExtractor->extract($code)), $code);
         $this->filesystem->dumpFile(sprintf('%s/SourceClassTest.php', $testsDir), $test);
 
         try {
