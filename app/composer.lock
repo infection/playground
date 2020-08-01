@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "05f3665a6fb8a51aae4eb093cb2d9f5b",
+    "content-hash": "ed2ecfc23680348a11d374acf686fb60",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -7216,6 +7216,59 @@
             ],
             "description": "Symfony Framework extensions and rules for PHPStan",
             "time": "2020-04-15T20:26:41+00:00"
+        },
+        {
+            "name": "phpstan/phpstan-webmozart-assert",
+            "version": "0.12.7",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phpstan/phpstan-webmozart-assert.git",
+                "reference": "afaf96ddd69133fc7a1ed527039eaca39454c4d8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phpstan/phpstan-webmozart-assert/zipball/afaf96ddd69133fc7a1ed527039eaca39454c4d8",
+                "reference": "afaf96ddd69133fc7a1ed527039eaca39454c4d8",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.1 || ^8.0",
+                "phpstan/phpstan": "^0.12.24"
+            },
+            "require-dev": {
+                "consistence/coding-standard": "^3.7",
+                "dealerdirect/phpcodesniffer-composer-installer": "^0.7.0",
+                "ergebnis/composer-normalize": "^2.0.2",
+                "jakub-onderka/php-parallel-lint": "^1.0",
+                "phing/phing": "^2.16.0",
+                "phpstan/phpstan-phpunit": "^0.12.6",
+                "phpstan/phpstan-strict-rules": "^0.12.1",
+                "phpunit/phpunit": "^7.5.18",
+                "slevomat/coding-standard": "^4.5.2",
+                "webmozart/assert": "^1.7.0"
+            },
+            "type": "phpstan-extension",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "0.12-dev"
+                },
+                "phpstan": {
+                    "includes": [
+                        "extension.neon"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "PHPStan\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHPStan webmozart/assert extension",
+            "time": "2020-07-21T14:55:38+00:00"
         },
         {
             "name": "psr/simple-cache",

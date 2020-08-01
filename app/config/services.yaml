@@ -37,3 +37,6 @@ services:
 
     App\Code\CodeSanitizer:
         factory: ['App\Code\CodeSanitizerFactory', 'create']
+
+    App\Code\ClassesExtractor\ClassesExtractor:
+        factory: ['App\Code\ClassesExtractor\ClassesExtractorFactory', 'create']

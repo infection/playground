@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Infection;
 
-use App\Code\ClassNameFromCodeExtractor;
+use App\Code\ClassesExtractor\ClassesExtractor;
 use App\Utils\DirectoryCreator;
 use function file_exists;
 use Symfony\Component\Filesystem\Filesystem;
@@ -18,13 +18,13 @@ class Runner
     private DirectoryCreator $directoryCreator;
     private Filesystem $filesystem;
 
-    private ClassNameFromCodeExtractor $classNameFromCodeExtractor;
+    private ClassesExtractor $classesExtractor;
 
-    public function __construct(DirectoryCreator $directoryCreator, Filesystem $filesystem, ClassNameFromCodeExtractor $classNameFromCodeExtractor)
+    public function __construct(DirectoryCreator $directoryCreator, Filesystem $filesystem, ClassesExtractor $classesExtractor)
     {
         $this->directoryCreator = $directoryCreator;
         $this->filesystem = $filesystem;
-        $this->classNameFromCodeExtractor = $classNameFromCodeExtractor;
+        $this->classesExtractor = $classesExtractor;
     }
 
     public function run(string $idHash, string $code, string $test, string $config): RunResult
@@ -41,8 +41,13 @@ class Runner
 
         $this->filesystem->dumpFile(sprintf('%s/infection.json', $rootDir), $config);
         $this->filesystem->dumpFile(sprintf('%s/autoload.php', $rootDir), $this->getAutoload());
-        $this->filesystem->dumpFile(sprintf('%s/%s.php', $srcDir, $this->classNameFromCodeExtractor->extract($code)), $code);
         $this->filesystem->dumpFile(sprintf('%s/SourceClassTest.php', $testsDir), $test);
+
+        $extractedClasses = $this->classesExtractor->extract($code);
+
+        foreach ($extractedClasses as $extractedClass) {
+            $this->filesystem->dumpFile(sprintf('%s/%s.php', $srcDir, $extractedClass->getClassName()), $extractedClass->getCode());
+        }
 
         try {
             $process = new Process(['php', '--define', 'memory_limit=100M', '../infection.phar', '--log-verbosity=all', '--ansi', '--no-progress'], $rootDir);
