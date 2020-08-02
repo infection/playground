@@ -118,13 +118,13 @@ function showMutantsTable(mutants) {
         uncovered: 'red'
     }
 
-    mutants.forEach((mutant) => {
+    mutants.forEach((mutant, index) => {
         const td1 = document.createElement('td');
 
         td1.className = 'border-dashed border-t border-gray-200';
         const span1 = document.createElement('span');
         span1.className = 'text-gray-700 px-6 py-3 flex items-center';
-        span1.textContent = '[M] ' + mutant.mutator.mutatorName + ', Line: ' + mutant.mutator.originalStartLine;
+        span1.textContent = `${index + 1}. ` + mutant.mutator.mutatorName; // + ', Line: ' + mutant.mutator.originalStartLine;
         td1.appendChild(span1);
         const td2 = document.createElement('td');
 
