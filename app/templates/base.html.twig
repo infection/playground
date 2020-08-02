@@ -2,6 +2,13 @@
 <html>
     <head>
         <meta charset="UTF-8">
+
+        <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('build/icons/apple-touch-icon.png') }}">
+        <link rel="icon" type="image/png" sizes="192x192"  href="{{ asset('build/icons/android-icon-192x192.png') }}">
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('build/icons/favicon-32x32.png') }}">
+        <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('build/icons/favicon-16x16.png') }}">
+        <link rel="icon" href="{{ asset('build/logo.png') }}" type="image/png">
+
         <title>{% block title %}Welcome!{% endblock %}</title>
         {% block stylesheets %}
             {# 'app' must match the first argument to addEntry() in webpack.config.js #}
