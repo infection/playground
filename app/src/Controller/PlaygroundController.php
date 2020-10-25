@@ -37,8 +37,7 @@ class PlaygroundController extends AbstractController
         CodeSanitizer $codeSanitizer,
         ConfigBuilder $configBuilder,
         ExampleRepository $exampleRepository
-    )
-    {
+    ) {
         $this->hashids = $hashids;
         $this->infectionRunner = $infectionRunner;
         $this->codeSanitizer = $codeSanitizer;
@@ -98,6 +97,7 @@ class PlaygroundController extends AbstractController
                 $this->configBuilder->build($originalConfig)
             );
 
+            $example->setIdHash($idHash);
             $example->updateResultOutput($runResult->getAnsiOutput());
             $example->updateJsonLog($runResult->getJsonLog());
 

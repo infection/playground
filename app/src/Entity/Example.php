@@ -55,6 +55,11 @@ class Example
      */
     private string $inputHash;
 
+    /**
+     * @ORM\Column(type="string", length=10, nullable=true)
+     */
+    private ?string $idHash = null;
+
     public function __construct(string $code, string $test, string $config)
     {
         $this->code = $code;
@@ -124,5 +129,15 @@ class Example
     public static function hashInput(string $code, string $test, string $config): string
     {
         return md5($code . $test . $config);
+    }
+
+    public function getIdHash(): ?string
+    {
+        return $this->idHash;
+    }
+
+    public function setIdHash(string $idHash): void
+    {
+        $this->idHash = $idHash;
     }
 }
