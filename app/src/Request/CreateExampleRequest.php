@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Request;
 
 use App\Entity\Example;
+use App\Infection\Runner;
 use App\Validator as AppAssert;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -34,6 +35,20 @@ class CreateExampleRequest
      */
     public $config;
 
+    /**
+     * @Assert\NotBlank()
+     *
+     * @var string|null
+     */
+    public $infectionVersion = Runner::CURRENT_INFECTION_VERSION;
+
+    /**
+     * @Assert\NotBlank()
+     *
+     * @var string|null
+     */
+    public $phpunitVersion = Runner::CURRENT_PHPUNIT_VERSION;
+
     public static function fromEntity(Example $example): self
     {
         $self = new self();
@@ -41,6 +56,8 @@ class CreateExampleRequest
         $self->code = $example->getCode();
         $self->test = $example->getTest();
         $self->config = $example->getConfig();
+        $self->infectionVersion = $example->getInfectionVersion();
+        $self->phpunitVersion = $example->getPhpunitVersion();
 
         return $self;
     }

@@ -76,13 +76,15 @@ class PlaygroundController extends AbstractController
 
             $originalConfig = $createExampleRequest->config;
 
-            $existingExample = $this->exampleRepository->findContentByHash(Example::hashInput($code, $test, $originalConfig));
+            $existingExample = $this->exampleRepository->findContentByHash(
+                Example::hashInput($code, $test, $originalConfig, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION)
+            );
 
             if ($existingExample instanceof Example) {
                 return $this->redirectToRoute('playground_display_example', ['exampleIdHash' => $this->hashids->encode($existingExample->getId())]);
             }
 
-            $example = new Example($code, $test, $originalConfig);
+            $example = new Example($code, $test, $originalConfig, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION);
 
             $em = $this->getDoctrine()->getManager();
             $em->persist($example);

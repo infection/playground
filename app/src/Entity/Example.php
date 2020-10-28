@@ -60,12 +60,24 @@ class Example
      */
     private ?string $idHash = null;
 
-    public function __construct(string $code, string $test, string $config)
+    /**
+     * @ORM\Column(type="string", length=11, nullable=true)
+     */
+    private ?string $infectionVersion;
+
+    /**
+     * @ORM\Column(type="string", length=11, nullable=true)
+     */
+    private ?string $phpunitVersion;
+
+    public function __construct(string $code, string $test, string $config, string $infectionVersion, string $phpunitVersion)
     {
         $this->code = $code;
         $this->test = $test;
         $this->config = $config;
-        $this->inputHash = self::hashInput($code, $test, $config);
+        $this->infectionVersion = $infectionVersion;
+        $this->phpunitVersion = $phpunitVersion;
+        $this->inputHash = self::hashInput($code, $test, $config, $infectionVersion, $phpunitVersion);
     }
 
     public function getId(): int
@@ -126,9 +138,9 @@ class Example
         return $this->inputHash;
     }
 
-    public static function hashInput(string $code, string $test, string $config): string
+    public static function hashInput(string $code, string $test, string $config, string $infectionVersion, string $phpunitVersion): string
     {
-        return md5($code . $test . $config);
+        return md5($code . $test . $config . $infectionVersion . $phpunitVersion);
     }
 
     public function getIdHash(): ?string
@@ -139,5 +151,15 @@ class Example
     public function setIdHash(string $idHash): void
     {
         $this->idHash = $idHash;
+    }
+
+    public function getInfectionVersion(): ?string
+    {
+        return $this->infectionVersion;
+    }
+
+    public function getPhpunitVersion(): ?string
+    {
+        return $this->phpunitVersion;
     }
 }

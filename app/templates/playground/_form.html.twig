@@ -36,5 +36,8 @@
             <div class="hidden" id="json-log" data-log="{{ jsonLog|e('html_attr') }}"></div>
         {% endif %}
     {% endif %}
+    {% if example is defined and example.infectionVersion and example.phpunitVersion %}
+        <span class="ml-5">Revision was created with Infection <span class="text-green-700">{{ example.infectionVersion }}</span> and PHPUnit <span class="text-green-700">{{ example.phpunitVersion }}</span></span>
+    {% endif %}
     <div class="hidden">{{ form_rest(form) }}</div>
 {{ form_end(form) }}
