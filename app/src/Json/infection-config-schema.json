@@ -30,7 +30,8 @@
                 "global-ignoreSourceCodeByRegex": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "type": "string",
+                        "format": "regex"
                     }
                 },
 
@@ -104,6 +105,13 @@
                                         "type": "string"
                                     }
                                 },
+                                "ignoreSourceCodeByRegex": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "format": "regex"
+                                    }
+                                },
                                 "settings": {
                                     "type": "object",
                                     "additionalProperties": false,
@@ -143,6 +151,7 @@
                 "AssignCoalesce": { "$ref": "#/definitions/default-mutator-config" },
                 "Break_": { "$ref": "#/definitions/default-mutator-config" },
                 "Continue_": { "$ref": "#/definitions/default-mutator-config" },
+                "Ternary": { "$ref": "#/definitions/default-mutator-config" },
                 "Throw_": { "$ref": "#/definitions/default-mutator-config" },
                 "Finally_": { "$ref": "#/definitions/default-mutator-config" },
                 "Coalesce": { "$ref": "#/definitions/default-mutator-config" },
@@ -161,6 +170,13 @@
                                     "type": "array",
                                     "items": {
                                         "type": "string"
+                                    }
+                                },
+                                "ignoreSourceCodeByRegex": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "format": "regex"
                                     }
                                 },
                                 "settings": {
@@ -241,10 +257,16 @@
                 "UnwrapArrayUnique": { "$ref": "#/definitions/default-mutator-config" },
                 "UnwrapArrayValues": { "$ref": "#/definitions/default-mutator-config" },
                 "UnwrapLcFirst": { "$ref": "#/definitions/default-mutator-config" },
+                "UnwrapLtrim": { "$ref": "#/definitions/default-mutator-config" },
+                "UnwrapRtrim": { "$ref": "#/definitions/default-mutator-config" },
+                "UnwrapStrIreplace": { "$ref": "#/definitions/default-mutator-config" },
                 "UnwrapStrRepeat": { "$ref": "#/definitions/default-mutator-config" },
                 "UnwrapStrReplace": { "$ref": "#/definitions/default-mutator-config" },
+                "UnwrapStrRev": { "$ref": "#/definitions/default-mutator-config" },
+                "UnwrapStrShuffle": { "$ref": "#/definitions/default-mutator-config" },
                 "UnwrapStrToLower": { "$ref": "#/definitions/default-mutator-config" },
                 "UnwrapStrToUpper": { "$ref": "#/definitions/default-mutator-config" },
+                "UnwrapSubstr": { "$ref": "#/definitions/default-mutator-config" },
                 "UnwrapTrim": { "$ref": "#/definitions/default-mutator-config" },
                 "UnwrapUcFirst": { "$ref": "#/definitions/default-mutator-config" },
                 "UnwrapUcWords": { "$ref": "#/definitions/default-mutator-config" },
@@ -261,6 +283,13 @@
                                     "type": "array",
                                     "items": {
                                         "type": "string"
+                                    }
+                                },
+                                "ignoreSourceCodeByRegex": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "format": "regex"
                                     }
                                 },
                                 "settings": {
@@ -313,6 +342,13 @@
                                     "type": "array",
                                     "items": {
                                         "type": "string"
+                                    }
+                                },
+                                "ignoreSourceCodeByRegex": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string",
+                                        "format": "regex"
                                     }
                                 },
                                 "settings": {
@@ -401,7 +437,8 @@
                         "ignoreSourceCodeByRegex": {
                             "type": "array",
                             "items": {
-                                "type": "string"
+                                "type": "string",
+                                "format": "regex"
                             }
                         }
                     }
