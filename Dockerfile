@@ -31,7 +31,7 @@ ENTRYPOINT ["docker-nodejs-entrypoint"]
 CMD ["yarn", "watch"]
 
 
-FROM php:7.4.5-fpm-alpine as prod
+FROM php:7.4.22-fpm-alpine as prod
 
 # persistent / runtime deps
 RUN apk add --no-cache \
