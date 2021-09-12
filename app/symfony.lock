@@ -566,9 +566,6 @@
     "twig/twig": {
         "version": "v2.6.2"
     },
-    "voku/ansi-to-html": {
-        "version": "v2.1.0"
-    },
     "webmozart/assert": {
         "version": "1.8.0"
     },

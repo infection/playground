@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Html\Ansi;
 
-use voku\AnsiConverter\Theme\Theme;
-
 final class InfectionAnsiHtmlTheme extends Theme
 {
     public function asArray()
