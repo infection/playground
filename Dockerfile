@@ -92,7 +92,7 @@ RUN set -eux; \
 
 COPY php/php.ini /usr/local/etc/php/php.ini
 
-COPY --from=composer:1 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # https://getcomposer.org/doc/03-cli.md#composer-allow-superuser
 ENV COMPOSER_ALLOW_SUPERUSER=1
 # install Symfony Flex globally to speed up download of Composer packages (parallelized prefetching)
@@ -109,7 +109,7 @@ COPY --from=infection_nodejs /srv/app/public/build/entrypoints.json /app/public/
 ARG APP_ENV=prod
 
 RUN mkdir -p var/cache var/logs var/sessions \
-    && composer install --prefer-dist --ignore-platform-reqs --no-dev --no-scripts --no-progress --no-suggest --classmap-authoritative --no-interaction \
+    && composer install --prefer-dist --no-dev --no-scripts --no-progress --no-suggest --classmap-authoritative --no-interaction \
     && composer dump-autoload --optimize --classmap-authoritative --no-dev \
     && composer run-script --no-dev post-install-cmd \
     && chmod +x bin/console && sync \

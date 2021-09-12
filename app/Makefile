@@ -1,6 +1,7 @@
 PHP-CS-FIXER=./php-cs-fixer-v2.phar
 PHP-CS-FIXER_URL="https://cs.sensiolabs.org/download/php-cs-fixer-v2.phar"
 PHPSTAN=vendor/bin/phpstan
+PHPSTAN_ARGS=analyse src tests -c phpstan.neon
 
 #Non phony targets for phars etc.
 vendor: composer.json composer.lock
@@ -21,7 +22,10 @@ cs-check: $(PHP-CS-FIXER)
 	$(PHP-CS-FIXER) fix -v --dry-run --stop-on-violation --allow-risky=yes
 
 phpstan: vendor
-	$(PHPSTAN) analyse src tests -c phpstan.neon --no-interaction
+	$(PHPSTAN) $(PHPSTAN_ARGS)
+
+phpstan-update-baseline: vendor ## Runs PHPStan and update baseline
+	$(PHPSTAN) $(PHPSTAN_ARGS) --generate-baseline
 
 validate:
 	composer validate --strict

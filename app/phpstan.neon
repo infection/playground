@@ -1,3 +1,6 @@
+includes:
+    - phpstan-baseline.neon
+
 parameters:
     level: max
     symfony:
@@ -10,10 +13,3 @@ parameters:
         - '#Access to an undefined property Symfony\\Component\\Validator\\Constraint::\$(.*?)#'
         - '#Method App\\Tests\\Unit\\(.*)::(.*)\(\) return type has no value type specified in iterable type Generator#'
 
-includes:
-    - vendor/phpstan/phpstan-strict-rules/rules.neon
-    - vendor/thecodingmachine/phpstan-strict-rules/phpstan-strict-rules.neon
-    - vendor/phpstan/phpstan-doctrine/extension.neon
-    - vendor/phpstan/phpstan-symfony/extension.neon
-    - vendor/phpstan/phpstan-phpunit/rules.neon
-    - vendor/phpstan/phpstan-webmozart-assert/extension.neon

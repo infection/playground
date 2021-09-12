@@ -23,7 +23,7 @@ class PlaygroundControllerTest extends WebTestCase
         ]);
 
         self::assertSame(302, $client->getResponse()->getStatusCode());
-        self::assertStringNotContainsString('This value should not be blank', $client->getResponse()->getContent());
+        self::assertStringNotContainsString('This value should not be blank', (string) $client->getResponse()->getContent());
     }
 
     public function test_it_fails_with_when_code_is_blank(): void
@@ -41,7 +41,7 @@ class PlaygroundControllerTest extends WebTestCase
         ]);
 
         self::assertSame(200, $client->getResponse()->getStatusCode());
-        self::assertStringContainsString('This value should not be blank', $client->getResponse()->getContent());
+        self::assertStringContainsString('This value should not be blank', (string) $client->getResponse()->getContent());
     }
 
     public function test_it_fails_with_when_code_is_invalid(): void
@@ -59,7 +59,7 @@ class PlaygroundControllerTest extends WebTestCase
         ]);
 
         self::assertSame(200, $client->getResponse()->getStatusCode());
-        self::assertStringContainsString('This is not a valid PHP code. Errors: Syntax error, unexpected', $client->getResponse()->getContent());
+        self::assertStringContainsString('This is not a valid PHP code. Errors: Syntax error, unexpected', (string) $client->getResponse()->getContent());
     }
 
     public function test_it_fails_with_when_test_is_invalid(): void
@@ -77,7 +77,7 @@ class PlaygroundControllerTest extends WebTestCase
         ]);
 
         self::assertSame(200, $client->getResponse()->getStatusCode());
-        self::assertStringContainsString('This is not a valid PHP code. Errors: Syntax error, unexpected', $client->getResponse()->getContent());
+        self::assertStringContainsString('This is not a valid PHP code. Errors: Syntax error, unexpected', (string) $client->getResponse()->getContent());
     }
 
     public function test_it_works_with_valid_both_code_and_test(): void
@@ -94,8 +94,8 @@ class PlaygroundControllerTest extends WebTestCase
         ]);
 
         self::assertSame(302, $client->getResponse()->getStatusCode());
-        self::assertStringNotContainsString('Error', $client->getResponse()->getContent());
-        self::assertStringNotContainsString('This value should be valid JSON', $client->getResponse()->getContent());
+        self::assertStringNotContainsString('Error', (string) $client->getResponse()->getContent());
+        self::assertStringNotContainsString('This value should be valid JSON', (string) $client->getResponse()->getContent());
         self::assertTrue($client->getResponse()->isRedirection());
     }
 
@@ -114,8 +114,8 @@ class PlaygroundControllerTest extends WebTestCase
         ]);
 
         self::assertSame(200, $client->getResponse()->getStatusCode());
-        self::assertStringNotContainsString('Error', $client->getResponse()->getContent());
-        self::assertStringContainsString('This value should be valid JSON', $client->getResponse()->getContent());
+        self::assertStringNotContainsString('Error', (string) $client->getResponse()->getContent());
+        self::assertStringContainsString('This value should be valid JSON', (string) $client->getResponse()->getContent());
     }
 
     public function test_it_fails_when_config_contains_not_allowed_property(): void
@@ -132,8 +132,8 @@ class PlaygroundControllerTest extends WebTestCase
         ]);
 
         self::assertSame(200, $client->getResponse()->getStatusCode());
-        self::assertStringNotContainsString('Error', $client->getResponse()->getContent());
-        self::assertStringContainsString('The property bootstrap is not defined and the definition does not allow additional properties', $client->getResponse()->getContent());
+        self::assertStringNotContainsString('Error', (string) $client->getResponse()->getContent());
+        self::assertStringContainsString('The property bootstrap is not defined and the definition does not allow additional properties', (string) $client->getResponse()->getContent());
         self::assertFalse($client->getResponse()->isRedirect());
     }
 }
