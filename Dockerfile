@@ -31,7 +31,7 @@ ENTRYPOINT ["docker-nodejs-entrypoint"]
 CMD ["yarn", "watch"]
 
 
-FROM php:7.4.22-fpm-alpine as prod
+FROM php:8.0.10-fpm-alpine3.13 as prod
 
 # persistent / runtime deps
 RUN apk add --no-cache \
@@ -109,7 +109,7 @@ COPY --from=infection_nodejs /srv/app/public/build/entrypoints.json /app/public/
 ARG APP_ENV=prod
 
 RUN mkdir -p var/cache var/logs var/sessions \
-    && composer install --prefer-dist --no-dev --no-scripts --no-progress --no-suggest --classmap-authoritative --no-interaction \
+    && composer install --prefer-dist --ignore-platform-reqs --no-dev --no-scripts --no-progress --no-suggest --classmap-authoritative --no-interaction \
     && composer dump-autoload --optimize --classmap-authoritative --no-dev \
     && composer run-script --no-dev post-install-cmd \
     && chmod +x bin/console && sync \
