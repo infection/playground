@@ -466,6 +466,19 @@
                     }
                 }
             ]
+        },
+        "stryker-branch": {
+            "type": "string",
+            "description": "Mutation score badge for your GitHub project. If this value starts and ends with \"/\", it will be considered a regular expression.",
+            "examples": [
+                "main",
+                "master",
+                "develop",
+                "latest",
+                "/1\\.\\d+/",
+                "/release-.*/",
+                "/feature\\/.*/"
+            ]
         }
     }
 }

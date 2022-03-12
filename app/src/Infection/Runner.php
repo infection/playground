@@ -13,19 +13,17 @@ use Symfony\Component\Process\Process;
 
 class Runner
 {
-    public const CURRENT_INFECTION_VERSION = '0.25.3';
+    public const CURRENT_INFECTION_VERSION = '0.26.5';
     public const CURRENT_PHPUNIT_VERSION = '9.5.9';
 
     private const PROCESS_TIMEOUT_SEC = 30;
 
-    private DirectoryCreator $directoryCreator;
     private Filesystem $filesystem;
 
     private ClassesExtractor $classesExtractor;
 
-    public function __construct(DirectoryCreator $directoryCreator, Filesystem $filesystem, ClassesExtractor $classesExtractor)
+    public function __construct(Filesystem $filesystem, ClassesExtractor $classesExtractor)
     {
-        $this->directoryCreator = $directoryCreator;
         $this->filesystem = $filesystem;
         $this->classesExtractor = $classesExtractor;
     }
