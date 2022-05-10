@@ -92,11 +92,9 @@ RUN set -eux; \
 
 COPY php/php.ini /usr/local/etc/php/php.ini
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2.1 /usr/bin/composer /usr/bin/composer
 # https://getcomposer.org/doc/03-cli.md#composer-allow-superuser
 ENV COMPOSER_ALLOW_SUPERUSER=1
-# install Symfony Flex globally to speed up download of Composer packages (parallelized prefetching)
-RUN composer global require "symfony/flex" --prefer-dist --no-progress --no-suggest --classmap-authoritative
 ENV PATH="${PATH}:/root/.composer/vendor/bin"
 
 WORKDIR /app
