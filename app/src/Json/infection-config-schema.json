@@ -4,6 +4,9 @@
     "additionalProperties": false,
     "required": [],
     "properties": {
+        "$schema": {
+            "type": "string"
+        },
         "minMsi": {
             "type": "number",
             "minimum": 0,
