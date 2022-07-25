@@ -55,7 +55,7 @@ class Runner
             $process->setTimeout(self::PROCESS_TIMEOUT_SEC);
 
             $process->run();
-            // todo download if not present infection/phpunit (cache warmer)?
+            // todo download if not present infection/phpunit (cache warmer) ?
             // todo remove tmp folder
 
             $infectionJsonLogPath = sprintf('%s/infection.log.json', $rootDir);
