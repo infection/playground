@@ -13,8 +13,8 @@ use Symfony\Component\Process\Process;
 
 class Runner
 {
-    public const CURRENT_INFECTION_VERSION = '0.26.13';
-    public const CURRENT_PHPUNIT_VERSION = '9.5.9';
+    public const CURRENT_INFECTION_VERSION = '0.26.20';
+    public const CURRENT_PHPUNIT_VERSION = '10.1.2';
 
     private const PROCESS_TIMEOUT_SEC = 30;
 
@@ -79,12 +79,8 @@ class Runner
         return <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit backupGlobals="false"
-         backupStaticAttributes="false"
          bootstrap="./autoload.php"
          colors="true"
-         convertErrorsToExceptions="true"
-         convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true"
          processIsolation="false"
          stopOnFailure="true"
 >
@@ -93,12 +89,14 @@ class Runner
             <directory>./tests/</directory>
         </testsuite>
     </testsuites>
+    
+    <coverage />
 
-    <coverage>
+    <source>
         <include>
             <directory>./src/</directory>
         </include>
-    </coverage>
+    </source>
 </phpunit>
 XML;
     }

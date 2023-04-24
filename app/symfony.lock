@@ -78,23 +78,14 @@
     "doctrine/persistence": {
         "version": "v1.1.0"
     },
-    "doctrine/reflection": {
-        "version": "v1.0.0"
-    },
     "doctrine/sql-formatter": {
         "version": "1.1.0"
-    },
-    "facebook/webdriver": {
-        "version": "1.6.0"
     },
     "friendsofphp/proxy-manager-lts": {
         "version": "v1.0.5"
     },
     "hashids/hashids": {
         "version": "4.0.0"
-    },
-    "jdorn/sql-formatter": {
-        "version": "v1.2.17"
     },
     "justinrainbow/json-schema": {
         "version": "5.2.10"
@@ -105,44 +96,14 @@
     "myclabs/deep-copy": {
         "version": "1.10.2"
     },
-    "nette/bootstrap": {
-        "version": "v2.4.6"
-    },
-    "nette/di": {
-        "version": "v2.4.15"
-    },
-    "nette/finder": {
-        "version": "v2.5.0"
-    },
-    "nette/neon": {
-        "version": "v3.0.0"
-    },
-    "nette/php-generator": {
-        "version": "v3.2.1"
-    },
-    "nette/robot-loader": {
-        "version": "v3.1.1"
-    },
-    "nette/utils": {
-        "version": "v2.5.3"
-    },
     "nikic/php-parser": {
         "version": "v4.2.1"
-    },
-    "ocramius/package-versions": {
-        "version": "1.4.0"
-    },
-    "ocramius/proxy-manager": {
-        "version": "2.2.2"
     },
     "phar-io/manifest": {
         "version": "1.0.3"
     },
     "phar-io/version": {
         "version": "2.0.1"
-    },
-    "php": {
-        "version": "8.0"
     },
     "phpdocumentor/reflection-common": {
         "version": "2.2.0"
@@ -164,9 +125,6 @@
     },
     "phpstan/phpstan-doctrine": {
         "version": "0.11.1"
-    },
-    "phpstan/phpstan-phpunit": {
-        "version": "0.11"
     },
     "phpstan/phpstan-strict-rules": {
         "version": "0.11"
@@ -192,9 +150,6 @@
     "phpunit/php-timer": {
         "version": "5.0.3"
     },
-    "phpunit/php-token-stream": {
-        "version": "4.0.4"
-    },
     "phpunit/phpunit": {
         "version": "4.7",
         "recipe": {
@@ -217,9 +172,6 @@
     },
     "psr/log": {
         "version": "1.1.0"
-    },
-    "psr/simple-cache": {
-        "version": "1.0.1"
     },
     "ramsey/uuid": {
         "version": "3.8.0"
@@ -571,11 +523,5 @@
     },
     "webmozart/assert": {
         "version": "1.8.0"
-    },
-    "zendframework/zend-code": {
-        "version": "3.3.1"
-    },
-    "zendframework/zend-eventmanager": {
-        "version": "3.2.1"
     }
 }

@@ -30,8 +30,7 @@ RUN chmod +x /usr/local/bin/docker-nodejs-entrypoint
 ENTRYPOINT ["docker-nodejs-entrypoint"]
 CMD ["yarn", "watch"]
 
-
-FROM php:8.0.10-fpm-alpine3.13 as prod
+FROM php:8.1-fpm-alpine3.15 as prod
 
 # persistent / runtime deps
 RUN apk add --no-cache \
@@ -67,7 +66,7 @@ RUN set -eux; \
 		bcmath \
 	; \
 	pecl install \
-		apcu-5.1.18 \
+		apcu-5.1.21 \
 		pcov \
 	; \
 	pecl clear-cache; \
