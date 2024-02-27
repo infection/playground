@@ -76,6 +76,46 @@ class Test
 PHP
         ];
 
+        yield 'Does not remove needed' => [
+            <<<'PHP'
+<?php
+
+namespace Infected;
+
+class SourceClass
+{
+    public function getClassName(): string
+    {
+        return self::class;
+    }
+
+    public function newObject(): static
+    {
+        return new ($this->getClassName())();
+    }
+}
+PHP
+            ,
+            <<<'PHP'
+<?php
+
+namespace Infected;
+
+class SourceClass
+{
+    public function getClassName(): string
+    {
+        return self::class;
+    }
+
+    public function newObject(): static
+    {
+        return new ($this->getClassName())();
+    }
+}
+PHP
+        ];
+
         // todo https://stackoverflow.com/questions/3115559/exploitable-php-functions
 
         // validate the code https://github.com/phpstan/playground/blob/63ecba15fdbb8bb0bf0ed30b4a60ee954fc3389c/app/Model/CodeValidator.php

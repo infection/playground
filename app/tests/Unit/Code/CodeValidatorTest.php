@@ -134,7 +134,7 @@ final abstract class Test
 PHP
             ,
             [
-                'Syntax error, unexpected T_ABSTRACT, expecting T_CLASS on line 5',
+                'Cannot use the final modifier on an abstract class on line 5',
             ],
         ];
 

@@ -68,6 +68,54 @@ PHP
             ],
         ];
 
+        yield 'One class, check it does not remove parenthesis' => [
+            <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace Infected;
+
+class SourceClass
+{
+    public function getClassName(): string
+    {
+        return self::class;
+    }
+
+    public function newObject(): static
+    {
+        return new ($this->getClassName())();
+    }
+}
+PHP
+            ,
+            [
+                [
+                    'className' => 'SourceClass',
+                    'code' => <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace Infected;
+
+class SourceClass
+{
+    public function getClassName() : string
+    {
+        return self::class;
+    }
+    public function newObject() : static
+    {
+        return new ($this->getClassName())();
+    }
+}
+PHP
+                ],
+            ],
+        ];
+
         yield 'One class, class name with numbers and underscores' => [
             <<<'PHP'
 <?php

@@ -13,7 +13,7 @@ use Symfony\Component\Process\Process;
 
 class Runner
 {
-    public const CURRENT_INFECTION_VERSION = '0.27.9';
+    public const CURRENT_INFECTION_VERSION = '0.27.10';
     public const CURRENT_PHPUNIT_VERSION = '10.5.10';
 
     private const PROCESS_TIMEOUT_SEC = 30;
