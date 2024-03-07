@@ -39,7 +39,7 @@ final class CodeValidatorTest extends TestCase
         self::assertSame($expectedErrors, $actualErrorMessages);
     }
 
-    public function provideCodeExamples(): \Generator
+    public static function provideCodeExamples(): \Generator
     {
         yield 'Valid code with no errors' => [
             <<<'PHP'
@@ -176,10 +176,10 @@ PHP
             ],
         ];
 
-        yield from $this->provideForbiddenFunctionsExamples();
+        yield from self::provideForbiddenFunctionsExamples();
     }
 
-    private function provideForbiddenFunctionsExamples(): \Generator
+    private static function provideForbiddenFunctionsExamples(): \Generator
     {
         foreach (CodeValidator::FORBIDDEN_FUNCTIONS as $function) {
             yield sprintf('Forbidden function "%s"', $function) => [

@@ -36,7 +36,7 @@ final class CodeSanitizerTest extends TestCase
         }
     }
 
-    public function provideCodeExamples(): \Generator
+    public static function provideCodeExamples(): \Generator
     {
         yield 'Do nothing with good valid code' => [
             <<<'PHP'

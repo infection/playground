@@ -34,7 +34,7 @@ final class ClassesExtractorTest extends TestCase
         }
     }
 
-    public function provideCodeWithClasses(): \Generator
+    public static function provideCodeWithClasses(): \Generator
     {
         yield 'One class, simple class name' => [
             <<<'PHP'

@@ -32,7 +32,7 @@ final class ConfigBuilderTest extends TestCase
         self::assertSame($expectedConfig, json_decode($resultConfig, true));
     }
 
-    public function provideConfigs(): \Generator
+    public static function provideConfigs(): \Generator
     {
         yield 'Empty object provided' => [
             '{}',
