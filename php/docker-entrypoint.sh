@@ -32,8 +32,8 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 		echo "The database is now ready and reachable"
 	fi
 
-	if [ "$APP_ENV" = 'dev' ]; then
-    	make app-reinstall
+	if [ "$APP_ENV" = 'prod' ]; then
+    	php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
   fi
 fi
 

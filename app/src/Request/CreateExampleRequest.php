@@ -49,6 +49,13 @@ class CreateExampleRequest
      */
     public $phpunitVersion = Runner::CURRENT_PHPUNIT_VERSION;
 
+    /**
+     * @Assert\NotBlank()
+     *
+     * @var string|null
+     */
+    public $phpVersion = Runner::CURRENT_PHP_VERSION;
+
     public static function fromEntity(Example $example): self
     {
         $self = new self();
@@ -58,6 +65,7 @@ class CreateExampleRequest
         $self->config = $example->getConfig();
         $self->infectionVersion = $example->getInfectionVersion();
         $self->phpunitVersion = $example->getPhpunitVersion();
+        $self->phpVersion = $example->getPhpVersion();
 
         return $self;
     }

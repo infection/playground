@@ -70,14 +70,20 @@ class Example
      */
     private ?string $phpunitVersion;
 
-    public function __construct(string $code, string $test, string $config, string $infectionVersion, string $phpunitVersion)
+    /**
+     * @ORM\Column(type="string", length=11, nullable=true, options={"default": "8.1.3"})
+     */
+    private ?string $phpVersion;
+
+    public function __construct(string $code, string $test, string $config, string $infectionVersion, string $phpunitVersion, string $phpVersion)
     {
         $this->code = $code;
         $this->test = $test;
         $this->config = $config;
         $this->infectionVersion = $infectionVersion;
         $this->phpunitVersion = $phpunitVersion;
-        $this->inputHash = self::hashInput($code, $test, $config, $infectionVersion, $phpunitVersion);
+        $this->phpVersion = $phpVersion;
+        $this->inputHash = self::hashInput($code, $test, $config, $infectionVersion, $phpunitVersion, $phpVersion);
     }
 
     public function getId(): int
@@ -138,9 +144,9 @@ class Example
         return $this->inputHash;
     }
 
-    public static function hashInput(string $code, string $test, string $config, string $infectionVersion, string $phpunitVersion): string
+    public static function hashInput(string $code, string $test, string $config, string $infectionVersion, string $phpunitVersion, string $phpVersion): string
     {
-        return md5($code . $test . $config . $infectionVersion . $phpunitVersion);
+        return md5($code . $test . $config . $infectionVersion . $phpunitVersion . $phpVersion);
     }
 
     public function getIdHash(): ?string
@@ -161,5 +167,10 @@ class Example
     public function getPhpunitVersion(): ?string
     {
         return $this->phpunitVersion;
+    }
+
+    public function getPhpVersion(): string
+    {
+        return $this->phpVersion;
     }
 }
