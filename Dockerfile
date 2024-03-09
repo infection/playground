@@ -30,7 +30,7 @@ RUN chmod +x /usr/local/bin/docker-nodejs-entrypoint
 ENTRYPOINT ["docker-nodejs-entrypoint"]
 CMD ["yarn", "watch"]
 
-FROM php:8.1-fpm-alpine3.15 as prod
+FROM php:8.2-fpm-alpine3.17 as prod
 
 # persistent / runtime deps
 RUN apk add --no-cache \
@@ -66,7 +66,7 @@ RUN set -eux; \
 		bcmath \
 	; \
 	pecl install \
-		apcu-5.1.21 \
+		apcu-5.1.22 \
 		pcov \
 	; \
 	pecl clear-cache; \
@@ -114,6 +114,10 @@ RUN mkdir -p var/cache var/logs var/sessions \
     && chown -R www-data var \
     && chown -R www-data infection-builds
 
+COPY --link php/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
+RUN chmod +x /usr/local/bin/docker-entrypoint
+
+ENTRYPOINT ["docker-entrypoint"]
 CMD ["php-fpm"]
 
 # "nginx" production stage
