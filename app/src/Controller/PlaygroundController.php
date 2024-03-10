@@ -13,11 +13,12 @@ use App\Infection\ConfigBuilder;
 use App\Infection\Runner;
 use App\Repository\ExampleRepository;
 use App\Request\CreateExampleRequest;
+use Doctrine\ORM\EntityManagerInterface;
 use Hashids\Hashids;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 class PlaygroundController extends AbstractController
 {
@@ -45,9 +46,7 @@ class PlaygroundController extends AbstractController
         $this->exampleRepository = $exampleRepository;
     }
 
-    /**
-     * @Route(name="playground_index", path="/")
-     */
+    #[Route("/", name: "playground_index")]
     public function index(): Response
     {
         $createExampleRequest = new CreateExampleRequest();
@@ -59,10 +58,8 @@ class PlaygroundController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route(name="playground_create_example", path="/r", methods={"POST"})
-     */
-    public function createExample(Request $request): Response
+    #[Route("/r", name: "playground_create_example", methods: ["POST"])]
+    public function createExample(Request $request, EntityManagerInterface $em): Response
     {
         $createExampleRequest = new CreateExampleRequest();
 
@@ -86,7 +83,6 @@ class PlaygroundController extends AbstractController
 
             $example = new Example($code, $test, $originalConfig, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION);
 
-            $em = $this->getDoctrine()->getManager();
             $em->persist($example);
             $em->flush();
 
@@ -114,13 +110,11 @@ class PlaygroundController extends AbstractController
         ]);
     }
 
-    /**
-     * @Route(name="playground_display_example", path="/r/{exampleIdHash}", methods={"GET"})
-     */
-    public function displayExample(string $exampleIdHash): Response
+    #[Route("/r/{exampleIdHash}", name: "playground_display_example", methods: ["GET"])]
+    public function displayExample(string $exampleIdHash, EntityManagerInterface $em): Response
     {
         /** @var Example|null $example */
-        $example = $this->getDoctrine()->getManager()->find(Example::class, $this->hashids->decode($exampleIdHash)[0]);
+        $example = $em->find(Example::class, $this->hashids->decode($exampleIdHash)[0]);
 
         if (!$example instanceof Example) {
             throw $this->createNotFoundException();

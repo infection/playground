@@ -7,72 +7,46 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use function md5;
 
-/**
- * @ORM\Entity()
- * @ORM\HasLifecycleCallbacks()
- */
+#[ORM\Entity]
+#[ORM\HasLifecycleCallbacks]
 class Example
 {
-    /**
-     * @ORM\Id()
-     * @ORM\GeneratedValue()
-     * @ORM\Column(type="integer")
-     */
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
     private int $id;
 
-    /**
-     * @ORM\Column(type="text")
-     */
+    #[ORM\Column(type: 'text')]
     private string $code;
 
-    /**
-     * @ORM\Column(type="text")
-     */
+    #[ORM\Column(type: 'text')]
     private string $test;
 
-    /**
-     * @ORM\Column(type="text")
-     */
+    #[ORM\Column(type: 'text')]
     private string $config;
 
-    /**
-     * @ORM\Column(type="text")
-     */
+    #[ORM\Column(type: 'text')]
     private string $resultOutput = '';
 
-    /**
-     * @ORM\Column(type="text", nullable=true)
-     */
+    #[ORM\Column(type: 'text', nullable: true)]
     private ?string $jsonLog = null;
 
-    /**
-     * @ORM\Column(type="datetime_immutable", options={"default"="CURRENT_TIMESTAMP"})
-     */
+    #[ORM\Column(type: 'datetime_immutable', options: ['default' => 'CURRENT_TIMESTAMP'])]
     private \DateTimeImmutable $createdAt;
 
-    /**
-     * @ORM\Column(type="string", length=32, unique=true)
-     */
+    #[ORM\Column(type: 'string', length: 32, unique: true)]
     private string $inputHash;
 
-    /**
-     * @ORM\Column(type="string", length=10, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 10, nullable: true)]
     private ?string $idHash = null;
 
-    /**
-     * @ORM\Column(type="string", length=11, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 11, nullable: true)]
     private ?string $infectionVersion;
 
-    /**
-     * @ORM\Column(type="string", length=11, nullable=true)
-     */
+    #[ORM\Column(type: 'string', length: 11, nullable: true)]
     private ?string $phpunitVersion;
 
-    /**
-     * @ORM\Column(type="string", length=11, nullable=true, options={"default": "8.1.3"})
-     */
+    #[ORM\Column(type: 'string', length: 11, nullable: true, options: ['default' => '8.1.3'])]
     private ?string $phpVersion;
 
     public function __construct(string $code, string $test, string $config, string $infectionVersion, string $phpunitVersion, string $phpVersion)
@@ -116,9 +90,7 @@ class Example
         return $this->resultOutput;
     }
 
-    /**
-     * @ORM\PrePersist()
-     */
+    #[ORM\PrePersist]
     public function setCreatedAtToCurrentDateTime(): void
     {
         $this->createdAt = new \DateTimeImmutable();
