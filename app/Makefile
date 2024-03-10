@@ -1,15 +1,10 @@
-PHP-CS-FIXER=./php-cs-fixer-v2.phar
-PHP-CS-FIXER_URL="https://cs.sensiolabs.org/download/php-cs-fixer-v2.phar"
+PHP-CS-FIXER=./vendor/bin/php-cs-fixer
 PHPSTAN=vendor/bin/phpstan
 PHPSTAN_ARGS=analyse src tests -c phpstan.neon
 
 #Non phony targets for phars etc.
 vendor: composer.json composer.lock
 	composer install
-
-./php-cs-fixer-v2.phar:
-	wget $(PHP-CS-FIXER_URL)
-	chmod a+x ./php-cs-fixer-v2.phar
 
 #style checks / static analysis
 .PHONY: analyze cs-fix cs-check phpstan validate
