@@ -6,17 +6,17 @@
 
 {{ form_start(form) }}
     <div class="flex">
-        <div class="flex-1 text-gray-700 bg-gray-400 px-1 py-1 my-2">
+        <div class="flex-1 text-gray-700 bg-gray-200 px-1 py-1 my-2">
             <div id="editor-code" style="height:400px;"></div>
             <div class="hidden">{{ form_widget(form.code) }}</div>
             {{ form_errors(form.code) }}
         </div>
-        <div class="flex-1 text-gray-700 bg-gray-400 px-1 py-1 m-2">
+        <div class="flex-1 text-gray-700 bg-gray-200 px-1 py-1 m-2">
             <div id="editor-test" style="height:400px;"></div>
             <div class="hidden">{{ form_widget(form.test) }}</div>
             {{ form_errors(form.test) }}
         </div>
-        <div class="flex-1 text-gray-700 bg-gray-400 px-1 py-1 m-2">
+        <div class="flex-1 text-gray-700 bg-gray-200 px-1 py-1 m-2">
             <div id="editor-config" style="height:400px;"></div>
             <div class="hidden">{{ form_widget(form.config) }}</div>
             {{ form_errors(form.config) }}
