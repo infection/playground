@@ -1,4 +1,4 @@
-ARG NODE_VERSION=10
+ARG NODE_VERSION=20
 
 FROM node:${NODE_VERSION}-alpine AS infection_nodejs
 

@@ -14,10 +14,7 @@ Encore
     .setPublicPath('/build')
     .addStyleEntry('tailwind', './assets/css/tailwind.css')
     .enablePostCssLoader((options) => {
-        options.config = {
-            // directory where the postcss.config.js file is stored
-            path: './postcss.config.js'
-        };
+        autoprefixer: {}
     })
     .copyFiles({
         from: './assets/images',
