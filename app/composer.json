@@ -16,6 +16,7 @@
         "hashids/hashids": "^5.0",
         "justinrainbow/json-schema": "^5.2",
         "nikic/php-parser": "^4.5",
+        "phpstan/phpstan": "^1.10",
         "ramsey/uuid": "^4.7",
         "symfony/console": "7.0.*",
         "symfony/dotenv": "7.0.*",

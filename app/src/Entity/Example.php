@@ -79,8 +79,8 @@ class Example
     #[ORM\Column(type: 'string', length: 11, nullable: true)]
     private ?string $phpunitVersion;
 
-    #[ORM\Column(type: 'string', length: 12, nullable: true, options: ['default' => '8.1.3'])]
-    private ?string $phpVersion;
+    #[ORM\Column(type: 'string', length: 12, options: ['default' => '8.1.3'])]
+    private string $phpVersion;
 
     public function __construct(string $code, string $test, string $config, string $infectionVersion, string $phpunitVersion, string $phpVersion)
     {

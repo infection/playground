@@ -53,7 +53,7 @@ class ValidPhpCodeValidator extends ConstraintValidator
         $this->codeValidator = $codeValidator;
     }
 
-    public function validate($phpCode, Constraint $constraint): void
+    public function validate(mixed $phpCode, Constraint $constraint): void
     {
         Assert::isInstanceOf($constraint, ValidPhpCode::class);
         /* @var $constraint ValidPhpCode */
@@ -61,6 +61,8 @@ class ValidPhpCodeValidator extends ConstraintValidator
         if ($phpCode === null || $phpCode === '') {
             return;
         }
+
+        Assert::string($phpCode);
 
         $errors = $this->codeValidator->validate($phpCode);
 

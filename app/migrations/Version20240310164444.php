@@ -33,63 +33,30 @@
 
 declare(strict_types=1);
 
-namespace App\Validator;
+namespace DoctrineMigrations;
 
-use function array_map;
-use function implode;
-use function json_decode;
-use const JSON_ERROR_NONE;
-use function json_last_error;
-use JsonSchema\Validator;
-use const PHP_EOL;
-use function sprintf;
-use Symfony\Component\Validator\Constraint;
-use Symfony\Component\Validator\ConstraintValidator;
-use Webmozart\Assert\Assert;
+use Doctrine\DBAL\Schema\Schema;
+use Doctrine\Migrations\AbstractMigration;
 
-class JsonSchemaValidator extends ConstraintValidator
+/**
+ * Auto-generated Migration: Please modify to your needs!
+ */
+final class Version20240310164444 extends AbstractMigration
 {
-    private string $projectDir;
-
-    public function __construct(string $projectDir)
+    public function getDescription(): string
     {
-        $this->projectDir = $projectDir;
+        return '';
     }
 
-    public function validate(mixed $value, Constraint $constraint): void
+    public function up(Schema $schema): void
     {
-        /* @var $constraint \App\Validator\JsonSchema */
+        // this up() migration is auto-generated, please modify it to your needs
+        $this->addSql('ALTER TABLE example CHANGE php_version php_version VARCHAR(12) DEFAULT \'8.1.3\' NOT NULL');
+    }
 
-        if ($value === null) {
-            return;
-        }
-
-        Assert::string($value);
-
-        $decodedJsonObject = json_decode($value);
-
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            $this->context->buildViolation('This value should be valid JSON.')->addViolation();
-
-            return;
-        }
-
-        $validator = new Validator();
-        $validator->validate($decodedJsonObject, (object) [
-            '$ref' => sprintf('file://%s/src/Json/%s', $this->projectDir, $constraint->schemaFile),
-        ]);
-
-        if ($validator->isValid()) {
-            return;
-        }
-
-        $errors = array_map(
-            static function (array $error): string {
-                return sprintf('[%s] %s%s', $error['property'], $error['message'], PHP_EOL);
-            },
-            $validator->getErrors()
-        );
-
-        $this->context->buildViolation(implode(PHP_EOL, $errors))->addViolation();
+    public function down(Schema $schema): void
+    {
+        // this down() migration is auto-generated, please modify it to your needs
+        $this->addSql('ALTER TABLE example CHANGE php_version php_version VARCHAR(11) DEFAULT \'8.1.3\'');
     }
 }
