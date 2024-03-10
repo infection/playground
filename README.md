@@ -1,20 +1,15 @@
-# Docker
+# Infection Playground
 
-## PHP
+This is a repository for Infection Playground, hosted here: https://infection-php.dev
 
-Build an image:
+### Developing
 
-```bash
-docker build -f "Dockerfile" -t infection-playground/php:latest .
-```
+The project is fully dockerized, after cloning just run `docker compose up` and you are good to go.
 
-## Test production mode locally
+Database can be setup up by `docker compose exec php make app-reinstall`.
 
-```bash
-docker-compose -f docker-compose.prod.yml build
+### Infection - Mutation Testing Framework
 
-docker push maksrafalko/infection-playground-php:latest
-docker push maksrafalko/infection-playground-nginx:latest
+Please read documentation here: [infection.github.io](http://infection.github.io)
 
-docker stack deploy -c docker-stack.yml infection --with-registry-auth
-```
+Twitter: [@infection_php](http://twitter.com/infection_php)
