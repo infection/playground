@@ -155,7 +155,8 @@ function showMutantsTable(mutants) {
 }
 
 function unhighlightAllRows() {
-    const rows = document.getElementById('mutants-table').getElementsByTagName('tr');
+    const htmlCollection = document.getElementById('mutants-table').getElementsByTagName('tr');
+    const rows = Array.prototype.slice.call(htmlCollection);
 
     rows.forEach((row) => {
         row.classList.remove('bg-gray-200');

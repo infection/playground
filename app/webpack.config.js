@@ -12,10 +12,7 @@ Encore
     .setOutputPath('public/build/')
     // public path used by the web server to access the output path
     .setPublicPath('/build')
-    .addStyleEntry('tailwind', './assets/css/tailwind.css')
-    .enablePostCssLoader((options) => {
-        autoprefixer: {}
-    })
+    .enablePostCssLoader()
     .copyFiles({
         from: './assets/images',
     })

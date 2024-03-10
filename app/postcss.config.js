@@ -14,6 +14,7 @@ module.exports = {
         // but make sure you install these via npm!
 
         // add browserslist config to package.json (see below)
-        autoprefixer: {}
+        autoprefixer: {},
+        tailwindcss: {}
     }
 }
