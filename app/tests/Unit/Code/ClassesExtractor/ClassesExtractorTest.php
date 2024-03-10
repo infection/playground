@@ -61,8 +61,8 @@ final class ClassesExtractorTest extends TestCase
         $extractedClasses = $this->extractor->extract($code);
 
         foreach ($extractedClasses as $index => $extractedClass) {
-            $this->assertSame($expectedClasses[$index]['className'], $extractedClass->getClassName());
-            $this->assertSame($expectedClasses[$index]['code'], $extractedClass->getCode());
+            self::assertSame($expectedClasses[$index]['className'], $extractedClass->getClassName());
+            self::assertSame($expectedClasses[$index]['code'], $extractedClass->getCode());
         }
     }
 

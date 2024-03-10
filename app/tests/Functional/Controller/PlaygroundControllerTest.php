@@ -45,7 +45,7 @@ class PlaygroundControllerTest extends WebTestCase
         $client->catchExceptions(false);
 
         $client->request('GET', '/');
-        $this->assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertSame(200, $client->getResponse()->getStatusCode());
 
         $client->submitForm('create_example[mutate]', [
             'create_example[code]' => 'code',
@@ -53,8 +53,8 @@ class PlaygroundControllerTest extends WebTestCase
             'create_example[config]' => '{"mutators": {"@default": true}}',
         ]);
 
-        $this->assertSame(302, $client->getResponse()->getStatusCode());
-        $this->assertStringNotContainsString('This value should not be blank', (string) $client->getResponse()->getContent());
+        static::assertSame(302, $client->getResponse()->getStatusCode());
+        static::assertStringNotContainsString('This value should not be blank', (string) $client->getResponse()->getContent());
     }
 
     public function test_it_fails_with_when_code_is_blank(): void
@@ -71,8 +71,8 @@ class PlaygroundControllerTest extends WebTestCase
             'create_example[config]' => '{"mutators": {"@default": true}}',
         ]);
 
-        $this->assertSame(200, $client->getResponse()->getStatusCode());
-        $this->assertStringContainsString('This value should not be blank', (string) $client->getResponse()->getContent());
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertStringContainsString('This value should not be blank', (string) $client->getResponse()->getContent());
     }
 
     public function test_it_fails_with_when_code_is_invalid(): void
@@ -89,8 +89,8 @@ class PlaygroundControllerTest extends WebTestCase
             'create_example[config]' => '{"mutators": {"@default": true}}',
         ]);
 
-        $this->assertSame(200, $client->getResponse()->getStatusCode());
-        $this->assertStringContainsString('This is not a valid PHP code. Errors: Syntax error, unexpected', (string) $client->getResponse()->getContent());
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertStringContainsString('This is not a valid PHP code. Errors: Syntax error, unexpected', (string) $client->getResponse()->getContent());
     }
 
     public function test_it_fails_with_when_test_is_invalid(): void
@@ -107,8 +107,8 @@ class PlaygroundControllerTest extends WebTestCase
             'create_example[config]' => '{"mutators": {"@default": true}}',
         ]);
 
-        $this->assertSame(200, $client->getResponse()->getStatusCode());
-        $this->assertStringContainsString('This is not a valid PHP code. Errors: Syntax error, unexpected', (string) $client->getResponse()->getContent());
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertStringContainsString('This is not a valid PHP code. Errors: Syntax error, unexpected', (string) $client->getResponse()->getContent());
     }
 
     public function test_it_works_with_valid_both_code_and_test(): void
@@ -124,10 +124,10 @@ class PlaygroundControllerTest extends WebTestCase
             'create_example[config]' => '{"mutators": {"@default": true}}',
         ]);
 
-        $this->assertSame(302, $client->getResponse()->getStatusCode());
-        $this->assertStringNotContainsString('Error', (string) $client->getResponse()->getContent());
-        $this->assertStringNotContainsString('This value should be valid JSON', (string) $client->getResponse()->getContent());
-        $this->assertTrue($client->getResponse()->isRedirection());
+        static::assertSame(302, $client->getResponse()->getStatusCode());
+        static::assertStringNotContainsString('Error', (string) $client->getResponse()->getContent());
+        static::assertStringNotContainsString('This value should be valid JSON', (string) $client->getResponse()->getContent());
+        static::assertTrue($client->getResponse()->isRedirection());
     }
 
     public function test_it_fails_when_config_is_not_a_valid_json(): void
@@ -144,9 +144,9 @@ class PlaygroundControllerTest extends WebTestCase
             'create_example[config]' => '{...',
         ]);
 
-        $this->assertSame(200, $client->getResponse()->getStatusCode());
-        $this->assertStringNotContainsString('Error', (string) $client->getResponse()->getContent());
-        $this->assertStringContainsString('This value should be valid JSON', (string) $client->getResponse()->getContent());
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertStringNotContainsString('Error', (string) $client->getResponse()->getContent());
+        static::assertStringContainsString('This value should be valid JSON', (string) $client->getResponse()->getContent());
     }
 
     public function test_it_fails_when_config_contains_not_allowed_property(): void
@@ -162,9 +162,9 @@ class PlaygroundControllerTest extends WebTestCase
             'create_example[config]' => '{"bootstrap": "", "source": {"directories": ["src"]}}',
         ]);
 
-        $this->assertSame(200, $client->getResponse()->getStatusCode());
-        $this->assertStringNotContainsString('Error', (string) $client->getResponse()->getContent());
-        $this->assertStringContainsString('The property bootstrap is not defined and the definition does not allow additional properties', (string) $client->getResponse()->getContent());
-        $this->assertFalse($client->getResponse()->isRedirect());
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertStringNotContainsString('Error', (string) $client->getResponse()->getContent());
+        static::assertStringContainsString('The property bootstrap is not defined and the definition does not allow additional properties', (string) $client->getResponse()->getContent());
+        static::assertFalse($client->getResponse()->isRedirect());
     }
 }

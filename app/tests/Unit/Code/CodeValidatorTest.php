@@ -69,7 +69,7 @@ final class CodeValidatorTest extends TestCase
             $errors
         );
 
-        $this->assertSame($expectedErrors, $actualErrorMessages);
+        self::assertSame($expectedErrors, $actualErrorMessages);
     }
 
     public static function provideCodeExamples(): Generator

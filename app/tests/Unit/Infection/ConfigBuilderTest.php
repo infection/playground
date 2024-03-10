@@ -61,7 +61,7 @@ final class ConfigBuilderTest extends TestCase
     {
         $resultConfig = $this->configBuilder->build($originalConfig);
 
-        $this->assertSame($expectedConfig, json_decode($resultConfig, true));
+        self::assertSame($expectedConfig, json_decode($resultConfig, true));
     }
 
     public static function provideConfigs(): Generator

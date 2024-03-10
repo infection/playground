@@ -62,9 +62,9 @@ final class CodeSanitizerTest extends TestCase
         $sanitizedCode = $this->codeSanitizer->sanitize($originalCode);
 
         if ($expectedSanitizedCode === null) {
-            $this->assertSame($sanitizedCode, $sanitizedCode);
+            self::assertSame($sanitizedCode, $sanitizedCode);
         } else {
-            $this->assertSame($expectedSanitizedCode, $sanitizedCode);
+            self::assertSame($expectedSanitizedCode, $sanitizedCode);
         }
     }
 

@@ -166,9 +166,7 @@ return (new Config())
         'php_unit_test_annotation' => [
             'style' => 'prefix',
         ],
-        'php_unit_test_case_static_method_calls' => [
-            'call_type' => 'this',
-        ],
+        'php_unit_test_case_static_method_calls' => true,
         'phpdoc_no_empty_return' => true,
         'phpdoc_order' => true,
         'phpdoc_summary' => false,

@@ -42,6 +42,6 @@ class UtcTimeZoneTest extends TestCase
 {
     public function test_the_system_uses_utc_timezone(): void
     {
-        $this->assertSame('UTC', date_default_timezone_get());
+        static::assertSame('UTC', date_default_timezone_get());
     }
 }
