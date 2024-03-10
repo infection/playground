@@ -11,50 +11,26 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class CreateExampleRequest
 {
-    /**
-     * @Assert\NotBlank()
-     * @AppAssert\ValidPhpCode()
-     *
-     * @var string
-     */
+    #[AppAssert\ValidPhpCode]
+    #[Assert\NotBlank]
     public $code;
 
-    /**
-     * @Assert\NotBlank()
-     * @AppAssert\ValidPhpCode()
-     *
-     * @var string
-     */
-    public $test;
+    #[AppAssert\ValidPhpCode]
+    #[Assert\NotBlank]
+    public string $test;
 
-    /**
-     * @Assert\NotBlank()
-     * @AppAssert\JsonSchema(schemaFile="infection-config-schema.json")
-     *
-     * @var string
-     */
-    public $config;
+    #[AppAssert\JsonSchema(['schemaFile' => "infection-config-schema.json"])]
+    #[Assert\NotBlank]
+    public string $config;
 
-    /**
-     * @Assert\NotBlank()
-     *
-     * @var string|null
-     */
-    public $infectionVersion = Runner::CURRENT_INFECTION_VERSION;
+    #[Assert\NotBlank]
+    public string|null $infectionVersion = Runner::CURRENT_INFECTION_VERSION;
 
-    /**
-     * @Assert\NotBlank()
-     *
-     * @var string|null
-     */
-    public $phpunitVersion = Runner::CURRENT_PHPUNIT_VERSION;
+    #[Assert\NotBlank]
+    public string|null $phpunitVersion = Runner::CURRENT_PHPUNIT_VERSION;
 
-    /**
-     * @Assert\NotBlank()
-     *
-     * @var string|null
-     */
-    public $phpVersion = Runner::CURRENT_PHP_VERSION;
+    #[Assert\NotBlank]
+    public string|null $phpVersion = Runner::CURRENT_PHP_VERSION;
 
     public static function fromEntity(Example $example): self
     {
