@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello AstController!{% endblock %}
+
+{% block body %}
+    Fill in the PHP code you want to see the AST of:
+
+    {{ include('ast/_form.html.twig') }}
+
+    {% if astRun is defined %}
+        <pre><code class="hljs">&lt;?php {{ clickableNodesDump|raw }}</code></pre>
+
+        <p>Selected code is represented by following abstract syntax tree:</p>
+
+        <div class="row">
+            <div class="col-12">
+                <pre><code class="language-php">{{ simpleNodeDump }}</code></pre>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block javascripts %}
+    {{ encore_entry_script_tags('ast') }}
+{% endblock %}

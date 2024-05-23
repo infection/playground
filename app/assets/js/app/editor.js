@@ -2,7 +2,7 @@ import * as monaco from 'monaco-editor';
 
 let diffEditor;
 
-export function initEditors() {
+export function initMutationEditors() {
     const codeEditor = initCodeEditor();
     const testEditor = initTestEditor();
     const configEditor = initConfigEditor();
@@ -226,6 +226,60 @@ function showDiffEditor(mutator) {
     });
 }
 
+export function initAstEditor() {
+    const loadedCodeElement = document.getElementById('loaded-code');
+    const code = loadedCodeElement !== null
+        ? loadedCodeElement.dataset.code
+        : [
+            '<?php',
+            '',
+            'declare(strict_types=1);',
+            '',
+            'namespace Infected;',
+            '',
+            'class SourceClass',
+            '{',
+            '    public function add(int $a, int $b): int',
+            '    {',
+            '        return $a + $b;',
+            '    }',
+            '}'
+        ].join('\n');
+
+    const editorNode = document.getElementById('editor-code-ast');
+
+    if (!editorNode) {
+        return;
+    }
+
+    const codeEditor = monaco.editor.create(editorNode, {
+        minimap: {
+            enabled: false
+        },
+        value: code,
+        language: 'php'
+    });
+
+    document.getElementById('js-submit').addEventListener(
+        'click',
+        function () {
+            disableButton(this);
+
+            document.getElementById('create_ast_run_code').textContent = codeEditor.getValue();
+            document.getElementsByName("create_ast_run")[0].submit()
+
+            return false;
+        }
+    );
+
+    window.addEventListener('resize', function() {
+        setTimeout(function () {
+            codeEditor.layout();
+        }, 50);
+
+    }, true);
+}
+
 function initCodeEditor() {
     const loadedCodeElement = document.getElementById('loaded-code');
     const code = loadedCodeElement !== null
@@ -246,7 +300,13 @@ function initCodeEditor() {
             '}'
         ].join('\n');
 
-    return monaco.editor.create(document.getElementById('editor-code'), {
+    const editorNode = document.getElementById('editor-code');
+
+    if (!editorNode) {
+        return;
+    }
+
+    const codeEditor = monaco.editor.create(editorNode, {
         minimap: {
             enabled: false
         },
@@ -281,9 +341,15 @@ function initTestEditor() {
             '        self::assertSame(3, $result);',
             '    }',
             '}'
-        ].join('\n')
+        ].join('\n');
 
-    return monaco.editor.create(document.getElementById('editor-test'), {
+    const editorNode = document.getElementById('editor-test');
+
+    if (!editorNode) {
+        return;
+    }
+
+    return monaco.editor.create(editorNode, {
         minimap: {
             enabled: false
         },
@@ -304,7 +370,13 @@ function initConfigEditor() {
             '}'
         ].join('\n');
 
-    return monaco.editor.create(document.getElementById('editor-config'), {
+    const editorNode = document.getElementById('editor-config');
+
+    if (!editorNode) {
+        return;
+    }
+
+    return monaco.editor.create(editorNode, {
         minimap: {
             enabled: false
         },
