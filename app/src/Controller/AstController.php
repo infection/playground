@@ -59,6 +59,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Webmozart\Assert\Assert;
 
 class AstController extends AbstractController
 {
@@ -92,6 +93,8 @@ class AstController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            Assert::notNull($createAstRunRequest->code);
+
             $existingAstRun = $this->astRunRepository->findContentByHash(
                 AstRun::hashInput($createAstRunRequest->code)
             );

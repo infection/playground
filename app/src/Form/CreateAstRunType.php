@@ -45,10 +45,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class CreateAstRunType extends AbstractType
 {
-    /**
-     * @var UrlGeneratorInterface
-     */
-    private $urlGenerator;
+    private UrlGeneratorInterface $urlGenerator;
 
     public function __construct(UrlGeneratorInterface $urlGenerator)
     {

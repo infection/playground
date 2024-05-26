@@ -43,7 +43,7 @@ class CreateAstRunRequest
 {
     #[AppAssert\ValidPhpCode]
     #[Assert\NotBlank]
-    public string $code;
+    public ?string $code = null;
 
     public static function fromEntity(AstRun $astRun): self
     {
