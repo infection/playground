@@ -1,4 +1,59 @@
 <?php
+/**
+ * This code is licensed under the BSD 3-Clause License.
+ *
+ * Copyright (c) 2017, Maks Rafalko
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ * * Redistributions of source code must retain the above copyright notice, this
+ *   list of conditions and the following disclaimer.
+ *
+ * * Redistributions in binary form must reproduce the above copyright notice,
+ *   this list of conditions and the following disclaimer in the documentation
+ *   and/or other materials provided with the distribution.
+ *
+ * * Neither the name of the copyright holder nor the names of its
+ *   contributors may be used to endorse or promote products derived from
+ *   this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * MIT License
+ *
+ * Copyright (c) 2017 RectorPHP
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 declare(strict_types=1);
 
@@ -150,6 +205,7 @@ use PhpParser\Node\UnionType;
 use PhpParser\Node\VariadicPlaceholder;
 use PhpParser\Node\VarLikeIdentifier;
 use PhpParser\PrettyPrinter\Standard;
+use function sprintf;
 
 final class ClickablePrinter extends Standard
 {
@@ -163,11 +219,12 @@ final class ClickablePrinter extends Standard
     protected function pParam(Param $param): string
     {
         $nodeId = $param->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pParam($param)
         );
     }
@@ -175,11 +232,12 @@ final class ClickablePrinter extends Standard
     protected function pArg(Arg $arg): string
     {
         $nodeId = $arg->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pArg($arg)
         );
     }
@@ -187,11 +245,12 @@ final class ClickablePrinter extends Standard
     protected function pVariadicPlaceholder(VariadicPlaceholder $variadicPlaceholder): string
     {
         $nodeId = $variadicPlaceholder->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pVariadicPlaceholder($variadicPlaceholder)
         );
     }
@@ -199,11 +258,12 @@ final class ClickablePrinter extends Standard
     protected function pConst(Const_ $const): string
     {
         $nodeId = $const->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pConst($const)
         );
     }
@@ -211,11 +271,12 @@ final class ClickablePrinter extends Standard
     protected function pNullableType(NullableType $nullableType): string
     {
         $nodeId = $nullableType->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pNullableType($nullableType)
         );
     }
@@ -223,11 +284,12 @@ final class ClickablePrinter extends Standard
     protected function pUnionType(UnionType $unionType): string
     {
         $nodeId = $unionType->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pUnionType($unionType)
         );
     }
@@ -235,11 +297,12 @@ final class ClickablePrinter extends Standard
     protected function pIntersectionType(IntersectionType $intersectionType): string
     {
         $nodeId = $intersectionType->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pIntersectionType($intersectionType)
         );
     }
@@ -247,11 +310,12 @@ final class ClickablePrinter extends Standard
     protected function pIdentifier(Identifier $identifier): string
     {
         $nodeId = $identifier->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pIdentifier($identifier)
         );
     }
@@ -259,11 +323,12 @@ final class ClickablePrinter extends Standard
     protected function pVarLikeIdentifier(VarLikeIdentifier $varLikeIdentifier): string
     {
         $nodeId = $varLikeIdentifier->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pVarLikeIdentifier($varLikeIdentifier)
         );
     }
@@ -271,11 +336,12 @@ final class ClickablePrinter extends Standard
     protected function pAttribute(Attribute $attribute): string
     {
         $nodeId = $attribute->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pAttribute($attribute)
         );
     }
@@ -283,11 +349,12 @@ final class ClickablePrinter extends Standard
     protected function pAttributeGroup(AttributeGroup $attributeGroup): string
     {
         $nodeId = $attributeGroup->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pAttributeGroup($attributeGroup)
         );
     }
@@ -295,11 +362,12 @@ final class ClickablePrinter extends Standard
     protected function pName(Name $name): string
     {
         $nodeId = $name->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pName($name)
         );
     }
@@ -307,11 +375,12 @@ final class ClickablePrinter extends Standard
     protected function pName_FullyQualified(FullyQualified $fullyQualified): string
     {
         $nodeId = $fullyQualified->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pName_FullyQualified($fullyQualified)
         );
     }
@@ -319,11 +388,12 @@ final class ClickablePrinter extends Standard
     protected function pName_Relative(Relative $relative): string
     {
         $nodeId = $relative->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pName_Relative($relative)
         );
     }
@@ -331,11 +401,12 @@ final class ClickablePrinter extends Standard
     protected function pScalar_MagicConst_Class(Class_ $class): string
     {
         $nodeId = $class->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pScalar_MagicConst_Class($class)
         );
     }
@@ -343,11 +414,12 @@ final class ClickablePrinter extends Standard
     protected function pScalar_MagicConst_Dir(Dir $dir): string
     {
         $nodeId = $dir->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pScalar_MagicConst_Dir($dir)
         );
     }
@@ -355,11 +427,12 @@ final class ClickablePrinter extends Standard
     protected function pScalar_MagicConst_File(File $file): string
     {
         $nodeId = $file->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pScalar_MagicConst_File($file)
         );
     }
@@ -367,11 +440,12 @@ final class ClickablePrinter extends Standard
     protected function pScalar_MagicConst_Function(Function_ $function): string
     {
         $nodeId = $function->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pScalar_MagicConst_Function($function)
         );
     }
@@ -379,11 +453,12 @@ final class ClickablePrinter extends Standard
     protected function pScalar_MagicConst_Line(Line $line): string
     {
         $nodeId = $line->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pScalar_MagicConst_Line($line)
         );
     }
@@ -391,11 +466,12 @@ final class ClickablePrinter extends Standard
     protected function pScalar_MagicConst_Method(Method $method): string
     {
         $nodeId = $method->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pScalar_MagicConst_Method($method)
         );
     }
@@ -403,11 +479,12 @@ final class ClickablePrinter extends Standard
     protected function pScalar_MagicConst_Namespace(Namespace_ $namespace): string
     {
         $nodeId = $namespace->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pScalar_MagicConst_Namespace($namespace)
         );
     }
@@ -415,11 +492,12 @@ final class ClickablePrinter extends Standard
     protected function pScalar_MagicConst_Trait(Trait_ $trait): string
     {
         $nodeId = $trait->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pScalar_MagicConst_Trait($trait)
         );
     }
@@ -427,11 +505,12 @@ final class ClickablePrinter extends Standard
     protected function pScalar_String(String_ $string): string
     {
         $nodeId = $string->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pScalar_String($string)
         );
     }
@@ -439,11 +518,12 @@ final class ClickablePrinter extends Standard
     protected function pScalar_Encapsed(Encapsed $encapsed): string
     {
         $nodeId = $encapsed->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pScalar_Encapsed($encapsed)
         );
     }
@@ -451,11 +531,12 @@ final class ClickablePrinter extends Standard
     protected function pScalar_LNumber(LNumber $lNumber): string
     {
         $nodeId = $lNumber->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pScalar_LNumber($lNumber)
         );
     }
@@ -463,11 +544,12 @@ final class ClickablePrinter extends Standard
     protected function pScalar_DNumber(DNumber $dNumber): string
     {
         $nodeId = $dNumber->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pScalar_DNumber($dNumber)
         );
     }
@@ -475,11 +557,12 @@ final class ClickablePrinter extends Standard
     protected function pScalar_EncapsedStringPart(EncapsedStringPart $encapsedStringPart): string
     {
         $nodeId = $encapsedStringPart->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pScalar_EncapsedStringPart($encapsedStringPart)
         );
     }
@@ -495,11 +578,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_AssignRef(AssignRef $assignRef): string
     {
         $nodeId = $assignRef->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_AssignRef($assignRef)
         );
     }
@@ -507,11 +591,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_AssignOp_Plus(Plus $plus): string
     {
         $nodeId = $plus->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_AssignOp_Plus($plus)
         );
     }
@@ -519,11 +604,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_AssignOp_Minus(Minus $minus): string
     {
         $nodeId = $minus->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_AssignOp_Minus($minus)
         );
     }
@@ -531,11 +617,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_AssignOp_Mul(Mul $mul): string
     {
         $nodeId = $mul->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_AssignOp_Mul($mul)
         );
     }
@@ -543,11 +630,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_AssignOp_Div(Div $div): string
     {
         $nodeId = $div->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_AssignOp_Div($div)
         );
     }
@@ -555,11 +643,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_AssignOp_Concat(Concat $concat): string
     {
         $nodeId = $concat->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_AssignOp_Concat($concat)
         );
     }
@@ -567,11 +656,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_AssignOp_Mod(Mod $mod): string
     {
         $nodeId = $mod->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_AssignOp_Mod($mod)
         );
     }
@@ -579,11 +669,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_AssignOp_BitwiseAnd(BitwiseAnd $bitwiseAnd): string
     {
         $nodeId = $bitwiseAnd->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_AssignOp_BitwiseAnd($bitwiseAnd)
         );
     }
@@ -591,11 +682,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_AssignOp_BitwiseOr(BitwiseOr $bitwiseOr): string
     {
         $nodeId = $bitwiseOr->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_AssignOp_BitwiseOr($bitwiseOr)
         );
     }
@@ -603,11 +695,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_AssignOp_BitwiseXor(BitwiseXor $bitwiseXor): string
     {
         $nodeId = $bitwiseXor->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_AssignOp_BitwiseXor($bitwiseXor)
         );
     }
@@ -615,11 +708,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_AssignOp_ShiftLeft(ShiftLeft $shiftLeft): string
     {
         $nodeId = $shiftLeft->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_AssignOp_ShiftLeft($shiftLeft)
         );
     }
@@ -627,11 +721,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_AssignOp_ShiftRight(ShiftRight $shiftRight): string
     {
         $nodeId = $shiftRight->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_AssignOp_ShiftRight($shiftRight)
         );
     }
@@ -639,11 +734,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_AssignOp_Pow(Pow $pow): string
     {
         $nodeId = $pow->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_AssignOp_Pow($pow)
         );
     }
@@ -651,83 +747,90 @@ final class ClickablePrinter extends Standard
     protected function pExpr_AssignOp_Coalesce(Coalesce $coalesce): string
     {
         $nodeId = $coalesce->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_AssignOp_Coalesce($coalesce)
         );
     }
 
-    protected function pExpr_BinaryOp_Plus(\PhpParser\Node\Expr\BinaryOp\Plus $plus): string
+    protected function pExpr_BinaryOp_Plus(Node\Expr\BinaryOp\Plus $plus): string
     {
         $nodeId = $plus->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_BinaryOp_Plus($plus)
         );
     }
 
-    protected function pExpr_BinaryOp_Minus(\PhpParser\Node\Expr\BinaryOp\Minus $minus): string
+    protected function pExpr_BinaryOp_Minus(Node\Expr\BinaryOp\Minus $minus): string
     {
         $nodeId = $minus->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_BinaryOp_Minus($minus)
         );
     }
 
-    protected function pExpr_BinaryOp_Mul(\PhpParser\Node\Expr\BinaryOp\Mul $mul): string
+    protected function pExpr_BinaryOp_Mul(Node\Expr\BinaryOp\Mul $mul): string
     {
         $nodeId = $mul->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_BinaryOp_Mul($mul)
         );
     }
 
-    protected function pExpr_BinaryOp_Div(\PhpParser\Node\Expr\BinaryOp\Div $div): string
+    protected function pExpr_BinaryOp_Div(Node\Expr\BinaryOp\Div $div): string
     {
         $nodeId = $div->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_BinaryOp_Div($div)
         );
     }
 
-    protected function pExpr_BinaryOp_Concat(\PhpParser\Node\Expr\BinaryOp\Concat $concat): string
+    protected function pExpr_BinaryOp_Concat(Node\Expr\BinaryOp\Concat $concat): string
     {
         $nodeId = $concat->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_BinaryOp_Concat($concat)
         );
     }
 
-    protected function pExpr_BinaryOp_Mod(\PhpParser\Node\Expr\BinaryOp\Mod $mod): string
+    protected function pExpr_BinaryOp_Mod(Node\Expr\BinaryOp\Mod $mod): string
     {
         $nodeId = $mod->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_BinaryOp_Mod($mod)
         );
     }
@@ -735,11 +838,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_BinaryOp_BooleanAnd(BooleanAnd $booleanAnd): string
     {
         $nodeId = $booleanAnd->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_BinaryOp_BooleanAnd($booleanAnd)
         );
     }
@@ -747,83 +851,90 @@ final class ClickablePrinter extends Standard
     protected function pExpr_BinaryOp_BooleanOr(BooleanOr $booleanOr): string
     {
         $nodeId = $booleanOr->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_BinaryOp_BooleanOr($booleanOr)
         );
     }
 
-    protected function pExpr_BinaryOp_BitwiseAnd(\PhpParser\Node\Expr\BinaryOp\BitwiseAnd $bitwiseAnd): string
+    protected function pExpr_BinaryOp_BitwiseAnd(Node\Expr\BinaryOp\BitwiseAnd $bitwiseAnd): string
     {
         $nodeId = $bitwiseAnd->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_BinaryOp_BitwiseAnd($bitwiseAnd)
         );
     }
 
-    protected function pExpr_BinaryOp_BitwiseOr(\PhpParser\Node\Expr\BinaryOp\BitwiseOr $bitwiseOr): string
+    protected function pExpr_BinaryOp_BitwiseOr(Node\Expr\BinaryOp\BitwiseOr $bitwiseOr): string
     {
         $nodeId = $bitwiseOr->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_BinaryOp_BitwiseOr($bitwiseOr)
         );
     }
 
-    protected function pExpr_BinaryOp_BitwiseXor(\PhpParser\Node\Expr\BinaryOp\BitwiseXor $bitwiseXor): string
+    protected function pExpr_BinaryOp_BitwiseXor(Node\Expr\BinaryOp\BitwiseXor $bitwiseXor): string
     {
         $nodeId = $bitwiseXor->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_BinaryOp_BitwiseXor($bitwiseXor)
         );
     }
 
-    protected function pExpr_BinaryOp_ShiftLeft(\PhpParser\Node\Expr\BinaryOp\ShiftLeft $shiftLeft): string
+    protected function pExpr_BinaryOp_ShiftLeft(Node\Expr\BinaryOp\ShiftLeft $shiftLeft): string
     {
         $nodeId = $shiftLeft->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_BinaryOp_ShiftLeft($shiftLeft)
         );
     }
 
-    protected function pExpr_BinaryOp_ShiftRight(\PhpParser\Node\Expr\BinaryOp\ShiftRight $shiftRight): string
+    protected function pExpr_BinaryOp_ShiftRight(Node\Expr\BinaryOp\ShiftRight $shiftRight): string
     {
         $nodeId = $shiftRight->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_BinaryOp_ShiftRight($shiftRight)
         );
     }
 
-    protected function pExpr_BinaryOp_Pow(\PhpParser\Node\Expr\BinaryOp\Pow $pow): string
+    protected function pExpr_BinaryOp_Pow(Node\Expr\BinaryOp\Pow $pow): string
     {
         $nodeId = $pow->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_BinaryOp_Pow($pow)
         );
     }
@@ -831,11 +942,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_BinaryOp_LogicalAnd(LogicalAnd $logicalAnd): string
     {
         $nodeId = $logicalAnd->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_BinaryOp_LogicalAnd($logicalAnd)
         );
     }
@@ -843,11 +955,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_BinaryOp_LogicalOr(LogicalOr $logicalOr): string
     {
         $nodeId = $logicalOr->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_BinaryOp_LogicalOr($logicalOr)
         );
     }
@@ -995,7 +1108,7 @@ final class ClickablePrinter extends Standard
         return $this->pInfixOp(SmallerOrEqual::class, $smallerOrEqual->left, $link, $smallerOrEqual->right);
     }
 
-    protected function pExpr_BinaryOp_Coalesce(\PhpParser\Node\Expr\BinaryOp\Coalesce $coalesce): string
+    protected function pExpr_BinaryOp_Coalesce(Node\Expr\BinaryOp\Coalesce $coalesce): string
     {
         $nodeId = $coalesce->getAttribute(AttributeKey::NODE_ID);
 
@@ -1006,17 +1119,18 @@ final class ClickablePrinter extends Standard
             $this->activeNodeId
         );
 
-        return $this->pInfixOp(\PhpParser\Node\Expr\BinaryOp\Coalesce::class, $coalesce->left, $link, $coalesce->right);
+        return $this->pInfixOp(Node\Expr\BinaryOp\Coalesce::class, $coalesce->left, $link, $coalesce->right);
     }
 
     protected function pExpr_Instanceof(Instanceof_ $instanceof): string
     {
         $nodeId = $instanceof->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Instanceof($instanceof)
         );
     }
@@ -1024,11 +1138,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_BooleanNot(BooleanNot $booleanNot): string
     {
         $nodeId = $booleanNot->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_BooleanNot($booleanNot)
         );
     }
@@ -1036,11 +1151,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_BitwiseNot(BitwiseNot $bitwiseNot): string
     {
         $nodeId = $bitwiseNot->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_BitwiseNot($bitwiseNot)
         );
     }
@@ -1048,11 +1164,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_UnaryMinus(UnaryMinus $unaryMinus): string
     {
         $nodeId = $unaryMinus->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_UnaryMinus($unaryMinus)
         );
     }
@@ -1060,11 +1177,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_UnaryPlus(UnaryPlus $unaryPlus): string
     {
         $nodeId = $unaryPlus->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_UnaryPlus($unaryPlus)
         );
     }
@@ -1072,11 +1190,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_PreInc(PreInc $preInc): string
     {
         $nodeId = $preInc->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_PreInc($preInc)
         );
     }
@@ -1084,11 +1203,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_PreDec(PreDec $preDec): string
     {
         $nodeId = $preDec->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_PreDec($preDec)
         );
     }
@@ -1096,11 +1216,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_PostInc(PostInc $postInc): string
     {
         $nodeId = $postInc->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_PostInc($postInc)
         );
     }
@@ -1108,11 +1229,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_PostDec(PostDec $postDec): string
     {
         $nodeId = $postDec->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_PostDec($postDec)
         );
     }
@@ -1120,11 +1242,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_ErrorSuppress(ErrorSuppress $errorSuppress): string
     {
         $nodeId = $errorSuppress->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_ErrorSuppress($errorSuppress)
         );
     }
@@ -1132,11 +1255,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_YieldFrom(YieldFrom $yieldFrom): string
     {
         $nodeId = $yieldFrom->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_YieldFrom($yieldFrom)
         );
     }
@@ -1144,11 +1268,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_Print(Print_ $print): string
     {
         $nodeId = $print->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Print($print)
         );
     }
@@ -1156,11 +1281,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_Cast_Int(Int_ $int): string
     {
         $nodeId = $int->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Cast_Int($int)
         );
     }
@@ -1168,23 +1294,25 @@ final class ClickablePrinter extends Standard
     protected function pExpr_Cast_Double(Double $double): string
     {
         $nodeId = $double->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Cast_Double($double)
         );
     }
 
-    protected function pExpr_Cast_String(\PhpParser\Node\Expr\Cast\String_ $string): string
+    protected function pExpr_Cast_String(Node\Expr\Cast\String_ $string): string
     {
         $nodeId = $string->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Cast_String($string)
         );
     }
@@ -1192,11 +1320,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_Cast_Array(Array_ $array): string
     {
         $nodeId = $array->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Cast_Array($array)
         );
     }
@@ -1204,11 +1333,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_Cast_Object(Object_ $object): string
     {
         $nodeId = $object->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Cast_Object($object)
         );
     }
@@ -1216,11 +1346,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_Cast_Bool(Bool_ $bool): string
     {
         $nodeId = $bool->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Cast_Bool($bool)
         );
     }
@@ -1228,11 +1359,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_Cast_Unset(Unset_ $unset): string
     {
         $nodeId = $unset->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Cast_Unset($unset)
         );
     }
@@ -1240,11 +1372,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_FuncCall(FuncCall $funcCall): string
     {
         $nodeId = $funcCall->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_FuncCall($funcCall)
         );
     }
@@ -1260,7 +1393,7 @@ final class ClickablePrinter extends Standard
             '<a href="/ast/%s/%s" %s>-></a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
         );
 
         return $this->pDereferenceLhs($methodCall->var) . $link . $this->pObjectProperty($methodCall->name)
@@ -1270,11 +1403,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_NullsafeMethodCall(NullsafeMethodCall $nullsafeMethodCall): string
     {
         $nodeId = $nullsafeMethodCall->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_NullsafeMethodCall($nullsafeMethodCall)
         );
     }
@@ -1282,11 +1416,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_StaticCall(StaticCall $staticCall): string
     {
         $nodeId = $staticCall->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_StaticCall($staticCall)
         );
     }
@@ -1294,11 +1429,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_Empty(Empty_ $empty): string
     {
         $nodeId = $empty->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Empty($empty)
         );
     }
@@ -1306,11 +1442,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_Isset(Isset_ $isset): string
     {
         $nodeId = $isset->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Isset($isset)
         );
     }
@@ -1318,11 +1455,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_Eval(Eval_ $eval): string
     {
         $nodeId = $eval->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Eval($eval)
         );
     }
@@ -1330,11 +1468,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_Include(Include_ $include): string
     {
         $nodeId = $include->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Include($include)
         );
     }
@@ -1342,11 +1481,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_List(List_ $list): string
     {
         $nodeId = $list->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_List($list)
         );
     }
@@ -1354,11 +1494,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_Error(Error $error): string
     {
         $nodeId = $error->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Error($error)
         );
     }
@@ -1366,23 +1507,25 @@ final class ClickablePrinter extends Standard
     protected function pExpr_Variable(Variable $variable): string
     {
         $nodeId = $variable->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Variable($variable)
         );
     }
 
-    protected function pExpr_Array(\PhpParser\Node\Expr\Array_ $array): string
+    protected function pExpr_Array(Node\Expr\Array_ $array): string
     {
         $nodeId = $array->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Array($array)
         );
     }
@@ -1390,11 +1533,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_ArrayItem(ArrayItem $arrayItem): string
     {
         $nodeId = $arrayItem->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_ArrayItem($arrayItem)
         );
     }
@@ -1402,11 +1546,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_ArrayDimFetch(ArrayDimFetch $arrayDimFetch): string
     {
         $nodeId = $arrayDimFetch->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_ArrayDimFetch($arrayDimFetch)
         );
     }
@@ -1414,11 +1559,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_ConstFetch(ConstFetch $constFetch): string
     {
         $nodeId = $constFetch->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_ConstFetch($constFetch)
         );
     }
@@ -1431,7 +1577,7 @@ final class ClickablePrinter extends Standard
             '<a href="/ast/%s/%s" %s>::</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
         );
 
         return $this->pStaticDereferenceLhs($classConstFetch->class) . $link . $this->pObjectProperty(
@@ -1450,11 +1596,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_NullsafePropertyFetch(NullsafePropertyFetch $nullsafePropertyFetch): string
     {
         $nodeId = $nullsafePropertyFetch->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_NullsafePropertyFetch($nullsafePropertyFetch)
         );
     }
@@ -1462,11 +1609,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_StaticPropertyFetch(StaticPropertyFetch $staticPropertyFetch): string
     {
         $nodeId = $staticPropertyFetch->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_StaticPropertyFetch($staticPropertyFetch)
         );
     }
@@ -1474,11 +1622,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_ShellExec(ShellExec $shellExec): string
     {
         $nodeId = $shellExec->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_ShellExec($shellExec)
         );
     }
@@ -1486,11 +1635,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_Closure(Closure $node): string
     {
         $nodeId = $node->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Closure($node)
         );
     }
@@ -1498,11 +1648,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_Match(Match_ $match): string
     {
         $nodeId = $match->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Match($match)
         );
     }
@@ -1510,11 +1661,12 @@ final class ClickablePrinter extends Standard
     protected function pMatchArm(MatchArm $matchArm): string
     {
         $nodeId = $matchArm->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pMatchArm($matchArm)
         );
     }
@@ -1522,11 +1674,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_ArrowFunction(ArrowFunction $arrowFunction): string
     {
         $nodeId = $arrowFunction->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_ArrowFunction($arrowFunction)
         );
     }
@@ -1534,11 +1687,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_ClosureUse(ClosureUse $node): string
     {
         $nodeId = $node->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_ClosureUse($node)
         );
     }
@@ -1546,11 +1700,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_New(New_ $new): string
     {
         $nodeId = $new->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_New($new)
         );
     }
@@ -1558,11 +1713,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_Clone(Clone_ $clone): string
     {
         $nodeId = $clone->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Clone($clone)
         );
     }
@@ -1570,11 +1726,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_Ternary(Ternary $ternary): string
     {
         $nodeId = $ternary->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Ternary($ternary)
         );
     }
@@ -1582,11 +1739,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_Exit(Exit_ $exit): string
     {
         $nodeId = $exit->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Exit($exit)
         );
     }
@@ -1594,11 +1752,12 @@ final class ClickablePrinter extends Standard
     protected function pExpr_Throw(Throw_ $throw): string
     {
         $nodeId = $throw->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Throw($throw)
         );
     }
@@ -1606,23 +1765,25 @@ final class ClickablePrinter extends Standard
     protected function pExpr_Yield(Yield_ $yield): string
     {
         $nodeId = $yield->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pExpr_Yield($yield)
         );
     }
 
-    protected function pStmt_Namespace(\PhpParser\Node\Stmt\Namespace_ $namespace): string
+    protected function pStmt_Namespace(Node\Stmt\Namespace_ $namespace): string
     {
         $nodeId = $namespace->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Namespace($namespace)
         );
     }
@@ -1630,11 +1791,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Use(Use_ $use): string
     {
         $nodeId = $use->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Use($use)
         );
     }
@@ -1642,11 +1804,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_GroupUse(GroupUse $groupUse): string
     {
         $nodeId = $groupUse->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_GroupUse($groupUse)
         );
     }
@@ -1654,11 +1817,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_UseUse(UseUse $useUse): string
     {
         $nodeId = $useUse->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_UseUse($useUse)
         );
     }
@@ -1666,11 +1830,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Interface(Interface_ $interface): string
     {
         $nodeId = $interface->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Interface($interface)
         );
     }
@@ -1678,35 +1843,38 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Enum(Enum_ $enum): string
     {
         $nodeId = $enum->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Enum($enum)
         );
     }
 
-    protected function pStmt_Class(\PhpParser\Node\Stmt\Class_ $class): string
+    protected function pStmt_Class(Node\Stmt\Class_ $class): string
     {
         $nodeId = $class->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Class($class)
         );
     }
 
-    protected function pStmt_Trait(\PhpParser\Node\Stmt\Trait_ $trait): string
+    protected function pStmt_Trait(Node\Stmt\Trait_ $trait): string
     {
         $nodeId = $trait->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Trait($trait)
         );
     }
@@ -1714,11 +1882,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_EnumCase(EnumCase $enumCase): string
     {
         $nodeId = $enumCase->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_EnumCase($enumCase)
         );
     }
@@ -1726,11 +1895,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_TraitUse(TraitUse $traitUse): string
     {
         $nodeId = $traitUse->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_TraitUse($traitUse)
         );
     }
@@ -1738,11 +1908,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_TraitUseAdaptation_Precedence(Precedence $precedence): string
     {
         $nodeId = $precedence->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_TraitUseAdaptation_Precedence($precedence)
         );
     }
@@ -1750,11 +1921,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_TraitUseAdaptation_Alias(Alias $alias): string
     {
         $nodeId = $alias->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_TraitUseAdaptation_Alias($alias)
         );
     }
@@ -1762,11 +1934,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Property(Property $property): string
     {
         $nodeId = $property->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Property($property)
         );
     }
@@ -1774,11 +1947,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_PropertyProperty(PropertyProperty $propertyProperty): string
     {
         $nodeId = $propertyProperty->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_PropertyProperty($propertyProperty)
         );
     }
@@ -1786,11 +1960,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_ClassMethod(ClassMethod $classMethod): string
     {
         $nodeId = $classMethod->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_ClassMethod($classMethod)
         );
     }
@@ -1798,35 +1973,38 @@ final class ClickablePrinter extends Standard
     protected function pStmt_ClassConst(ClassConst $classConst): string
     {
         $nodeId = $classConst->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_ClassConst($classConst)
         );
     }
 
-    protected function pStmt_Function(\PhpParser\Node\Stmt\Function_ $function): string
+    protected function pStmt_Function(Node\Stmt\Function_ $function): string
     {
         $nodeId = $function->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Function($function)
         );
     }
 
-    protected function pStmt_Const(\PhpParser\Node\Stmt\Const_ $const): string
+    protected function pStmt_Const(Node\Stmt\Const_ $const): string
     {
         $nodeId = $const->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Const($const)
         );
     }
@@ -1834,11 +2012,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Declare(Declare_ $declare): string
     {
         $nodeId = $declare->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Declare($declare)
         );
     }
@@ -1846,11 +2025,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_DeclareDeclare(DeclareDeclare $declareDeclare): string
     {
         $nodeId = $declareDeclare->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_DeclareDeclare($declareDeclare)
         );
     }
@@ -1858,11 +2038,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_If(If_ $if): string
     {
         $nodeId = $if->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_If($if)
         );
     }
@@ -1870,11 +2051,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_ElseIf(ElseIf_ $elseIf): string
     {
         $nodeId = $elseIf->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_ElseIf($elseIf)
         );
     }
@@ -1882,11 +2064,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Else(Else_ $else): string
     {
         $nodeId = $else->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Else($else)
         );
     }
@@ -1894,11 +2077,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_For(For_ $for): string
     {
         $nodeId = $for->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_For($for)
         );
     }
@@ -1906,11 +2090,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Foreach(Foreach_ $foreach): string
     {
         $nodeId = $foreach->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Foreach($foreach)
         );
     }
@@ -1918,11 +2103,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_While(While_ $while): string
     {
         $nodeId = $while->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_While($while)
         );
     }
@@ -1930,11 +2116,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Do(Do_ $do): string
     {
         $nodeId = $do->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Do($do)
         );
     }
@@ -1942,11 +2129,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Switch(Switch_ $switch): string
     {
         $nodeId = $switch->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Switch($switch)
         );
     }
@@ -1954,11 +2142,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Case(Case_ $case): string
     {
         $nodeId = $case->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Case($case)
         );
     }
@@ -1966,11 +2155,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_TryCatch(TryCatch $tryCatch): string
     {
         $nodeId = $tryCatch->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_TryCatch($tryCatch)
         );
     }
@@ -1978,11 +2168,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Catch(Catch_ $catch): string
     {
         $nodeId = $catch->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Catch($catch)
         );
     }
@@ -1990,11 +2181,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Finally(Finally_ $finally): string
     {
         $nodeId = $finally->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Finally($finally)
         );
     }
@@ -2002,11 +2194,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Break(Break_ $break): string
     {
         $nodeId = $break->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Break($break)
         );
     }
@@ -2014,11 +2207,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Continue(Continue_ $continue): string
     {
         $nodeId = $continue->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Continue($continue)
         );
     }
@@ -2026,23 +2220,25 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Return(Return_ $return): string
     {
         $nodeId = $return->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Return($return)
         );
     }
 
-    protected function pStmt_Throw(\PhpParser\Node\Stmt\Throw_ $throw): string
+    protected function pStmt_Throw(Node\Stmt\Throw_ $throw): string
     {
         $nodeId = $throw->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Throw($throw)
         );
     }
@@ -2050,11 +2246,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Label(Label $label): string
     {
         $nodeId = $label->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Label($label)
         );
     }
@@ -2062,11 +2259,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Goto(Goto_ $goto): string
     {
         $nodeId = $goto->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Goto($goto)
         );
     }
@@ -2074,11 +2272,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Expression(Expression $expression): string
     {
         $nodeId = $expression->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Expression($expression)
         );
     }
@@ -2086,11 +2285,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Echo(Echo_ $echo): string
     {
         $nodeId = $echo->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Echo($echo)
         );
     }
@@ -2098,11 +2298,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Static(Static_ $static): string
     {
         $nodeId = $static->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Static($static)
         );
     }
@@ -2110,11 +2311,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Global(Global_ $global): string
     {
         $nodeId = $global->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Global($global)
         );
     }
@@ -2122,23 +2324,25 @@ final class ClickablePrinter extends Standard
     protected function pStmt_StaticVar(StaticVar $staticVar): string
     {
         $nodeId = $staticVar->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_StaticVar($staticVar)
         );
     }
 
-    protected function pStmt_Unset(\PhpParser\Node\Stmt\Unset_ $unset): string
+    protected function pStmt_Unset(Node\Stmt\Unset_ $unset): string
     {
         $nodeId = $unset->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Unset($unset)
         );
     }
@@ -2146,11 +2350,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_InlineHTML(InlineHTML $inlineHTML): string
     {
         $nodeId = $inlineHTML->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_InlineHTML($inlineHTML)
         );
     }
@@ -2158,11 +2363,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_HaltCompiler(HaltCompiler $haltCompiler): string
     {
         $nodeId = $haltCompiler->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_HaltCompiler($haltCompiler)
         );
     }
@@ -2170,11 +2376,12 @@ final class ClickablePrinter extends Standard
     protected function pStmt_Nop(Nop $nop): string
     {
         $nodeId = $nop->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pStmt_Nop($nop)
         );
     }
@@ -2182,11 +2389,12 @@ final class ClickablePrinter extends Standard
     protected function pObjectProperty($node): string
     {
         $nodeId = $node->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pObjectProperty($node)
         );
     }
@@ -2194,11 +2402,12 @@ final class ClickablePrinter extends Standard
     protected function pDereferenceLhs(Node $node): string
     {
         $nodeId = $node->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pDereferenceLhs($node)
         );
     }
@@ -2206,11 +2415,12 @@ final class ClickablePrinter extends Standard
     protected function pCallLhs(Node $node): string
     {
         $nodeId = $node->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pCallLhs($node)
         );
     }
@@ -2218,11 +2428,12 @@ final class ClickablePrinter extends Standard
     protected function pNewVariable(Node $node): string
     {
         $nodeId = $node->getAttribute(AttributeKey::NODE_ID);
+
         return sprintf(
             '<a href="/ast/%s/%s" %s>%s</a>',
             $this->idHash,
             $nodeId,
-            $this->activeNodeId == $nodeId ? 'class="active-node"' : '',
+            $this->activeNodeId === $nodeId ? 'class="active-node"' : '',
             parent::pNewVariable($node)
         );
     }

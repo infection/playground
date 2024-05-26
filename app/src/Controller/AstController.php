@@ -35,29 +35,17 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Code\CodeSanitizer;
 use App\Entity\AstRun;
-use App\Entity\Example;
 use App\Form\CreateAstRunType;
-use App\Form\CreateExampleType;
-use App\Html\Ansi\AnsiToHtmlConverter;
-use App\Html\Ansi\InfectionAnsiHtmlTheme;
-use App\Infection\ConfigBuilder;
-use App\Infection\Runner;
 use App\PhpParser\ClickablePrinter;
 use App\PhpParser\NodeResolver\FocusedNodeResolver;
 use App\PhpParser\SimpleNodeDumper;
 use App\PhpParser\SimplePhpParser;
 use App\Repository\AstRunRepository;
-use App\Repository\ExampleRepository;
 use App\Request\CreateAstRunRequest;
-use App\Request\CreateExampleRequest;
 use Doctrine\ORM\EntityManagerInterface;
 use Hashids\Hashids;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
+use function is_int;
 use PhpParser\Node;
 use PhpParser\Node\Attribute;
 use PhpParser\Node\AttributeGroup;
@@ -67,7 +55,10 @@ use PhpParser\Node\Name;
 use PhpParser\Node\Param;
 use PhpParser\Node\Stmt;
 use PhpParser\Node\Stmt\UseUse;
-use function is_int;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
 
 class AstController extends AbstractController
 {
@@ -91,7 +82,7 @@ class AstController extends AbstractController
         ]);
     }
 
-    #[Route('/r', name: 'app_ast_create', methods: ['POST'])]
+    #[Route('/ast', name: 'app_ast_create', methods: ['POST'])]
     public function createExample(Request $request, EntityManagerInterface $em): Response
     {
         $createAstRunRequest = new CreateAstRunRequest();
@@ -124,12 +115,12 @@ class AstController extends AbstractController
 
         return $this->render('ast/create.html.twig', [
             'form' => $form->createView(),
-            'example' => $createAstRunRequest,
+            'astRun' => $createAstRunRequest,
         ]);
     }
 
     #[Route('/ast/{astRunIdHash}/{activeNodeId}', name: 'app_ast_display', defaults: ['activeNodeId' => null], methods: ['GET'])]
-    public function displayExample(EntityManagerInterface $em, string $astRunIdHash, int|null $activeNodeId = null): Response
+    public function displayExample(EntityManagerInterface $em, string $astRunIdHash, ?int $activeNodeId = null): Response
     {
         /** @var AstRun|null $astRun */
         $astRun = $em->find(AstRun::class, $this->hashids->decode($astRunIdHash)[0]);
@@ -161,6 +152,7 @@ class AstController extends AbstractController
             'astRun' => $createAstRequest,
             'clickableNodesDump' => $this->makeNodeClickable($nodes, $astRunIdHash, $activeNodeId),
             'simpleNodeDump' => $simpleNodeDump,
+            'targetNodeClass' => $targetNodeClass,
         ]);
     }
 
@@ -177,13 +169,18 @@ class AstController extends AbstractController
     private function resolveTargetNodeClass(Node $node): string
     {
         if ($node instanceof UseUse || $node instanceof AttributeGroup) {
+            /** @var Node $parentNode */
             $parentNode = $node->getAttribute('parent');
+
             return $parentNode::class;
         }
 
         if ($node instanceof Attribute) {
+            /** @var Node $attributeGroup */
             $attributeGroup = $node->getAttribute('parent');
+            /** @var Node $stmt */
             $stmt = $attributeGroup->getAttribute('parent');
+
             return $stmt::class;
         }
 
@@ -202,7 +199,9 @@ class AstController extends AbstractController
 
         // target one level up
         if ($node instanceof Identifier || $node instanceof Name || $node instanceof Variable) {
+            /** @var Node $parentNode */
             $parentNode = $node->getAttribute('parent');
+
             return $this->resolveTargetNodeClass($parentNode);
         }
 

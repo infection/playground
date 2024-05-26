@@ -8,6 +8,7 @@ parameters:
         - tests/
     excludePaths:
         - src/Html/Ansi/*
+        - src/PhpParser/*
     ignoreErrors:
         - '#Access to an undefined property Symfony\\Component\\Validator\\Constraint::\$(.*?)#'
         - '#^Property App\\Entity\\(.*):\$id is never written, only read.$#'

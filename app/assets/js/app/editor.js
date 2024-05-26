@@ -233,17 +233,10 @@ export function initAstEditor() {
         : [
             '<?php',
             '',
-            'declare(strict_types=1);',
-            '',
-            'namespace Infected;',
-            '',
-            'class SourceClass',
+            'function add(int $a, int $b): int',
             '{',
-            '    public function add(int $a, int $b): int',
-            '    {',
-            '        return $a + $b;',
-            '    }',
-            '}'
+            '    return $a + $b;',
+            '}',
         ].join('\n');
 
     const editorNode = document.getElementById('editor-code-ast');
@@ -306,7 +299,7 @@ function initCodeEditor() {
         return;
     }
 
-    const codeEditor = monaco.editor.create(editorNode, {
+    return monaco.editor.create(editorNode, {
         minimap: {
             enabled: false
         },

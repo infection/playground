@@ -91,4 +91,19 @@ class AstRun
     {
         return md5($code);
     }
+
+    public function getCreatedAt(): DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+
+    public function getIdHash(): ?string
+    {
+        return $this->idHash;
+    }
+
+    public function getInputHash(): string
+    {
+        return $this->inputHash;
+    }
 }

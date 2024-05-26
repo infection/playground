@@ -1,25 +1,61 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello AstController!{% endblock %}
+{% block title %}AST Explorer{% endblock %}
 
 {% block body %}
-    Fill in the PHP code you want to see the AST of:
+    <div class="container w-full md:max-w-3xl mx-auto pb-4">
+        {% if astRun is defined %}
+            <p class="py-6"><span class="font-bold">Click</span> on code part to see its AST</p>
+            <pre id="clickable-nodes-code"><code class="hljs">&lt;?php
+{{ clickableNodesDump|raw }}</code></pre>
 
-    {{ include('ast/_form.html.twig') }}
+            <p class="py-6">Selected code is represented by following abstract syntax tree:</p>
 
-    {% if astRun is defined %}
-        <pre><code class="hljs">&lt;?php {{ clickableNodesDump|raw }}</code></pre>
+            <div class="row">
+                <div class="col-12">
+                    <pre><code class="language-php">{{ simpleNodeDump }}</code></pre>
+                </div>
+            </div>
 
-        <p>Selected code is represented by following abstract syntax tree:</p>
+            {% if targetNodeClass %}
+                <p class="py-6">In <code>Mutator::canMutate()</code> method you can use the following node to mutate it:</p>
+                <pre><code class="language-php">{{ targetNodeClass }}</code></pre>
+            {% endif %}
+        {% endif %}
 
-        <div class="row">
-            <div class="col-12">
-                <pre><code class="language-php">{{ simpleNodeDump }}</code></pre>
+        <p class="py-6">
+            {% if astRun is defined %}
+                Update the code and generate new AST:
+            {% else %}
+                Add PHP code to convert it to AST:
+            {% endif %}
+        </p>
+
+        {{ include('ast/_form.html.twig') }}
+
+
+        <div class="flex w-full items-center font-light px-4 py-12">
+            <div class="flex-1 px-2">
+                <p class="text-gray-600 text-xs md:text-base">This AST explorer is highly insired by and uses <a class="text-green-500 no-underline hover:underline" href="https://getrector.com/ast">Rector PHP's</a> code (MIT license)</p>
             </div>
         </div>
-    {% endif %}
+    </div>
+{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
 {% endblock %}
 
 {% block javascripts %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/php.min.js"></script>
+
+    <script>
+        document.querySelectorAll('pre code.language-bash, pre code.language-php, pre code.language-yaml, pre code.language-diff, pre code.language-json').forEach((block) => {
+            hljs.highlightBlock(block);
+        });
+    </script>
+
     {{ encore_entry_script_tags('ast') }}
 {% endblock %}

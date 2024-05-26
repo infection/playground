@@ -1,5 +1,12 @@
 {% extends 'base.html.twig' %}
 
+
 {% block body %}
-    {{ include('ast/_form.html.twig') }}
+    <div class="container w-full md:max-w-3xl mx-auto pb-4">
+        {{ include('ast/_form.html.twig') }}
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ encore_entry_script_tags('ast') }}
 {% endblock %}
