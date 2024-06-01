@@ -164,5 +164,33 @@ JSON
                 ]
             ),
         ];
+
+        yield 'Custom mutators are automatically exluded from mutation' => [
+            <<<'JSON'
+{
+    "mutators": {"@default": false, "Infected\\CustomMutator1": true, "Infected\\CustomMutator2": true}
+}
+JSON
+            ,
+            [
+                'bootstrap' => './autoload.php',
+                'timeout' => 3,
+                'source' => [
+                    'directories' => ['src'],
+                    'excludes' => [
+                        'CustomMutator1',
+                        'CustomMutator2',
+                    ],
+                ],
+                'phpUnit' => ['customPath' => '../phpunit.phar'],
+                'tmpDir' => '.',
+                'logs' => ['json' => 'infection.log.json'],
+                'mutators' => [
+                    '@default' => false,
+                    'Infected\\CustomMutator1' => true,
+                    'Infected\\CustomMutator2' => true,
+                ],
+            ],
+        ];
     }
 }
