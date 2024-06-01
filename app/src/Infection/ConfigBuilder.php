@@ -38,6 +38,10 @@ namespace App\Infection;
 use function json_decode;
 use function json_encode;
 use const JSON_THROW_ON_ERROR;
+use function sprintf;
+use function str_starts_with;
+use function strlen;
+use function substr;
 
 /**
  * This class assumes that json was already validated by Infection's JSON schema.
@@ -56,10 +60,60 @@ final class ConfigBuilder
 
     private const TIMEOUT = 3;
 
+    private const NAMESPACE = 'Infected';
+
     public function build(string $userProvidedConfig): string
     {
+        $basicConfig = self::NOT_OVERRIDABLE_KEYS;
+        /** @var array{mutators?: array<string, bool>} $decodedOriginalConfig */
         $decodedOriginalConfig = json_decode($userProvidedConfig, true, JSON_THROW_ON_ERROR);
 
-        return (string) json_encode(self::NOT_OVERRIDABLE_KEYS + $decodedOriginalConfig);
+        if ($this->containsCustomMutator($decodedOriginalConfig['mutators'] ?? [])) {
+            $basicConfig['source']['excludes'] = $this->findCustomMutators($decodedOriginalConfig['mutators'] ?? []);
+        }
+
+        return (string) json_encode($basicConfig + $decodedOriginalConfig);
+    }
+
+    /**
+     * @param array<string, bool> $mutators
+     */
+    private function containsCustomMutator(array $mutators): bool
+    {
+        foreach ($mutators as $mutatorName => $mutatorConfig) {
+            if ($this->isCustomMutatorName($mutatorName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param array<string, bool> $mutators
+     *
+     * @return list<string>
+     */
+    private function findCustomMutators(array $mutators): array
+    {
+        $customMutatorNames = [];
+
+        foreach ($mutators as $mutatorName => $mutatorConfig) {
+            if ($this->isCustomMutatorName($mutatorName)) {
+                $customMutatorNames[] = substr($mutatorName, strlen($this->getStaticNamespace()));
+            }
+        }
+
+        return $customMutatorNames;
+    }
+
+    private function getStaticNamespace(): string
+    {
+        return sprintf('%s\\', self::NAMESPACE);
+    }
+
+    private function isCustomMutatorName(string $mutatorName): bool
+    {
+        return str_starts_with($mutatorName, $this->getStaticNamespace());
     }
 }
