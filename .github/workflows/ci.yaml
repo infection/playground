@@ -1,0 +1,47 @@
+name: 'CI: tests, static analysis'
+on:
+  pull_request:
+  push:
+    branches: ['master']
+
+env:
+  APP_ENV: dev
+  APP_SECRET: infection_ci_secret
+  DATABASE_ROOT_PASSWORD: root
+  DATABASE_PASSWORD: infection_ci_pass
+  DATABASE_NAME: infection_ci_playground
+  DATABASE_USER: infection_ci
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker images
+        uses: docker/bake-action@v4
+        with:
+          pull: true
+          load: true
+          files: |
+            docker-compose.yml
+          set: |
+            *.cache-from=type=gha,scope=${{github.ref}}
+            *.cache-from=type=gha,scope=refs/heads/main
+            *.cache-to=type=gha,scope=${{github.ref}},mode=max
+
+      - name: Start services
+        run: docker compose up -d
+
+      - name: Install dependencies
+        run: docker compose exec -T php composer install --prefer-install=source
+
+      - name: Install application and DB
+        run: docker compose exec -T php make app-reinstall
+
+      - name: make analyze
+        run: docker compose exec -T php make analyze
