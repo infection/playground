@@ -46,9 +46,7 @@ RUN set -eux; \
 	apk add --no-cache --virtual .build-deps \
 		$PHPIZE_DEPS \
 		icu-dev \
-		unzip \
 		libzip-dev \
-		zip \
 		mysql-dev \
 		zlib-dev \
 	; \
