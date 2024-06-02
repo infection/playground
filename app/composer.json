@@ -48,7 +48,8 @@
         "preferred-install": {
             "phpstan/phpstan": "dist",
             "symfony/flex": "source",
-            "symfony/runtime": "source"
+            "symfony/runtime": "source",
+            "symfony/doctrine-bridge": "source"
         },
         "sort-packages": true
     },
