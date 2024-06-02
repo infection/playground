@@ -45,6 +45,10 @@
             "symfony/runtime": true,
             "phpstan/extension-installer": true
         },
+        "preferred-install": {
+            "phpstan/phpstan": "dist",
+            "symfony/*": "source"
+        },
         "sort-packages": true
     },
     "autoload": {
