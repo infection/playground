@@ -41,7 +41,7 @@ jobs:
         run: docker compose up -d
 
       - name: Install dependencies
-        run: docker compose exec -T php composer install
+        run: docker compose exec -T php composer install --prefer-dist
 
       - name: Create test database
         run: docker compose exec -T php bin/console list
