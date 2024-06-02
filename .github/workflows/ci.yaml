@@ -40,5 +40,5 @@ jobs:
       - name: Install dependencies
         run: docker compose exec -T php composer install --prefer-install=source
 
-      - name: Create test database
-        run: docker compose exec -T php bin/console list
+      - name: make analyze
+        run: docker compose exec -T php make analyze
