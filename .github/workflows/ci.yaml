@@ -37,6 +37,9 @@ jobs:
       - name: Start services
         run: docker compose up -d
 
+      - name: Remove vendor
+        run: docker compose exec -T php rm -rf vendor
+
       - name: Install dependencies
         run: docker compose exec -T php composer install
 
