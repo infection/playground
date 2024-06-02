@@ -37,5 +37,8 @@ jobs:
       - name: Start services
         run: docker compose up --wait --build php
 
+      - name: Install dependencies
+        run: docker compose exec -T php composer install
+
       - name: Create test database
         run: docker compose exec -T php bin/console list
