@@ -106,7 +106,7 @@ class AstController extends AbstractController
             $astRun = new AstRun($createAstRunRequest->code);
 
             $em->persist($astRun);
-            //$em->flush();
+            $em->flush();
 
             $idHash = $this->hashids->encode($astRun->getId());
 
