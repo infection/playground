@@ -1,0 +1,34 @@
+name: 'CI: tests, static analysis'
+on:
+  pull_request:
+  push:
+    branches: ['master']
+
+env:
+  APP_ENV: dev
+  APP_SECRET: infection_ci_secret
+  DATABASE_ROOT_PASSWORD: root
+  DATABASE_PASSWORD: infection_ci_pass
+  DATABASE_NAME: infection_ci_playground
+  DATABASE_USER: infection_ci
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+          coverage: pcov
+          ini-values: xdebug.mode=off
+          tools: composer
+
+      - name: Build docker image
+        run: docker compose up -d --build php
+
+      - name: Run tests
+        run: docker-compose exec -T php vendor/bin/phpunit
