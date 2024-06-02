@@ -47,8 +47,7 @@
         },
         "preferred-install": {
             "phpstan/phpstan": "dist",
-            "symfony/flex": "source",
-            "symfony/runtime": "source"
+            "symfony/*": "source"
         },
         "sort-packages": true
     },

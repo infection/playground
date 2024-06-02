@@ -38,7 +38,7 @@ jobs:
         run: docker compose up -d
 
       - name: Install dependencies
-        run: docker compose exec -T php composer install
+        run: docker compose exec -T php composer install -vvv
 
       - name: Install application and DB
         run: docker compose exec -T php make app-reinstall
