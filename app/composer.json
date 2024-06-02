@@ -46,8 +46,7 @@
             "phpstan/extension-installer": true
         },
         "preferred-install": {
-            "phpstan/phpstan": "dist",
-            "symfony/*": "source"
+            "phpstan/phpstan": "dist"
         },
         "sort-packages": true
     },
