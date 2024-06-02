@@ -34,8 +34,11 @@ jobs:
             *.cache-from=type=gha,scope=refs/heads/main
             *.cache-to=type=gha,scope=${{github.ref}},mode=max
 
+      - name: Build services
+        run: docker compose build --no-cache --force-rm
+
       - name: Start services
-        run: docker compose up --wait --build php
+        run: docker compose up -d
 
       - name: Install dependencies
         run: docker compose exec -T php composer install
