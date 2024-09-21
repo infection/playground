@@ -6,6 +6,7 @@ services:
       context: .
       target: prod
     image: ${DOCKER_REGISTRY}/infection-playground-php:latest
+    platform: linux/amd64
     depends_on:
       - db
     networks:
@@ -23,6 +24,7 @@ services:
       context: .
       target: infection_nginx_prod
     image: ${DOCKER_REGISTRY}/infection-playground-nginx:latest
+    platform: linux/amd64
     ports:
       - "8099:80"
     depends_on:
@@ -32,6 +34,7 @@ services:
 
   db:
     image: mysql:5.7
+    platform: linux/amd64
     environment:
       - MYSQL_ROOT_PASSWORD=${DATABASE_ROOT_PASSWORD}
       - MYSQL_DATABASE=${DATABASE_NAME}
