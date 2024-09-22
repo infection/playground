@@ -33,5 +33,5 @@ docker run -it --rm --name certbot \
 -v "./secrets/certbot/www/:/var/www/certbot/" \
 -v "./secrets/certbot/conf/:/etc/letsencrypt/" \
 -v "./secrets/digitalocean-token.ini/:/secrets/digitalocean-token.ini" \
-certbot/dns-digitalocean certonly renew
+certbot/dns-digitalocean renew
 ```
