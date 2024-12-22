@@ -34,4 +34,7 @@ docker run -it --rm --name certbot \
 -v "./secrets/certbot/conf/:/etc/letsencrypt/" \
 -v "./secrets/digitalocean-token.ini/:/secrets/digitalocean-token.ini" \
 certbot/dns-digitalocean renew
+
+cp secrets/certbot/conf/live/infection-php.dev/fullchain.pem secrets/bundle.crt
+cp secrets/certbot/conf/live/infection-php.dev/privkey.pem secrets/infection-php.dev.key
 ```
