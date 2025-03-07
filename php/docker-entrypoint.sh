@@ -9,11 +9,11 @@ fi
 if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 	mkdir -p var/cache var/log
 
-	setfacl -R -m u:www-data:rwX -m u:"$(whoami)":rwX var
-	setfacl -dR -m u:www-data:rwX -m u:"$(whoami)":rwX var
+	setfacl -R -m u:www-data:rwX -m u:"$(whoami)":rwX var || true
+	setfacl -dR -m u:www-data:rwX -m u:"$(whoami)":rwX var || true
 
-	setfacl -R -m u:www-data:rwX -m u:"$(whoami)":rwX infection-builds
-	setfacl -dR -m u:www-data:rwX -m u:"$(whoami)":rwX infection-builds
+	setfacl -R -m u:www-data:rwX -m u:"$(whoami)":rwX infection-builds || true
+	setfacl -dR -m u:www-data:rwX -m u:"$(whoami)":rwX infection-builds || true
 
 	if [ "$APP_ENV" = 'dev' ]; then
 		composer install --prefer-dist --no-progress --no-interaction
