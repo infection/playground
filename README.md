@@ -36,5 +36,5 @@ docker run -it --rm --name certbot \
 certbot/dns-digitalocean renew
 
 cp secrets/certbot/conf/live/infection-php.dev/fullchain.pem secrets/bundle.crt
-cp secrets/certbot/conf/live/infection-php.dev/privkey.pem secrets/infection-php.dev.key
+cp secrets/certbot/conf/live/infection-php.dev/privkey.pem secrets/infection-php_dev.key
 ```
