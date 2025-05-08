@@ -167,4 +167,60 @@ class PlaygroundControllerTest extends WebTestCase
         static::assertStringContainsString('The property bootstrap is not defined and the definition does not allow additional properties', (string) $client->getResponse()->getContent());
         static::assertFalse($client->getResponse()->isRedirect());
     }
+
+    public function test_phpunit_test_case_fails_if_forbidden_function_is_used(): void
+    {
+        $client = static::createClient();
+        $client->catchExceptions(false);
+
+        $client->followRedirects(true);
+        $client->request('GET', '/');
+
+        $client->submitForm('create_example[mutate]', [
+            'create_example[code]' => <<<'PHP'
+            <?php
+            
+            declare(strict_types=1);
+            
+            namespace Infected;
+            
+            class SourceClass
+            {
+                public function add(int $a, int $b): int
+                {
+                    $system = 'system';
+                    $system('pwd'); // exploit!
+
+                    return $a + $b;
+                }
+            }
+            PHP,
+            'create_example[test]' => <<<'PHP'
+            <?php
+            
+            declare(strict_types=1);
+            
+            namespace Infected;
+            
+            use Infected\SourceClass;
+            use PHPUnit\Framework\TestCase;
+            
+            class SourceClassTest extends TestCase
+            {
+                public function test_it_adds_2_numbers(): void
+                {
+                    $source = new SourceClass();
+            
+                    $result = $source->add(1, 2);
+            
+                    self::assertSame(3, $result);
+                }
+            }
+            PHP,
+            'create_example[config]' => '{"mutators": {"@default": true}}',
+        ]);
+
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertStringContainsString('Error: Call to undefined function system() ', (string) $client->getResponse()->getContent());
+    }
 }
