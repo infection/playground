@@ -35,6 +35,8 @@ declare(strict_types=1);
 
 namespace App\Infection;
 
+use App\Code\Validator\CodeValidator;
+use function implode;
 use function json_decode;
 use function json_encode;
 use const JSON_THROW_ON_ERROR;
@@ -49,30 +51,45 @@ use function substr;
  */
 final class ConfigBuilder
 {
-    public const NOT_OVERRIDABLE_KEYS = [
-        'bootstrap' => './autoload.php',
-        'timeout' => self::TIMEOUT,
-        'source' => ['directories' => ['src']],
-        'phpUnit' => ['customPath' => '../phpunit.phar'],
-        'tmpDir' => '.',
-        'logs' => ['json' => 'infection.log.json'],
-    ];
-
     private const TIMEOUT = 3;
 
     private const NAMESPACE = 'Infected';
 
     public function build(string $userProvidedConfig): string
     {
-        $basicConfig = self::NOT_OVERRIDABLE_KEYS;
+        $basicConfig = self::getNotOverridableBaseConfig();
+
         /** @var array{mutators?: array<string, bool>} $decodedOriginalConfig */
         $decodedOriginalConfig = json_decode($userProvidedConfig, true, JSON_THROW_ON_ERROR);
 
         if ($this->containsCustomMutator($decodedOriginalConfig['mutators'] ?? [])) {
+            // @phpstan-ignore-next-line
             $basicConfig['source']['excludes'] = $this->findCustomMutators($decodedOriginalConfig['mutators'] ?? []);
         }
 
         return (string) json_encode($basicConfig + $decodedOriginalConfig);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public static function getNotOverridableBaseConfig(): array
+    {
+        return [
+            'bootstrap' => './autoload.php',
+            'timeout' => self::TIMEOUT,
+            'source' => ['directories' => ['src']],
+            'phpUnit' => ['customPath' => '../phpunit.phar'],
+            'tmpDir' => '.',
+            'logs' => ['json' => 'infection.log.json'],
+            'initialTestsPhpOptions' => sprintf(
+                '--define disable_functions=%s',
+                implode(
+                    ',',
+                    CodeValidator::getListOfDisabledFunctionsOnPhpLevel()
+                )
+            ),
+        ];
     }
 
     /**

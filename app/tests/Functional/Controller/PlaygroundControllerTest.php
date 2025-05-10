@@ -35,6 +35,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Controller;
 
+use Generator;
+use function sprintf;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class PlaygroundControllerTest extends WebTestCase
@@ -168,7 +170,10 @@ class PlaygroundControllerTest extends WebTestCase
         static::assertFalse($client->getResponse()->isRedirect());
     }
 
-    public function test_phpunit_test_case_fails_if_forbidden_function_is_used(): void
+    /**
+     * @dataProvider provideForbiddenFunctions
+     */
+    public function test_phpunit_test_case_fails_if_forbidden_function_is_used(string $exploitFunction): void
     {
         $client = static::createClient();
         $client->catchExceptions(false);
@@ -177,24 +182,26 @@ class PlaygroundControllerTest extends WebTestCase
         $client->request('GET', '/');
 
         $client->submitForm('create_example[mutate]', [
-            'create_example[code]' => <<<'PHP'
-            <?php
-            
-            declare(strict_types=1);
-            
-            namespace Infected;
-            
-            class SourceClass
-            {
-                public function add(int $a, int $b): int
+            'create_example[code]' => sprintf(
+                <<<'PHP'
+                <?php
+                
+                declare(strict_types=1);
+                
+                namespace Infected;
+                
+                class SourceClass
                 {
-                    $system = 'system';
-                    $system('pwd'); // exploit!
-
-                    return $a + $b;
+                    public function add(int $a, int $b): int
+                    {
+                        $system = '%s';
+                        $system('pwd'); // exploit!
+                        return $a + $b;
+                    }
                 }
-            }
-            PHP,
+                PHP,
+                $exploitFunction
+            ),
             'create_example[test]' => <<<'PHP'
             <?php
             
@@ -221,6 +228,18 @@ class PlaygroundControllerTest extends WebTestCase
         ]);
 
         static::assertSame(200, $client->getResponse()->getStatusCode());
-        static::assertStringContainsString('Error: Call to undefined function system() ', (string) $client->getResponse()->getContent());
+        static::assertStringContainsString(
+            sprintf('Error: Call to undefined function %s()', $exploitFunction),
+            (string) $client->getResponse()->getContent()
+        );
+    }
+
+    public static function provideForbiddenFunctions(): Generator
+    {
+        yield 'exec' => ['exec'];
+
+        yield 'shell_exec' => ['shell_exec'];
+
+        yield 'system' => ['system'];
     }
 }
