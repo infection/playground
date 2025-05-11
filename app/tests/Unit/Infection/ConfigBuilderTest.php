@@ -35,11 +35,14 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Infection;
 
+use App\Code\Validator\CodeValidator;
 use App\Infection\ConfigBuilder;
 use function array_merge;
 use Generator;
+use function implode;
 use function json_decode;
 use PHPUnit\Framework\TestCase;
+use function sprintf;
 
 final class ConfigBuilderTest extends TestCase
 {
@@ -68,7 +71,7 @@ final class ConfigBuilderTest extends TestCase
     {
         yield 'Empty object provided' => [
             '{}',
-            ConfigBuilder::NOT_OVERRIDABLE_KEYS,
+            ConfigBuilder::getNotOverridableBaseConfig(),
         ];
 
         yield 'Default profile is enabled' => [
@@ -81,7 +84,7 @@ final class ConfigBuilderTest extends TestCase
 JSON
             ,
             array_merge(
-                ConfigBuilder::NOT_OVERRIDABLE_KEYS,
+                ConfigBuilder::getNotOverridableBaseConfig(),
                 [
                     'mutators' => ['@default' => true],
                 ]
@@ -95,7 +98,7 @@ JSON
 }
 JSON
             ,
-            ConfigBuilder::NOT_OVERRIDABLE_KEYS,
+            ConfigBuilder::getNotOverridableBaseConfig(),
         ];
 
         yield 'Timeout does not override system value' => [
@@ -105,7 +108,7 @@ JSON
 }
 JSON
             ,
-            ConfigBuilder::NOT_OVERRIDABLE_KEYS,
+            ConfigBuilder::getNotOverridableBaseConfig(),
         ];
 
         yield 'Source does not override system value' => [
@@ -115,7 +118,7 @@ JSON
 }
 JSON
             ,
-            ConfigBuilder::NOT_OVERRIDABLE_KEYS,
+            ConfigBuilder::getNotOverridableBaseConfig(),
         ];
 
         yield 'PHPUnit setting does not override system value' => [
@@ -125,7 +128,7 @@ JSON
 }
 JSON
             ,
-            ConfigBuilder::NOT_OVERRIDABLE_KEYS,
+            ConfigBuilder::getNotOverridableBaseConfig(),
         ];
 
         yield 'tmpDir setting does not override system value' => [
@@ -135,7 +138,7 @@ JSON
 }
 JSON
             ,
-            ConfigBuilder::NOT_OVERRIDABLE_KEYS,
+            ConfigBuilder::getNotOverridableBaseConfig(),
         ];
 
         yield 'logs setting does not override system value' => [
@@ -145,7 +148,7 @@ JSON
 }
 JSON
             ,
-            ConfigBuilder::NOT_OVERRIDABLE_KEYS,
+            ConfigBuilder::getNotOverridableBaseConfig(),
         ];
 
         yield 'Custom allowed settings are present in the final config' => [
@@ -157,7 +160,7 @@ JSON
 JSON
             ,
             array_merge(
-                ConfigBuilder::NOT_OVERRIDABLE_KEYS,
+                ConfigBuilder::getNotOverridableBaseConfig(),
                 [
                     'mutators' => ['ArrayItem' => false, 'PublicVisibility' => true],
                     'minMsi' => 100,
@@ -165,7 +168,7 @@ JSON
             ),
         ];
 
-        yield 'Custom mutators are automatically exluded from mutation' => [
+        yield 'Custom mutators are automatically excluded from mutation' => [
             <<<'JSON'
 {
     "mutators": {"@default": false, "Infected\\CustomMutator1": true, "Infected\\CustomMutator2": true}
@@ -185,6 +188,13 @@ JSON
                 'phpUnit' => ['customPath' => '../phpunit.phar'],
                 'tmpDir' => '.',
                 'logs' => ['json' => 'infection.log.json'],
+                'initialTestsPhpOptions' => sprintf(
+                    '--define disable_functions=%s',
+                    implode(
+                        ',',
+                        CodeValidator::getListOfDisabledFunctionsOnPhpLevel()
+                    )
+                ),
                 'mutators' => [
                     '@default' => false,
                     'Infected\\CustomMutator1' => true,

@@ -36,6 +36,7 @@ declare(strict_types=1);
 namespace App\Code\Validator;
 
 use App\Code\Visitor\ForbiddenCodeCollectorVisitor;
+use function array_diff;
 use function array_map;
 use function array_merge;
 use PhpParser\Error as PhpParserError;
@@ -223,6 +224,33 @@ final class CodeValidator
         return array_merge(
             $errors,
             $errorCollectorVisitor->getErrors()
+        );
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function getListOfDisabledFunctionsOnPhpLevel(): array
+    {
+        return array_diff(
+            self::FORBIDDEN_FUNCTIONS,
+            [
+                // functions needed for PHPUnit itself when Infection runs it
+                'getenv',
+                'putenv',
+                'realpath',
+                'is_file',
+                'is_readable',
+                'file_get_contents',
+                'file_put_contents',
+                'is_dir',
+                'mkdir',
+                'fopen',
+                'ini_set',
+                'file_exists',
+                'getcwd',
+                'glob',
+            ]
         );
     }
 }
