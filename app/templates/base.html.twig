@@ -1,7 +1,19 @@
 <!DOCTYPE html>
-<html class="light">
+<html>
     <head>
         <meta charset="UTF-8">
+
+        <script>
+            // On page load, set the theme
+            const userTheme = localStorage.getItem('theme');
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
+            if (userTheme === 'dark' || (!userTheme && systemTheme === 'dark')) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        </script>
 
         <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('build/icons/apple-touch-icon.png') }}">
         <link rel="icon" type="image/png" sizes="192x192"  href="{{ asset('build/icons/android-icon-192x192.png') }}">
@@ -14,17 +26,6 @@
             {# 'app' must match the first argument to addEntry() in webpack.config.js #}
             {{ encore_entry_link_tags('app') }}
         {% endblock %}
-
-        <script>
-            // Check for saved theme preference or use the system preference
-            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                document.documentElement.classList.add('dark');
-                document.documentElement.classList.remove('light');
-            } else {
-                document.documentElement.classList.remove('dark');
-                document.documentElement.classList.add('light');
-            }
-        </script>
     </head>
     <body class="bg-white dark:bg-gray-900 transition-colors duration-200">
         <nav class="w-full z-20 flex items-center justify-between flex-wrap bg-white dark:bg-gray-800 py-4 px-2 sm:px-6 border border-gray-200 dark:border-gray-700 transition-colors duration-200">
@@ -68,47 +69,41 @@
             {% block body %}{% endblock %}
         </div>
 
-        {% block javascripts %}{% endblock %}
+        {% block javascripts %}
+            <script>
+                // Function to update the visibility of the icons based on the current theme
+                function updateThemeIcons() {
+                    const darkIcon = document.getElementById('theme-toggle-dark-icon');
+                    const lightIcon = document.getElementById('theme-toggle-light-icon');
 
-        <script>
-            // Function to toggle between light and dark mode
-            function toggleTheme() {
-                // Toggle dark class on html element
-                const htmlElement = document.documentElement;
-                if (htmlElement.classList.contains('dark')) {
-                    htmlElement.classList.remove('dark');
-                    htmlElement.classList.add('light');
-                    localStorage.theme = 'light';
-                } else {
-                    htmlElement.classList.remove('light');
-                    htmlElement.classList.add('dark');
-                    localStorage.theme = 'dark';
+                    if (darkIcon && lightIcon) {
+                        if (document.documentElement.classList.contains('dark')) {
+                            darkIcon.classList.add('hidden');
+                            lightIcon.classList.remove('hidden');
+                        } else {
+                            lightIcon.classList.add('hidden');
+                            darkIcon.classList.remove('hidden');
+                        }
+                    }
                 }
-                updateIcons();
 
-                // Dispatch custom event for Monaco editors
-                document.dispatchEvent(new CustomEvent('themeChanged'));
-            }
+                // Function to toggle between light and dark mode
+                function toggleTheme() {
+                    // Toggle dark class on html element
+                    const isDark = document.documentElement.classList.toggle('dark');
+                    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                    updateThemeIcons();
 
-            // Function to update the visibility of the icons based on the current theme
-            function updateIcons() {
-                const darkIcon = document.getElementById('theme-toggle-dark-icon');
-                const lightIcon = document.getElementById('theme-toggle-light-icon');
-
-                if (document.documentElement.classList.contains('dark')) {
-                    darkIcon.classList.add('hidden');
-                    lightIcon.classList.remove('hidden');
-                } else {
-                    lightIcon.classList.add('hidden');
-                    darkIcon.classList.remove('hidden');
+                    // Dispatch custom event for Monaco editors
+                    document.dispatchEvent(new CustomEvent('themeChanged'));
                 }
-            }
 
-            // Add event listener to the theme toggle button
-            document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+                // Add event listener to the theme toggle button
+                document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
 
-            // Initialize the correct icon on page load
-            document.addEventListener('DOMContentLoaded', updateIcons);
-        </script>
+                // Initialize the correct icon on page load
+                document.addEventListener('DOMContentLoaded', updateThemeIcons);
+            </script>
+        {% endblock %}
     </body>
 </html>
