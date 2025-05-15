@@ -1,14 +1,14 @@
 import * as monaco from 'monaco-editor';
 
 let diffEditor;
-let codeEditorInstance;
-let testEditorInstance;
-let configEditorInstance;
+let codeEditor;
+let testEditor;
+let configEditor;
 
 export function initMutationEditors() {
-    codeEditorInstance = initCodeEditor();
-    testEditorInstance = initTestEditor();
-    configEditorInstance = initConfigEditor();
+    codeEditor = initCodeEditor();
+    testEditor = initTestEditor();
+    configEditor = initConfigEditor();
 
     // Set initial theme based on current mode
     updateEditorsTheme();
@@ -415,14 +415,14 @@ function updateEditorsTheme() {
     monaco.editor.setTheme(theme);
 
     // Force layout update to ensure proper rendering
-    if (codeEditorInstance) {
-        codeEditorInstance.layout();
+    if (codeEditor) {
+        codeEditor.layout();
     }
-    if (testEditorInstance) {
-        testEditorInstance.layout();
+    if (testEditor) {
+        testEditor.layout();
     }
-    if (configEditorInstance) {
-        configEditorInstance.layout();
+    if (configEditor) {
+        configEditor.layout();
     }
     if (diffEditor) {
         diffEditor.layout();
