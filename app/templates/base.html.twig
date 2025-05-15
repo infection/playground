@@ -103,6 +103,17 @@
 
                 // Initialize the correct icon on page load
                 document.addEventListener('DOMContentLoaded', updateThemeIcons);
+
+                // Listen for changes in system color scheme preference
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+                    // react even user has a preference in local storage (same as vite press does it)
+                    const isDark = event.matches;
+                    document.documentElement.classList.toggle('dark', isDark);
+                    updateThemeIcons();
+
+                    // Dispatch custom event for Monaco editors
+                    document.dispatchEvent(new CustomEvent('themeChanged'));
+                });
             </script>
         {% endblock %}
     </body>
