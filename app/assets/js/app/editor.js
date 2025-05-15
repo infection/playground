@@ -1,11 +1,20 @@
 import * as monaco from 'monaco-editor';
 
 let diffEditor;
+let codeEditorInstance;
+let testEditorInstance;
+let configEditorInstance;
 
 export function initMutationEditors() {
-    const codeEditor = initCodeEditor();
-    const testEditor = initTestEditor();
-    const configEditor = initConfigEditor();
+    codeEditorInstance = initCodeEditor();
+    testEditorInstance = initTestEditor();
+    configEditorInstance = initConfigEditor();
+
+    // Set initial theme based on current mode
+    updateEditorsTheme();
+
+    // Listen for theme changes
+    document.addEventListener('themeChanged', updateEditorsTheme);
 
     processMutantsDetails();
 
@@ -217,7 +226,8 @@ function showDiffEditor(mutator) {
         enableSplitViewResizing: false,
         // Render the diff inline
         renderSideBySide: false,
-        readOnly: true
+        readOnly: true,
+        theme: isCurrentThemeDark() ? 'vs-dark' : 'vs'
     });
 
     diffEditor.setModel({
@@ -250,8 +260,15 @@ export function initAstEditor() {
             enabled: false
         },
         value: code,
-        language: 'php'
+        language: 'php',
+        theme: isCurrentThemeDark() ? 'vs-dark' : 'vs'
     });
+
+    // Set initial theme based on current mode
+    updateEditorsTheme();
+
+    // Listen for theme changes
+    document.addEventListener('themeChanged', updateEditorsTheme);
 
     document.getElementById('js-submit').addEventListener(
         'click',
@@ -304,7 +321,8 @@ function initCodeEditor() {
             enabled: false
         },
         value: code,
-        language: 'php'
+        language: 'php',
+        theme: isCurrentThemeDark() ? 'vs-dark' : 'vs'
     });
 }
 
@@ -347,7 +365,8 @@ function initTestEditor() {
             enabled: false
         },
         value: code,
-        language: 'php'
+        language: 'php',
+        theme: isCurrentThemeDark() ? 'vs-dark' : 'vs'
     });
 }
 
@@ -375,5 +394,37 @@ function initConfigEditor() {
         },
         value: code,
         language: 'json',
+        theme: isCurrentThemeDark() ? 'vs-dark' : 'vs'
     });
+}
+
+/**
+ * Check if the current theme is dark
+ * @returns {boolean}
+ */
+function isCurrentThemeDark() {
+    return document.documentElement.classList.contains('dark');
+}
+
+/**
+ * Update the theme for all Monaco editors based on the current theme
+ */
+function updateEditorsTheme() {
+    const theme = isCurrentThemeDark() ? 'vs-dark' : 'vs';
+
+    monaco.editor.setTheme(theme);
+
+    // Force layout update to ensure proper rendering
+    if (codeEditorInstance) {
+        codeEditorInstance.layout();
+    }
+    if (testEditorInstance) {
+        testEditorInstance.layout();
+    }
+    if (configEditorInstance) {
+        configEditorInstance.layout();
+    }
+    if (diffEditor) {
+        diffEditor.layout();
+    }
 }

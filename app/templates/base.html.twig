@@ -85,6 +85,9 @@
                     localStorage.theme = 'dark';
                 }
                 updateIcons();
+
+                // Dispatch custom event for Monaco editors
+                document.dispatchEvent(new CustomEvent('themeChanged'));
             }
 
             // Function to update the visibility of the icons based on the current theme
