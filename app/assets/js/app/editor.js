@@ -130,14 +130,14 @@ function showMutantsTable(mutants) {
     mutants.forEach((mutant, index) => {
         const td1 = document.createElement('td');
 
-        td1.className = 'border-dashed border-t border-gray-200';
+        td1.className = 'border-dashed border-t border-gray-200 dark:border-gray-700';
         const span1 = document.createElement('span');
-        span1.className = 'text-gray-700 px-6 py-3 flex items-center';
+        span1.className = 'text-gray-700 dark:text-gray-300 px-6 py-3 flex items-center';
         span1.textContent = `${index + 1}. ` + mutant.mutator.mutatorName; // + ', Line: ' + mutant.mutator.originalStartLine;
         td1.appendChild(span1);
         const td2 = document.createElement('td');
 
-        td1.className = 'border-dashed border-t border-gray-200';
+        td1.className = 'border-dashed border-t border-gray-200 dark:border-gray-700';
         const span2 = document.createElement('span');
         span2.className = 'rounded py-1 px-3 text-xs font-bold' + ' bg-' + colorsMap[mutant.status] + '-400';
         span2.textContent = mutant.status;
@@ -145,7 +145,7 @@ function showMutantsTable(mutants) {
 
         const tr = document.createElement('tr');
         tr.appendChild(td1);
-        tr.className = 'cursor-pointer hover:bg-gray-100';
+        tr.className = 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700';
         tr.appendChild(td2);
 
         tBody.appendChild(tr);
@@ -168,12 +168,12 @@ function unhighlightAllRows() {
     const rows = Array.prototype.slice.call(htmlCollection);
 
     rows.forEach((row) => {
-        row.classList.remove('bg-gray-200');
+        row.classList.remove('bg-gray-200', 'dark:bg-gray-700');
     });
 }
 
 function highlightRow(row) {
-    row.classList.add('bg-gray-200');
+    row.classList.add('bg-gray-200', 'dark:bg-gray-700');
 }
 
 function showProcessOutput(mutant) {
