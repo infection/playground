@@ -155,7 +155,7 @@ class PlaygroundController extends AbstractController
 
         $form = $this->createForm(CreateExampleType::class, $createExampleRequest);
 
-        $converter = new AnsiToHtmlConverter(new InfectionAnsiHtmlTheme());
+        $converter = new AnsiToHtmlConverter(new InfectionAnsiHtmlTheme(), false);
         $converter->setInvertBackground(true);
 
         return $this->render('playground/index.html.twig', [

@@ -9,3 +9,52 @@
 pre code.hljs {
     border-radius: .6em;
 }
+
+/* ANSI Theme styles for light/dark mode */
+.ansi-theme-container .ansi_color_fg_black { color: black; }
+.ansi-theme-container .ansi_color_fg_red { color: darkred; }
+.ansi-theme-container .ansi_color_fg_green { color: green; }
+.ansi-theme-container .ansi_color_fg_yellow { color: orange; }
+.ansi-theme-container .ansi_color_fg_blue { color: blue; }
+.ansi-theme-container .ansi_color_fg_magenta { color: darkmagenta; }
+.ansi-theme-container .ansi_color_fg_cyan { color: cyan; }
+.ansi-theme-container .ansi_color_fg_white { color: white; }
+
+.ansi-theme-container .ansi_color_bg_black { background-color: black; }
+.ansi-theme-container .ansi_color_bg_red { background-color: red; }
+.ansi-theme-container .ansi_color_bg_green { background-color: green; }
+.ansi-theme-container .ansi_color_bg_yellow { background-color: lightyellow; }
+.ansi-theme-container .ansi_color_bg_blue { background-color: blue; }
+.ansi-theme-container .ansi_color_bg_magenta { background-color: magenta; }
+.ansi-theme-container .ansi_color_bg_cyan { background-color: lightcyan; }
+.ansi-theme-container .ansi_color_bg_white { background-color: white; }
+
+.ansi-theme-container .ansi_color_bg_#ef7373 { background-color: #ef7373; }
+
+/* Dark mode overrides */
+.dark .ansi-theme-container .ansi_color_fg_black { color: #cccccc; }
+.dark .ansi-theme-container .ansi_color_fg_red { color: #ff5555; }
+.dark .ansi-theme-container .ansi_color_fg_green { color: #55ff55; }
+.dark .ansi-theme-container .ansi_color_fg_yellow { color: #ffff55; }
+.dark .ansi-theme-container .ansi_color_fg_blue { color: #5555ff; }
+.dark .ansi-theme-container .ansi_color_fg_magenta { color: #ff55ff; }
+.dark .ansi-theme-container .ansi_color_fg_cyan { color: #55ffff; }
+.dark .ansi-theme-container .ansi_color_fg_white { color: #ffffff; }
+
+.dark .ansi-theme-container .ansi_color_fg_#ef7373 { color: #ff9999; }
+
+.dark .ansi-theme-container .ansi_color_bg_black { background-color: #333333; }
+.dark .ansi-theme-container .ansi_color_bg_red { background-color: #aa0000; }
+.dark .ansi-theme-container .ansi_color_bg_green { background-color: #00aa00; }
+.dark .ansi-theme-container .ansi_color_bg_yellow { background-color: #aaaa00; }
+.dark .ansi-theme-container .ansi_color_bg_blue { background-color: #0000aa; }
+.dark .ansi-theme-container .ansi_color_bg_magenta { background-color: #aa00aa; }
+.dark .ansi-theme-container .ansi_color_bg_cyan { background-color: #00aaaa; }
+.dark .ansi-theme-container .ansi_color_bg_white { background-color: #aaaaaa; }
+
+.dark .ansi-theme-container .ansi_color_bg_#ef7373 { background-color: #cc5555; }
+
+/* Add transition for smooth theme switching */
+.ansi-theme-container span {
+    transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
