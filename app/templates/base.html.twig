@@ -3,6 +3,18 @@
     <head>
         <meta charset="UTF-8">
 
+        <script>
+            // On page load, set the theme
+            const userTheme = localStorage.getItem('theme');
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+
+            if (userTheme === 'dark' || (!userTheme && systemTheme === 'dark')) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        </script>
+
         <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('build/icons/apple-touch-icon.png') }}">
         <link rel="icon" type="image/png" sizes="192x192"  href="{{ asset('build/icons/android-icon-192x192.png') }}">
         <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('build/icons/favicon-32x32.png') }}">
@@ -15,40 +27,94 @@
             {{ encore_entry_link_tags('app') }}
         {% endblock %}
     </head>
-    <body>
-        <nav class="w-full z-20 flex items-center justify-between flex-wrap bg-white py-4 px-2 sm:px-6 border border-gray-200">
-            <a href="https://infection-php.dev/" class="no-underline flex items-center flex-no-shrink text-white mr-6">
+    <body class="bg-white dark:bg-gray-900 transition-colors duration-200">
+        <nav class="w-full z-20 flex items-center justify-between flex-wrap bg-white dark:bg-gray-800 py-4 px-2 sm:px-6 border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+            <a href="https://infection-php.dev/" class="no-underline flex items-center flex-no-shrink mr-6">
                 <img class="h-8 w-8 mr-2" src="{{ asset('build/logo.png') }}" alt="Infection logo">
-                <span class="font-medium text-xl tracking-tighter text-green-500">Infection Playground</span>
+                <span class="font-medium text-xl tracking-tighter text-green-500 dark:text-green-400">Infection Playground</span>
             </a>
             <div class="w-full hidden flex-grow lg:flex lg:items-center lg:w-auto">
                 <div class="text-sm lg:flex-grow ">
-                    <a href="{{ path('app_ast_index') }}" class="block mt-4 lg:inline-block text-gray-600 lg:mt-0 hover:text-gray-900 mr-4 no-underline">
+                    <a href="{{ path('app_ast_index') }}" class="block mt-4 lg:inline-block text-gray-600 dark:text-gray-300 lg:mt-0 hover:text-gray-900 dark:hover:text-white mr-4 no-underline">
                         AST Explorer
                     </a>
-                    <a href="https://infection.github.io/" target="_blank" class="block mt-4 lg:inline-block text-gray-600 lg:mt-0 hover:text-gray-900 mr-4 no-underline">
+                    <a href="https://infection.github.io/" target="_blank" class="block mt-4 lg:inline-block text-gray-600 dark:text-gray-300 lg:mt-0 hover:text-gray-900 dark:hover:text-white mr-4 no-underline">
                         Documentation
                     </a>
                     <a href="https://github.com/infection/infection"
                        target="_blank"
-                       class="block mt-4 lg:inline-block lg:mt-0 text-gray-600 hover:text-gray-900 mr-4 no-underline">
+                       class="block mt-4 lg:inline-block lg:mt-0 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white mr-4 no-underline">
                         GitHub
                     </a>
                     <a href="https://github.com/infection/playground"
                        target="_blank"
-                       class="block mt-4 lg:inline-block lg:mt-0 text-gray-600 hover:text-gray-900 no-underline">
+                       class="block mt-4 lg:inline-block lg:mt-0 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white no-underline">
                         Found issue? Contribute!
                     </a>
                 </div>
-                <div>
-                    <p class="text-gray-500">PHP Mutation Testing</p>
+                <div class="flex items-center">
+                    <p class="text-gray-500 dark:text-gray-300 mr-4">PHP Mutation Testing</p>
+                    <button id="theme-toggle" type="button" class="text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5">
+                        <svg id="theme-toggle-dark-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                        </svg>
+                        <svg id="theme-toggle-light-icon" class="hidden w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
                 </div>
             </div>
         </nav>
-        <div class="w-full relative bg-white px-2">
+        <div class="w-full relative bg-white dark:bg-gray-900 px-2 text-gray-900 dark:text-gray-100 transition-colors duration-200">
             {% block body %}{% endblock %}
         </div>
 
-        {% block javascripts %}{% endblock %}
+        {% block javascripts %}
+            <script>
+                // Function to update the visibility of the icons based on the current theme
+                function updateThemeIcons() {
+                    const darkIcon = document.getElementById('theme-toggle-dark-icon');
+                    const lightIcon = document.getElementById('theme-toggle-light-icon');
+
+                    if (darkIcon && lightIcon) {
+                        if (document.documentElement.classList.contains('dark')) {
+                            darkIcon.classList.add('hidden');
+                            lightIcon.classList.remove('hidden');
+                        } else {
+                            lightIcon.classList.add('hidden');
+                            darkIcon.classList.remove('hidden');
+                        }
+                    }
+                }
+
+                // Function to toggle between light and dark mode
+                function toggleTheme() {
+                    // Toggle dark class on html element
+                    const isDark = document.documentElement.classList.toggle('dark');
+                    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                    updateThemeIcons();
+
+                    // Dispatch custom event for Monaco editors
+                    document.dispatchEvent(new CustomEvent('themeChanged'));
+                }
+
+                // Add event listener to the theme toggle button
+                document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+
+                // Initialize the correct icon on page load
+                document.addEventListener('DOMContentLoaded', updateThemeIcons);
+
+                // Listen for changes in system color scheme preference
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+                    // react even user has a preference in local storage (same as vite press does it)
+                    const isDark = event.matches;
+                    document.documentElement.classList.toggle('dark', isDark);
+                    updateThemeIcons();
+
+                    // Dispatch custom event for Monaco editors
+                    document.dispatchEvent(new CustomEvent('themeChanged'));
+                });
+            </script>
+        {% endblock %}
     </body>
 </html>
