@@ -2,15 +2,324 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================
+   Navbar - glass morphism
+   ========================================== */
+.navbar-glass {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(229, 231, 235, 0.6);
+}
+.dark .navbar-glass {
+    background: rgba(3, 7, 18, 0.8);
+    border-bottom: 1px solid rgba(55, 65, 81, 0.4);
+}
+
+/* ==========================================
+   Nav links - pill style
+   ========================================== */
+.nav-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #6b7280;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+.nav-link:hover {
+    color: #111827;
+    background: rgba(0, 0, 0, 0.05);
+}
+.dark .nav-link {
+    color: #9ca3af;
+}
+.dark .nav-link:hover {
+    color: #f3f4f6;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* ==========================================
+   Theme toggle
+   ========================================== */
+.theme-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.5rem;
+    color: #6b7280;
+    transition: all 0.2s ease;
+}
+.theme-toggle-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #374151;
+}
+.dark .theme-toggle-btn {
+    color: #9ca3af;
+}
+.dark .theme-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #e5e7eb;
+}
+
+/* ==========================================
+   Editor panels
+   ========================================== */
+.editor-panel {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.editor-panel:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.dark .editor-panel {
+    border-color: rgba(55, 65, 81, 0.5);
+    background: #111827;
+}
+.dark .editor-panel:hover {
+    border-color: rgba(75, 85, 99, 0.6);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.editor-panel-header {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+.dark .editor-panel-header {
+    color: #9ca3af;
+    background: rgba(17, 24, 39, 0.8);
+    border-bottom-color: rgba(55, 65, 81, 0.5);
+}
+
+/* ==========================================
+   Buttons
+   ========================================== */
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1.25rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #ffffff;
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+.btn-primary:hover {
+    background: linear-gradient(135deg, #15803d, #166534);
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+    transform: translateY(-1px);
+}
+.btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+.btn-primary:disabled,
+.btn-primary.opacity-50 {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1.25rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #6b7280;
+    background: transparent;
+    border: 1px solid #d1d5db;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.btn-secondary:hover {
+    color: #374151;
+    border-color: #9ca3af;
+    background: rgba(0, 0, 0, 0.02);
+}
+.dark .btn-secondary {
+    color: #9ca3af;
+    border-color: rgba(75, 85, 99, 0.5);
+}
+.dark .btn-secondary:hover {
+    color: #e5e7eb;
+    border-color: rgba(107, 114, 128, 0.6);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+/* ==========================================
+   Terminal window
+   ========================================== */
+.terminal-window {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+}
+.dark .terminal-window {
+    border-color: rgba(55, 65, 81, 0.5);
+    background: #111827;
+}
+
+.terminal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.625rem 1rem;
+    background: #f3f4f6;
+    border-bottom: 1px solid #e5e7eb;
+}
+.dark .terminal-header {
+    background: rgba(17, 24, 39, 0.9);
+    border-bottom-color: rgba(55, 65, 81, 0.5);
+}
+
+.terminal-body {
+    padding: 1rem 1.25rem;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', Menlo, Monaco, Consolas, monospace;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+    overflow: auto;
+    background: #ffffff;
+    color: #374151;
+}
+.dark .terminal-body {
+    background: #0f172a;
+    color: #e2e8f0;
+}
+
+/* ==========================================
+   Mutant list panel
+   ========================================== */
+.mutant-list-panel {
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+}
+.dark .mutant-list-panel {
+    border-color: rgba(55, 65, 81, 0.5);
+    background: #111827;
+}
+
+.mutant-row {
+    cursor: pointer;
+    transition: background 0.15s ease;
+    border-bottom: 1px solid #f3f4f6;
+}
+.mutant-row:last-child {
+    border-bottom: none;
+}
+.mutant-row:hover {
+    background: #f9fafb;
+}
+.dark .mutant-row {
+    border-bottom-color: rgba(55, 65, 81, 0.3);
+}
+.dark .mutant-row:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+.mutant-row-active {
+    background: #ecfdf5 !important;
+}
+.dark .mutant-row-active {
+    background: rgba(16, 185, 129, 0.1) !important;
+}
+
+/* ==========================================
+   Mutant badges
+   ========================================== */
+.mutant-badge {
+    display: inline-block;
+    padding: 0.125rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+.mutant-badge-killed {
+    background: #dcfce7;
+    color: #166534;
+}
+.dark .mutant-badge-killed {
+    background: rgba(22, 163, 74, 0.15);
+    color: #4ade80;
+}
+.mutant-badge-errored {
+    background: #dcfce7;
+    color: #166534;
+}
+.dark .mutant-badge-errored {
+    background: rgba(22, 163, 74, 0.15);
+    color: #4ade80;
+}
+.mutant-badge-escaped {
+    background: #fef2f2;
+    color: #991b1b;
+}
+.dark .mutant-badge-escaped {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+}
+.mutant-badge-timeout {
+    background: #fefce8;
+    color: #854d0e;
+}
+.dark .mutant-badge-timeout {
+    background: rgba(234, 179, 8, 0.15);
+    color: #fde047;
+}
+.mutant-badge-uncovered {
+    background: #fef2f2;
+    color: #991b1b;
+}
+.dark .mutant-badge-uncovered {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+}
+
+/* ==========================================
+   AST Explorer
+   ========================================== */
 #clickable-nodes-code a.active-node {
-    color: forestgreen;
+    color: #16a34a;
+    font-weight: 600;
+}
+.dark #clickable-nodes-code a.active-node {
+    color: #4ade80;
 }
 
 pre code.hljs {
-    border-radius: .6em;
+    border-radius: 0.75rem;
 }
 
-/* ANSI Theme styles for light/dark mode */
+/* ==========================================
+   ANSI Theme - Light mode
+   ========================================== */
 .ansi-theme-container .ansi_color_fg_black { color: black; }
 .ansi-theme-container .ansi_color_fg_red { color: darkred; }
 .ansi-theme-container .ansi_color_fg_green { color: green; }
@@ -29,9 +338,11 @@ pre code.hljs {
 .ansi-theme-container .ansi_color_bg_cyan { background-color: lightcyan; }
 .ansi-theme-container .ansi_color_bg_white { }
 
-.ansi-theme-container .ansi_color_bg_#ef7373 { background-color: #ef7373; }
+.ansi-theme-container .ansi_color_bg_\#ef7373 { background-color: #ef7373; }
 
-/* Dark mode overrides */
+/* ==========================================
+   ANSI Theme - Dark mode
+   ========================================== */
 .dark .ansi-theme-container .ansi_color_fg_black { color: white; }
 .dark .ansi-theme-container .ansi_color_fg_red { color: #ff5555; }
 .dark .ansi-theme-container .ansi_color_fg_green { color: #55ff55; }
@@ -41,7 +352,7 @@ pre code.hljs {
 .dark .ansi-theme-container .ansi_color_fg_cyan { color: #55ffff; }
 .dark .ansi-theme-container .ansi_color_fg_white { color: #333333; }
 
-.dark .ansi-theme-container .ansi_color_fg_#ef7373 { color: #ff9999; }
+.dark .ansi-theme-container .ansi_color_fg_\#ef7373 { color: #ff9999; }
 
 .dark .ansi-theme-container .ansi_color_bg_black { background-color: white; }
 .dark .ansi-theme-container .ansi_color_bg_red { background-color: #aa0000; }
@@ -52,9 +363,9 @@ pre code.hljs {
 .dark .ansi-theme-container .ansi_color_bg_cyan { background-color: #00aaaa; }
 .dark .ansi-theme-container .ansi_color_bg_white { }
 
-.dark .ansi-theme-container .ansi_color_bg_#ef7373 { background-color: #cc5555; }
+.dark .ansi-theme-container .ansi_color_bg_\#ef7373 { background-color: #cc5555; }
 
-/* Add transition for smooth theme switching */
+/* Smooth transitions for theme switching */
 .ansi-theme-container span {
     transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }

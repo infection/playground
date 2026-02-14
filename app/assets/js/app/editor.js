@@ -119,33 +119,32 @@ function getAllMutants(jsonLog) {
 function showMutantsTable(mutants) {
     const tBody = document.getElementById('mutants-table').getElementsByTagName('tbody')[0];
 
-    const colorsMap = {
-        escaped: 'red',
-        killed: 'green',
-        errored: 'green',
-        timeouted: 'yellow',
-        uncovered: 'red'
+    const badgeClasses = {
+        escaped: 'mutant-badge-escaped',
+        killed: 'mutant-badge-killed',
+        errored: 'mutant-badge-errored',
+        timeouted: 'mutant-badge-timeout',
+        uncovered: 'mutant-badge-uncovered'
     }
 
     mutants.forEach((mutant, index) => {
         const td1 = document.createElement('td');
-
-        td1.className = 'border-dashed border-t border-gray-200 dark:border-gray-700';
+        td1.className = 'py-2.5 px-3';
         const span1 = document.createElement('span');
-        span1.className = 'text-gray-700 dark:text-gray-300 px-6 py-3 flex items-center';
-        span1.textContent = `${index + 1}. ` + mutant.mutator.mutatorName; // + ', Line: ' + mutant.mutator.originalStartLine;
+        span1.className = 'text-sm text-gray-700 dark:text-gray-300 flex items-center';
+        span1.innerHTML = '<span class="text-gray-400 dark:text-gray-500 text-xs mr-2 font-mono">' + (index + 1) + '</span>' + mutant.mutator.mutatorName;
         td1.appendChild(span1);
-        const td2 = document.createElement('td');
 
-        td1.className = 'border-dashed border-t border-gray-200 dark:border-gray-700';
+        const td2 = document.createElement('td');
+        td2.className = 'py-2.5 px-3 text-right';
         const span2 = document.createElement('span');
-        span2.className = 'rounded py-1 px-3 text-xs font-bold' + ' bg-' + colorsMap[mutant.status] + '-400';
+        span2.className = 'mutant-badge ' + (badgeClasses[mutant.status] || '');
         span2.textContent = mutant.status;
         td2.appendChild(span2);
 
         const tr = document.createElement('tr');
         tr.appendChild(td1);
-        tr.className = 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700';
+        tr.className = 'mutant-row';
         tr.appendChild(td2);
 
         tBody.appendChild(tr);
@@ -168,12 +167,12 @@ function unhighlightAllRows() {
     const rows = Array.prototype.slice.call(htmlCollection);
 
     rows.forEach((row) => {
-        row.classList.remove('bg-gray-200', 'dark:bg-gray-700');
+        row.classList.remove('mutant-row-active');
     });
 }
 
 function highlightRow(row) {
-    row.classList.add('bg-gray-200', 'dark:bg-gray-700');
+    row.classList.add('mutant-row-active');
 }
 
 function showProcessOutput(mutant) {
