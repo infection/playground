@@ -5,13 +5,13 @@
 {% endif %}
 
 {{ form_start(form) }}
-    <div class="flex gap-3 mt-4">
+    <div class="flex flex-col lg:flex-row gap-3 mt-4">
         <div class="flex-1 editor-panel">
             <div class="editor-panel-header">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
                 Source Code
             </div>
-            <div id="editor-code" style="height:400px;"></div>
+            <div id="editor-code" class="editor-area"></div>
             <div class="hidden">{{ form_widget(form.code) }}</div>
             {{ form_errors(form.code) }}
         </div>
@@ -20,7 +20,7 @@
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 Test
             </div>
-            <div id="editor-test" style="height:400px;"></div>
+            <div id="editor-test" class="editor-area"></div>
             <div class="hidden">{{ form_widget(form.test) }}</div>
             {{ form_errors(form.test) }}
         </div>
@@ -29,13 +29,13 @@
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
                 Config
             </div>
-            <div id="editor-config" style="height:400px;"></div>
+            <div id="editor-config" class="editor-area"></div>
             <div class="hidden">{{ form_widget(form.config) }}</div>
             {{ form_errors(form.config) }}
         </div>
     </div>
 
-    <div class="flex items-center gap-3 mt-4">
+    <div class="flex flex-wrap items-center gap-3 mt-4">
         <button id="js-submit" class="btn-primary" type="button">
             <svg class="w-4 h-4 mr-2" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"/></svg>
             <span>Run</span>
@@ -50,7 +50,7 @@
             {% endif %}
         {% endif %}
         {% if example is defined and example.infectionVersion and example.phpunitVersion %}
-            <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">
+            <span class="ml-0 sm:ml-2 text-sm text-gray-500 dark:text-gray-400">
                 Infection <span class="text-green-600 dark:text-green-400 font-medium">{{ example.infectionVersion }}</span>
                 &middot; PHPUnit <span class="text-green-600 dark:text-green-400 font-medium">{{ example.phpunitVersion }}</span>
                 &middot; PHP <span class="text-green-600 dark:text-green-400 font-medium">{{ example.phpVersion }}</span>

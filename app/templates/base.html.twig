@@ -34,7 +34,16 @@
                 <span class="font-bold text-lg tracking-tight text-green-600 dark:text-green-400">Infection</span>
                 <span class="font-light text-lg tracking-tight text-gray-500 dark:text-gray-400 ml-1">Playground</span>
             </a>
-            <div class="w-full hidden flex-grow lg:flex lg:items-center lg:w-auto">
+            <div class="flex items-center gap-2 lg:hidden">
+                <button id="theme-toggle-mobile" type="button" class="theme-toggle-btn">
+                    <svg id="theme-toggle-dark-icon-mobile" class="hidden w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                    <svg id="theme-toggle-light-icon-mobile" class="hidden w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" fill-rule="evenodd" clip-rule="evenodd"></path></svg>
+                </button>
+                <button id="mobile-menu-btn" type="button" class="theme-toggle-btn">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+            </div>
+            <div id="mobile-menu" class="w-full hidden flex-col gap-1 py-2 lg:flex lg:flex-row lg:items-center lg:w-auto lg:py-0">
                 <div class="text-sm lg:flex-grow flex items-center gap-1">
                     <a href="{{ path('app_ast_index') }}" class="nav-link">
                         <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
@@ -74,45 +83,62 @@
             <script>
                 // Function to update the visibility of the icons based on the current theme
                 function updateThemeIcons() {
+                    const isDark = document.documentElement.classList.contains('dark');
+                    // Desktop icons
                     const darkIcon = document.getElementById('theme-toggle-dark-icon');
                     const lightIcon = document.getElementById('theme-toggle-light-icon');
-
                     if (darkIcon && lightIcon) {
-                        if (document.documentElement.classList.contains('dark')) {
-                            darkIcon.classList.add('hidden');
-                            lightIcon.classList.remove('hidden');
-                        } else {
-                            lightIcon.classList.add('hidden');
-                            darkIcon.classList.remove('hidden');
-                        }
+                        darkIcon.classList.toggle('hidden', isDark);
+                        lightIcon.classList.toggle('hidden', !isDark);
+                    }
+                    // Mobile icons
+                    const darkIconMobile = document.getElementById('theme-toggle-dark-icon-mobile');
+                    const lightIconMobile = document.getElementById('theme-toggle-light-icon-mobile');
+                    if (darkIconMobile && lightIconMobile) {
+                        darkIconMobile.classList.toggle('hidden', isDark);
+                        lightIconMobile.classList.toggle('hidden', !isDark);
                     }
                 }
 
                 // Function to toggle between light and dark mode
                 function toggleTheme() {
-                    // Toggle dark class on html element
                     const isDark = document.documentElement.classList.toggle('dark');
                     localStorage.setItem('theme', isDark ? 'dark' : 'light');
                     updateThemeIcons();
-
-                    // Dispatch custom event for Monaco editors
                     document.dispatchEvent(new CustomEvent('themeChanged'));
                 }
 
-                // Add event listener to the theme toggle button
+                // Theme toggle buttons (desktop + mobile)
                 document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+                const mobileThemeToggle = document.getElementById('theme-toggle-mobile');
+                if (mobileThemeToggle) {
+                    mobileThemeToggle.addEventListener('click', toggleTheme);
+                }
+
+                // Mobile menu toggle
+                const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+                const mobileMenu = document.getElementById('mobile-menu');
+                if (mobileMenuBtn && mobileMenu) {
+                    mobileMenuBtn.addEventListener('click', function() {
+                        const isHidden = mobileMenu.classList.contains('hidden');
+                        if (isHidden) {
+                            mobileMenu.classList.remove('hidden');
+                            mobileMenu.classList.add('flex');
+                        } else {
+                            mobileMenu.classList.add('hidden');
+                            mobileMenu.classList.remove('flex');
+                        }
+                    });
+                }
 
                 // Initialize the correct icon on page load
                 document.addEventListener('DOMContentLoaded', updateThemeIcons);
 
                 // Listen for changes in system color scheme preference
                 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-                    // react even user has a preference in local storage (same as vite press does it)
                     const isDark = event.matches;
                     document.documentElement.classList.toggle('dark', isDark);
                     updateThemeIcons();
-
-                    // Dispatch custom event for Monaco editors
                     document.dispatchEvent(new CustomEvent('themeChanged'));
                 });
             </script>
