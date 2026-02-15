@@ -92,7 +92,7 @@ class Runner
                 '--log-verbosity=all',
                 '--ansi',
                 '--no-progress',
-                '--show-mutations=0'
+                '--show-mutations=0',
             ], $rootDir);
             $process->setTimeout(self::PROCESS_TIMEOUT_SEC);
 
