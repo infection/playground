@@ -21,5 +21,12 @@ export APP_SECRET=$(cat "$SCRIPT_DIR/../secrets/app_secret")
 export DATABASE_NAME=$(cat "$SCRIPT_DIR/../secrets/mysql_db_name")
 export DATABASE_USER=$(cat "$SCRIPT_DIR/../secrets/mysql_db_user")
 
+if [ "${RECREATE_SECRETS:-0}" = "1" ]; then
+    echo "Removing service and secrets before redeployment..."
+    docker service rm infection_web || true
+    docker secret rm infection_ssl_certificate || true
+    docker secret rm infection_ssl_key || true
+fi
+
 docker stack deploy -c docker-stack.yml infection --with-registry-auth
 
