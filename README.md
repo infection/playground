@@ -6,7 +6,10 @@ This is a repository for Infection Playground, hosted here: https://infection-ph
 
 Please read documentation here: [infection.github.io](http://infection.github.io)
 
-Twitter: [@infection_php](http://twitter.com/infection_php)
+* Twitter: [@infection_php][[twitter](http://twitter.com/infection_php)]
+* Mastodon: [@infection_php][[mastodon](https://mastodon.social/@infection_php)]
+* Discord: https://discord.gg/ZUmyHTJ
+* [Playground](https://infection-php.dev/) - try it right in your browser!
 
 ### Developing
 
