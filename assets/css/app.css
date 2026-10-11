@@ -1050,12 +1050,15 @@ kbd {
     color: var(--c);
 }
 
+/* room around the cells, so the rings of the hovered and focused cell are not cut off where the strip scrolls */
 .strip {
     display: flex;
     flex-wrap: wrap;
     gap: 3px;
-    max-height: 88px;
+    max-height: 96px;
     overflow-y: auto;
+    padding: 3px;
+    margin: -3px;
 }
 
 .cell {
@@ -1070,11 +1073,11 @@ kbd {
     background: color-mix(in oklab, var(--c) 16%, var(--surface));
     color: var(--c);
     border: 1px solid color-mix(in oklab, var(--c) 35%, transparent);
-    transition: transform .12s;
+    transition: box-shadow .12s;
 }
 
 .cell:hover {
-    transform: translateY(-2px);
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--c) 55%, transparent);
 }
 
 .cell[aria-current="true"] {
