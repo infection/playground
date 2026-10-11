@@ -33,24 +33,54 @@
 
 declare(strict_types=1);
 
-namespace App\Request;
+namespace App\PhpParser\XRay;
 
-use App\Entity\AstRun;
-use App\Validator as AppAssert;
-use Symfony\Component\Validator\Constraints as Assert;
+use PhpParser\Node;
+use PhpParser\Node\Attribute;
+use PhpParser\Node\AttributeGroup;
+use PhpParser\Node\Expr\Variable;
+use PhpParser\Node\Identifier;
+use PhpParser\Node\Name;
+use PhpParser\Node\Param;
+use PhpParser\Node\Stmt;
+use PhpParser\Node\Stmt\UseUse;
 
-class CreateAstRunRequest
+/**
+ * Resolves the node class that should be used in Mutator::canMutate() to mutate the given node.
+ *
+ * Same logic as AstController::resolveTargetNodeClass(), but tolerant to nodes without a parent.
+ * Requires the "parent" attribute set by ParentConnectingVisitor.
+ */
+final class MutatorTargetNodeResolver
 {
-    #[AppAssert\ValidPhpCode]
-    #[Assert\NotBlank]
-    public ?string $code = null;
-
-    public static function fromEntity(AstRun $astRun): self
+    public function resolve(Node $node): string
     {
-        $self = new self();
+        $parentNode = $node->getAttribute('parent');
 
-        $self->code = $astRun->getCode();
+        if ($node instanceof UseUse || $node instanceof AttributeGroup) {
+            return $parentNode instanceof Node ? $parentNode::class : $node::class;
+        }
 
-        return $self;
+        if ($node instanceof Attribute) {
+            $stmt = $parentNode instanceof Node ? $parentNode->getAttribute('parent') : null;
+
+            return $stmt instanceof Node ? $stmt::class : $node::class;
+        }
+
+        if ($node instanceof Stmt) {
+            return $node::class;
+        }
+
+        // special case
+        if ($node instanceof Variable && $parentNode instanceof Param) {
+            return $parentNode::class;
+        }
+
+        // target one level up
+        if (($node instanceof Identifier || $node instanceof Name || $node instanceof Variable) && $parentNode instanceof Node) {
+            return $this->resolve($parentNode);
+        }
+
+        return $node::class;
     }
 }

@@ -235,60 +235,6 @@ function showDiffEditor(mutator) {
     });
 }
 
-export function initAstEditor() {
-    const loadedCodeElement = document.getElementById('loaded-code');
-    const code = loadedCodeElement !== null
-        ? loadedCodeElement.dataset.code
-        : [
-            '<?php',
-            '',
-            'function add(int $a, int $b): int',
-            '{',
-            '    return $a + $b;',
-            '}',
-        ].join('\n');
-
-    const editorNode = document.getElementById('editor-code-ast');
-
-    if (!editorNode) {
-        return;
-    }
-
-    const codeEditor = monaco.editor.create(editorNode, {
-        minimap: {
-            enabled: false
-        },
-        value: code,
-        language: 'php',
-        theme: isCurrentThemeDark() ? 'vs-dark' : 'vs'
-    });
-
-    // Set initial theme based on current mode
-    updateEditorsTheme();
-
-    // Listen for theme changes
-    document.addEventListener('themeChanged', updateEditorsTheme);
-
-    document.getElementById('js-submit').addEventListener(
-        'click',
-        function () {
-            disableButton(this);
-
-            document.getElementById('create_ast_run_code').textContent = codeEditor.getValue();
-            document.getElementsByName("create_ast_run")[0].submit()
-
-            return false;
-        }
-    );
-
-    window.addEventListener('resize', function() {
-        setTimeout(function () {
-            codeEditor.layout();
-        }, 50);
-
-    }, true);
-}
-
 function initCodeEditor() {
     const loadedCodeElement = document.getElementById('loaded-code');
     const code = loadedCodeElement !== null

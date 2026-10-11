@@ -36,178 +36,168 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\AstRun;
-use App\Form\CreateAstRunType;
-use App\PhpParser\ClickablePrinter;
-use App\PhpParser\NodeResolver\FocusedNodeResolver;
-use App\PhpParser\SimpleNodeDumper;
-use App\PhpParser\SimplePhpParser;
+use App\PhpParser\XRay\XRayBuilder;
 use App\Repository\AstRunRepository;
-use App\Request\CreateAstRunRequest;
 use Doctrine\ORM\EntityManagerInterface;
 use Hashids\Hashids;
-use function is_int;
-use PhpParser\Node;
-use PhpParser\Node\Attribute;
-use PhpParser\Node\AttributeGroup;
-use PhpParser\Node\Expr\Variable;
-use PhpParser\Node\Identifier;
-use PhpParser\Node\Name;
-use PhpParser\Node\Param;
-use PhpParser\Node\Stmt;
-use PhpParser\Node\Stmt\UseUse;
+use function is_array;
+use function is_string;
+use function json_decode;
+use PhpParser\Error;
+use function str_starts_with;
+use function strlen;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Webmozart\Assert\Assert;
+use function trim;
 
+/**
+ * AST explorer with AST X-Ray. Code is analyzed live via /ast/xray and saved only when shared.
+ *
+ * Shared links are /ast/{astRunIdHash}/{activeNodeId}, where activeNodeId is the 1-based
+ * pre-order index of the node in the AST (as in the original AST explorer, so old links keep working).
+ */
 class AstController extends AbstractController
 {
+    private const MAX_CODE_LENGTH = 100_000;
+
     public function __construct(
         private Hashids $hashids,
         private AstRunRepository $astRunRepository,
-        private SimplePhpParser $simplePhpParser,
-        private FocusedNodeResolver $focusedNodeResolver
+        private XRayBuilder $xRayBuilder,
     ) {
     }
 
     #[Route('/ast', name: 'app_ast_index', methods: ['GET'])]
     public function index(): Response
     {
-        $createExampleRequest = new CreateAstRunRequest();
-
-        $form = $this->createForm(CreateAstRunType::class, $createExampleRequest);
-
         return $this->render('ast/index.html.twig', [
-            'form' => $form->createView(),
+            'code' => null,
+            'idHash' => null,
+            'activeNodeId' => null,
+            'xray' => null,
         ]);
     }
 
-    #[Route('/ast', name: 'app_ast_create', methods: ['POST'])]
-    public function createExample(Request $request, EntityManagerInterface $em): Response
+    #[Route('/ast/xray', name: 'app_ast_xray', methods: ['POST'])]
+    public function xray(Request $request): JsonResponse
     {
-        $createAstRunRequest = new CreateAstRunRequest();
+        $code = $this->extractCode($request);
 
-        $form = $this->createForm(CreateAstRunType::class, $createAstRunRequest);
+        if ($code instanceof JsonResponse) {
+            return $code;
+        }
 
-        $form->handleRequest($request);
+        try {
+            return new JsonResponse($this->xRayBuilder->build($code));
+        } catch (Error $e) {
+            return $this->parseErrorResponse($e, $code);
+        }
+    }
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            Assert::notNull($createAstRunRequest->code);
+    #[Route('/ast/share', name: 'app_ast_share', methods: ['POST'])]
+    public function share(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $code = $this->extractCode($request);
 
-            $existingAstRun = $this->astRunRepository->findContentByHash(
-                AstRun::hashInput($createAstRunRequest->code)
-            );
+        if ($code instanceof JsonResponse) {
+            return $code;
+        }
 
-            if ($existingAstRun instanceof AstRun) {
-                return $this->redirectToRoute('app_ast_display', ['astRunIdHash' => $this->hashids->encode($existingAstRun->getId())]);
-            }
+        if (trim($code) === '') {
+            return new JsonResponse(['error' => ['message' => 'Code must not be blank']], Response::HTTP_BAD_REQUEST);
+        }
 
-            $astRun = new AstRun($createAstRunRequest->code);
+        // stored code is always loaded with an opening tag, so node ids in the link match what the user sees
+        $code = self::ensureOpeningTag($code);
+
+        try {
+            $this->xRayBuilder->build($code);
+        } catch (Error $e) {
+            return $this->parseErrorResponse($e, $code);
+        }
+
+        $astRun = $this->astRunRepository->findContentByHash(AstRun::hashInput($code));
+
+        if (!$astRun instanceof AstRun) {
+            $astRun = new AstRun($code);
 
             $em->persist($astRun);
             $em->flush();
 
-            $idHash = $this->hashids->encode($astRun->getId());
-
-            $astRun->setIdHash($idHash);
+            $astRun->setIdHash($this->hashids->encode($astRun->getId()));
             $em->flush();
-
-            return $this->redirectToRoute('app_ast_display', ['astRunIdHash' => $idHash]);
         }
 
-        return $this->render('ast/create.html.twig', [
-            'form' => $form->createView(),
-            'astRun' => $createAstRunRequest,
+        $idHash = (string) $astRun->getIdHash();
+
+        return new JsonResponse([
+            'idHash' => $idHash,
+            'code' => $code,
+            'url' => $this->generateUrl('app_ast_display', ['astRunIdHash' => $idHash]),
         ]);
     }
 
-    #[Route('/ast/{astRunIdHash}/{activeNodeId}', name: 'app_ast_display', defaults: ['activeNodeId' => null], methods: ['GET'])]
-    public function displayExample(EntityManagerInterface $em, string $astRunIdHash, ?int $activeNodeId = null): Response
+    #[Route('/ast/{astRunIdHash}/{activeNodeId}', name: 'app_ast_display', requirements: ['activeNodeId' => '\d+'], defaults: ['activeNodeId' => null], methods: ['GET'])]
+    public function display(EntityManagerInterface $em, string $astRunIdHash, ?int $activeNodeId = null): Response
     {
+        $ids = $this->hashids->decode($astRunIdHash);
         /** @var AstRun|null $astRun */
-        $astRun = $em->find(AstRun::class, $this->hashids->decode($astRunIdHash)[0]);
+        $astRun = $ids === [] ? null : $em->find(AstRun::class, $ids[0]);
 
         if (!$astRun instanceof AstRun) {
             throw $this->createNotFoundException();
         }
 
-        $createAstRequest = CreateAstRunRequest::fromEntity($astRun);
+        // the original AST explorer parsed code without an opening tag as if it had one
+        $code = self::ensureOpeningTag($astRun->getCode());
 
-        $nodes = $this->simplePhpParser->parseString($astRun->getCode());
-
-        $focusedNode = is_int($activeNodeId) && $activeNodeId > 0
-            ? $this->focusedNodeResolver->focus($nodes, $activeNodeId)
-            : null;
-
-        if ($focusedNode instanceof Node) {
-            $simpleNodeDump = SimpleNodeDumper::dump($focusedNode);
-            $targetNodeClass = $this->resolveTargetNodeClass($focusedNode);
-        } else {
-            $simpleNodeDump = SimpleNodeDumper::dump($nodes);
-            $targetNodeClass = null;
+        try {
+            $xray = $this->xRayBuilder->build($code);
+        } catch (Error) {
+            $xray = null;
         }
 
-        $form = $this->createForm(CreateAstRunType::class, $createAstRequest);
-
         return $this->render('ast/index.html.twig', [
-            'form' => $form->createView(),
-            'astRun' => $createAstRequest,
-            'clickableNodesDump' => $this->makeNodeClickable($nodes, $astRunIdHash, $activeNodeId),
-            'simpleNodeDump' => $simpleNodeDump,
-            'targetNodeClass' => $targetNodeClass,
+            'code' => $code,
+            'idHash' => $astRun->getIdHash() ?? $astRunIdHash,
+            'activeNodeId' => $activeNodeId,
+            'xray' => $xray,
         ]);
     }
 
-    /**
-     * @param Node[] $nodes
-     */
-    private function makeNodeClickable(array $nodes, string $uuid, ?int $activeNodeId): string
+    private function extractCode(Request $request): string|JsonResponse
     {
-        $clickablePrinter = new ClickablePrinter($uuid, $activeNodeId);
+        $payload = json_decode($request->getContent(), true);
+        $code = is_array($payload) ? ($payload['code'] ?? null) : null;
 
-        return $clickablePrinter->prettyPrint($nodes);
+        if (!is_string($code)) {
+            return new JsonResponse(['error' => ['message' => 'Expected JSON body {"code": "<?php ..."}']], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (strlen($code) > self::MAX_CODE_LENGTH) {
+            return new JsonResponse(['error' => ['message' => 'Code is too long']], Response::HTTP_REQUEST_ENTITY_TOO_LARGE);
+        }
+
+        return $code;
     }
 
-    private function resolveTargetNodeClass(Node $node): string
+    private function parseErrorResponse(Error $e, string $code): JsonResponse
     {
-        if ($node instanceof UseUse || $node instanceof AttributeGroup) {
-            /** @var Node $parentNode */
-            $parentNode = $node->getAttribute('parent');
+        return new JsonResponse([
+            'error' => [
+                'message' => $e->getRawMessage(),
+                'startLine' => $e->getStartLine(),
+                'startColumn' => $e->hasColumnInfo() ? $e->getStartColumn($code) : null,
+                'endColumn' => $e->hasColumnInfo() ? $e->getEndColumn($code) : null,
+            ],
+        ], Response::HTTP_UNPROCESSABLE_ENTITY);
+    }
 
-            return $parentNode::class;
-        }
-
-        if ($node instanceof Attribute) {
-            /** @var Node $attributeGroup */
-            $attributeGroup = $node->getAttribute('parent');
-            /** @var Node $stmt */
-            $stmt = $attributeGroup->getAttribute('parent');
-
-            return $stmt::class;
-        }
-
-        if ($node instanceof Stmt) {
-            return $node::class;
-        }
-
-        if ($node instanceof Variable) {
-            $parentNode = $node->getAttribute('parent');
-
-            // special case
-            if ($parentNode instanceof Param) {
-                return $parentNode::class;
-            }
-        }
-
-        // target one level up
-        if ($node instanceof Identifier || $node instanceof Name || $node instanceof Variable) {
-            /** @var Node $parentNode */
-            $parentNode = $node->getAttribute('parent');
-
-            return $this->resolveTargetNodeClass($parentNode);
-        }
-
-        return $node::class;
+    private static function ensureOpeningTag(string $code): string
+    {
+        return str_starts_with(trim($code), '<?php') ? $code : '<?php ' . $code;
     }
 }

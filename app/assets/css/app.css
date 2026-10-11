@@ -322,21 +322,6 @@
 }
 
 /* ==========================================
-   AST Explorer
-   ========================================== */
-#clickable-nodes-code a.active-node {
-    color: #16a34a;
-    font-weight: 600;
-}
-.dark #clickable-nodes-code a.active-node {
-    color: #4ade80;
-}
-
-pre code.hljs {
-    border-radius: 0.75rem;
-}
-
-/* ==========================================
    ANSI Theme - Light mode
    ========================================== */
 .ansi-theme-container .ansi_color_fg_black { color: black; }
