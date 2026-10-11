@@ -1,0 +1,25 @@
+---
+# Production environment override
+#
+# Deployed by deploy/prod.sh, which reads the values below from secrets/.
+services:
+  php:
+    # not "infection-playground-php": that one is the php-fpm image of the legacy swarm stack
+    image: ${IMAGES_PREFIX:-maksrafalko/}infection-playground-frankenphp:${IMAGE_TAG:-latest}
+    # the droplet
+    platform: linux/amd64
+    build:
+      context: .
+      target: frankenphp_prod
+    environment:
+      APP_SECRET: ${APP_SECRET:?}
+      # Caddy gets and renews the Let's Encrypt certificate for SERVER_NAME by itself;
+      # it keeps it in the caddy_data volume.
+      SERVER_NAME: ${SERVER_NAME:-infection-php.dev}, php:80
+      # the password may contain characters that are not allowed in a URL
+      DATABASE_URL: mysql://${MYSQL_USER:?}:${MYSQL_PASSWORD_URLENCODED:?}@database:3306/${MYSQL_DATABASE:?}?serverVersion=${MYSQL_VERSION:-8.4}&charset=${MYSQL_CHARSET:-utf8mb4}
+
+  database:
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?}
