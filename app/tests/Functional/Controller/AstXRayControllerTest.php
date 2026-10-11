@@ -37,6 +37,8 @@ namespace App\Tests\Functional\Controller;
 
 use function json_decode;
 use function json_encode;
+use const JSON_THROW_ON_ERROR;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class AstXRayControllerTest extends WebTestCase
@@ -57,11 +59,11 @@ class AstXRayControllerTest extends WebTestCase
         $client = static::createClient();
         $client->catchExceptions(false);
 
-        $client->request('POST', '/ast2/xray', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode(['code' => '<?php echo "é", $a;']));
+        $client->request('POST', '/ast2/xray', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode(['code' => '<?php echo "é", $a;'], JSON_THROW_ON_ERROR));
 
         static::assertSame(200, $client->getResponse()->getStatusCode());
 
-        $nodes = json_decode((string) $client->getResponse()->getContent(), true)['nodes'];
+        $nodes = self::getNodes($client);
 
         static::assertSame(
             [
@@ -78,9 +80,9 @@ class AstXRayControllerTest extends WebTestCase
         $client = static::createClient();
         $client->catchExceptions(false);
 
-        $client->request('POST', '/ast2/xray', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode(['code' => '<?php class A { public static function f(int $x) {} }']));
+        $client->request('POST', '/ast2/xray', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode(['code' => '<?php class A { public static function f(int $x) {} }'], JSON_THROW_ON_ERROR));
 
-        $nodes = json_decode((string) $client->getResponse()->getContent(), true)['nodes'];
+        $nodes = self::getNodes($client);
         $method = $nodes[2];
 
         static::assertSame('Stmt\ClassMethod', $method[0]);
@@ -95,12 +97,12 @@ class AstXRayControllerTest extends WebTestCase
         $client = static::createClient();
         $client->catchExceptions(false);
 
-        $client->request('POST', '/ast2/xray', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode(['code' => '<?php $a ==== $b;']));
+        $client->request('POST', '/ast2/xray', [], [], ['CONTENT_TYPE' => 'application/json'], json_encode(['code' => '<?php $a ==== $b;'], JSON_THROW_ON_ERROR));
 
         static::assertSame(422, $client->getResponse()->getStatusCode());
         static::assertSame(
             ['error' => ['message' => "Syntax error, unexpected '='", 'startLine' => 1, 'startColumn' => 13, 'endColumn' => 13]],
-            json_decode((string) $client->getResponse()->getContent(), true),
+            json_decode((string) $client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR),
         );
     }
 
@@ -112,5 +114,21 @@ class AstXRayControllerTest extends WebTestCase
         $client->request('POST', '/ast2/xray', [], [], ['CONTENT_TYPE' => 'application/json'], '{"foo": 1}');
 
         static::assertSame(400, $client->getResponse()->getStatusCode());
+    }
+
+    /**
+     * @return list<array{0: string, 1: int, 2: int, 3: int, 4: list<array{0: string, 1: mixed}>, 5: string}>
+     */
+    private static function getNodes(KernelBrowser $client): array
+    {
+        $response = json_decode((string) $client->getResponse()->getContent(), true, 512, JSON_THROW_ON_ERROR);
+
+        static::assertIsArray($response);
+        static::assertArrayHasKey('nodes', $response);
+
+        /** @var list<array{0: string, 1: int, 2: int, 3: int, 4: list<array{0: string, 1: mixed}>, 5: string}> $nodes */
+        $nodes = $response['nodes'];
+
+        return $nodes;
     }
 }
