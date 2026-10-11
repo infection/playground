@@ -246,6 +246,11 @@ final class CodeValidator
                 'file_exists',
                 'getcwd',
                 'glob',
+                // PHPUnit 13 calls it before every test (ShutdownHandler)
+                'getmypid',
+                // php-code-coverage 13 hashes the covered files and checks the XML report directory is writable
+                'sha1_file',
+                'is_writable',
             ]
         ));
     }
