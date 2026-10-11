@@ -41,10 +41,19 @@ final class ExtractedClass
 
     private string $code;
 
-    public function __construct(string $className, string $code)
+    /**
+     * @var array<int, int>
+     */
+    private array $lineMap;
+
+    /**
+     * @param array<int, int> $lineMap line in the extracted file => line in the submitted code
+     */
+    public function __construct(string $className, string $code, array $lineMap = [])
     {
         $this->className = $className;
         $this->code = $code;
+        $this->lineMap = $lineMap;
     }
 
     public function getClassName(): string
@@ -55,5 +64,13 @@ final class ExtractedClass
     public function getCode(): string
     {
         return $this->code;
+    }
+
+    /**
+     * @return array<int, int> line in the extracted file => line in the submitted code
+     */
+    public function getLineMap(): array
+    {
+        return $this->lineMap;
     }
 }
