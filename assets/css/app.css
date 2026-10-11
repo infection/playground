@@ -515,3 +515,12 @@
 .ansi-theme-container span {
     transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out;
 }
+
+/* a new mutant's diff fades in once it is computed (see showDiffEditor) */
+#editor-diff {
+    transition: opacity 150ms ease-out;
+}
+#editor-diff.mutant-diff-pending {
+    opacity: 0;
+    transition: none;
+}
