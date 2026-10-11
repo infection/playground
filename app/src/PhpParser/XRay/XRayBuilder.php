@@ -190,10 +190,10 @@ final class XRayBuilder
         return $this->nodes;
     }
 
-    private function visit(Node $node, int $parent): ?int
+    private function visit(Node $node, int $parent): void
     {
         if (!$node->hasAttribute('startFilePos') || !$node->hasAttribute('endFilePos')) {
-            return null;
+            return;
         }
 
         $index = count($this->nodes);
@@ -231,8 +231,6 @@ final class XRayBuilder
         }
 
         $this->nodes[$index][4] = $props;
-
-        return $index;
     }
 
     /**

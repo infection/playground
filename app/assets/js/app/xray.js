@@ -105,14 +105,14 @@ function shortClass(fqcn) {
 /**
  * @param {object} options
  * @param {HTMLElement} options.editorNode
- * @param {HTMLElement|null} options.statusNode
+ * @param {HTMLElement} options.statusNode
  * @param {string} options.endpoint            POST endpoint returning the X-Ray data for {code}
  * @param {string} options.code
- * @param {object|null} options.initialData    X-Ray data for `code`, saves the first request
+ * @param {object|null} options.initialData    X-Ray data for `code` (saves the first request), or null
  * @param {function(number)} options.onPin     called with the pinned node index (-1 when unpinned)
  * @param {function()} options.onData          called whenever fresh X-Ray data is applied
  */
-export function initXRayEditor({editorNode, statusNode, endpoint, code, initialData = null, onPin = () => {}, onData = () => {}}) {
+export function initXRayEditor({editorNode, statusNode, endpoint, code, initialData, onPin, onData}) {
     const editor = monaco.editor.create(editorNode, {
         value: code,
         language: 'php',
@@ -185,7 +185,6 @@ export function initXRayEditor({editorNode, statusNode, endpoint, code, initialD
         }
 
         // xray-bg-dark / xray-bg-light name the editor background, the box colours depend on it.
-        editorNode.classList.toggle('xray-on', state.enabled);
         editorNode.classList.toggle('xray-bg-dark', state.enabled && dark);
         editorNode.classList.toggle('xray-bg-light', state.enabled && !dark);
         toggle.classList.toggle('xray-toggle-active', state.enabled);
@@ -193,10 +192,6 @@ export function initXRayEditor({editorNode, statusNode, endpoint, code, initialD
     }
 
     function setStatus(text, isError) {
-        if (!statusNode) {
-            return;
-        }
-
         statusNode.textContent = text;
         statusNode.classList.toggle('xray-status-error', !!isError);
     }
