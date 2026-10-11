@@ -340,6 +340,16 @@
 .mutant-glyph-bad::before { background: #ef4444; }
 .mutant-glyph-warn::before { background: #eab308; }
 .mutant-glyph-good::before { background: #22c55e; }
+/* the dot of the selected mutant gets a ring of its own color */
+.mutant-glyph-selected::before {
+    width: 7px;
+    height: 7px;
+    outline: 2px solid;
+    outline-offset: 2px;
+}
+.mutant-glyph-bad.mutant-glyph-selected::before { outline-color: #ef4444; }
+.mutant-glyph-warn.mutant-glyph-selected::before { outline-color: #eab308; }
+.mutant-glyph-good.mutant-glyph-selected::before { outline-color: #22c55e; }
 
 .mutant-line-bad { background: rgba(239, 68, 68, 0.15); }
 .mutant-line-warn { background: rgba(234, 179, 8, 0.18); }
