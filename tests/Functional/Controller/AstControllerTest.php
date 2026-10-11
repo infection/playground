@@ -35,6 +35,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Controller;
 
+use App\Controller\AstController;
 use App\Entity\AstRun;
 use Doctrine\ORM\EntityManagerInterface;
 use Hashids\Hashids;
@@ -42,6 +43,8 @@ use function json_decode;
 use function json_encode;
 use const PHP_INT_MAX;
 use function random_int;
+use function sprintf;
+use function str_repeat;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
@@ -120,6 +123,33 @@ class AstControllerTest extends WebTestCase
         $client->request('POST', '/ast/xray', [], [], ['CONTENT_TYPE' => 'application/json'], '{"foo": 1}');
 
         static::assertSame(400, $client->getResponse()->getStatusCode());
+    }
+
+    public function test_it_rejects_too_long_code(): void
+    {
+        $client = self::createExplorerClient();
+        $code = '<?php ' . str_repeat('$a;', (int) (AstController::MAX_CODE_LENGTH / 3));
+
+        foreach (['/ast/xray', '/ast/share'] as $endpoint) {
+            $client->request('POST', $endpoint, [], [], ['CONTENT_TYPE' => 'application/json'], (string) json_encode(['code' => $code]));
+
+            static::assertSame(413, $client->getResponse()->getStatusCode());
+            static::assertSame(
+                ['error' => ['message' => sprintf('Code is too long. It should have %d characters or less.', AstController::MAX_CODE_LENGTH)]],
+                json_decode((string) $client->getResponse()->getContent(), true),
+            );
+        }
+    }
+
+    public function test_it_accepts_code_of_the_maximum_length(): void
+    {
+        $client = self::createExplorerClient();
+        // multibyte characters: the limit is in characters, not bytes
+        $code = '<?php //' . str_repeat('ё', AstController::MAX_CODE_LENGTH - 8);
+
+        $client->request('POST', '/ast/xray', [], [], ['CONTENT_TYPE' => 'application/json'], (string) json_encode(['code' => $code]));
+
+        static::assertSame(200, $client->getResponse()->getStatusCode());
     }
 
     public function test_it_shares_code_once_per_content(): void

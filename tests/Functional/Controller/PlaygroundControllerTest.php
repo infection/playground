@@ -35,9 +35,11 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Controller;
 
+use App\Request\CreateExampleRequest;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use function sprintf;
+use function str_repeat;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class PlaygroundControllerTest extends WebTestCase
@@ -112,6 +114,44 @@ class PlaygroundControllerTest extends WebTestCase
 
         static::assertSame(200, $client->getResponse()->getStatusCode());
         static::assertStringContainsString('This is not a valid PHP code. Errors: Syntax error, unexpected', (string) $client->getResponse()->getContent());
+    }
+
+    #[DataProvider('provideTooLongFields')]
+    public function test_it_fails_when_a_field_is_too_long(string $field, string $value, int $limit): void
+    {
+        $client = static::createClient();
+        $client->followRedirects();
+        $client->catchExceptions(false);
+
+        $client->request('GET', '/');
+
+        $client->submitForm('create_example[mutate]', [
+            'create_example[code]' => '<?php $a = $b;',
+            'create_example[test]' => '<?php $a = $b;',
+            'create_example[config]' => '{"mutators": {"@default": true}}',
+            $field => $value,
+        ]);
+
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertStringContainsString(
+            sprintf('This value is too long. It should have %d characters or less.', $limit),
+            (string) $client->getResponse()->getContent(),
+        );
+    }
+
+    public static function provideTooLongFields(): Generator
+    {
+        $tooLongCode = '<?php //' . str_repeat('a', CreateExampleRequest::MAX_CODE_LENGTH);
+
+        yield 'code' => ['create_example[code]', $tooLongCode, CreateExampleRequest::MAX_CODE_LENGTH];
+
+        yield 'test' => ['create_example[test]', $tooLongCode, CreateExampleRequest::MAX_CODE_LENGTH];
+
+        yield 'config' => [
+            'create_example[config]',
+            '{"mutators": {"@default": true}' . str_repeat(' ', CreateExampleRequest::MAX_CONFIG_LENGTH) . '}',
+            CreateExampleRequest::MAX_CONFIG_LENGTH,
+        ];
     }
 
     public function test_it_works_with_valid_both_code_and_test(): void

@@ -43,9 +43,10 @@ use Hashids\Hashids;
 use function is_array;
 use function is_string;
 use function json_decode;
+use function mb_strlen;
 use PhpParser\Error;
+use function sprintf;
 use function str_starts_with;
-use function strlen;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -61,7 +62,10 @@ use function trim;
  */
 class AstController extends AbstractController
 {
-    private const MAX_CODE_LENGTH = 100_000;
+    /**
+     * Longer code produces an AST too big to build and render in the browser.
+     */
+    public const MAX_CODE_LENGTH = 20_000;
 
     public function __construct(
         private Hashids $hashids,
@@ -177,8 +181,8 @@ class AstController extends AbstractController
             return new JsonResponse(['error' => ['message' => 'Expected JSON body {"code": "<?php ..."}']], Response::HTTP_BAD_REQUEST);
         }
 
-        if (strlen($code) > self::MAX_CODE_LENGTH) {
-            return new JsonResponse(['error' => ['message' => 'Code is too long']], Response::HTTP_REQUEST_ENTITY_TOO_LARGE);
+        if (mb_strlen($code) > self::MAX_CODE_LENGTH) {
+            return new JsonResponse(['error' => ['message' => sprintf('Code is too long. It should have %d characters or less.', self::MAX_CODE_LENGTH)]], Response::HTTP_REQUEST_ENTITY_TOO_LARGE);
         }
 
         return $code;
