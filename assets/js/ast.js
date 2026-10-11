@@ -2,11 +2,10 @@ import '../css/app.css';
 import '../css/xray.css';
 import '../css/ast.css';
 
+// before Monaco: the panes get their saved sizes without waiting for it to load
+import './app/splitters.js';
 import monaco from './monaco.js';
 import {initXRayEditor} from './app/xray.js';
-import {initSplitters} from './app/splitters.js';
-
-initSplitters();
 
 const DEFAULT_CODE = [
     '<?php',
@@ -196,7 +195,7 @@ function initAstExplorer(root) {
         }
 
         if (pinned < 0) {
-            details.appendChild(el('p', 'ast-details-hint', 'Click on any part of the code to pin its node and see what to use in Mutator::canMutate(). The whole AST:'));
+            details.appendChild(el('p', 'ast-details-hint', 'The whole AST:'));
             const pre = el('pre', 'ast-dump');
             nodes.forEach((node, index) => {
                 if (node.parent < 0) {

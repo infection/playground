@@ -1,5 +1,10 @@
 {% extends 'base.html.twig' %}
 
+{# the versions of this run, or of a new one: in the top bar, and in the menu on narrow screens #}
+{% set infectionVersion = example.infectionVersion ?? constant('App\\Infection\\Runner::CURRENT_INFECTION_VERSION') %}
+{% set phpunitVersion = example.phpunitVersion ?? constant('App\\Infection\\Runner::CURRENT_PHPUNIT_VERSION') %}
+{% set phpVersion = example.phpVersion ?? constant('App\\Infection\\Runner::CURRENT_PHP_VERSION') %}
+
 {% block title %}Infection Playground{% endblock %}
 
 {% block body_class %}workbench-page{% endblock %}

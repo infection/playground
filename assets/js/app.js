@@ -8,8 +8,8 @@
 // any CSS you import will output into a single css file (app.css in this case)
 import '../css/app.css';
 
+// before the editors: the panes get their saved sizes without waiting for Monaco to load
+import './app/splitters.js';
 import {initMutationEditors} from './app/editor.js';
-import {initSplitters} from './app/splitters.js';
 
-initSplitters();
 initMutationEditors();

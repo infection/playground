@@ -18,16 +18,16 @@
     --line-strong: #b9c4bd;
     --fg: #141c18;
     --fg-2: #3a4640;
-    --muted: #66746c;
-    --brand: #1b8a4c;
-    --brand-hover: #157440;
+    --muted: #5b6961;
+    --brand: #177a43;
+    --brand-hover: #136637;
     --brand-fg: #ffffff;
     --focus: #2563eb;
 
-    --killed: #17864b;
+    --killed: #137a43;
     --escaped: #cf2f3b;
-    --uncovered: #bd6500;
-    --timeout: #9c7a00;
+    --uncovered: #a65800;
+    --timeout: #876a00;
     --errored: #3a63c9;
 
     --shadow: 0 1px 2px rgb(20 28 24 / .06), 0 8px 24px rgb(20 28 24 / .10);
@@ -102,7 +102,7 @@ kbd {
     height: 100%;
 }
 
-.top {
+.topbar {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -427,22 +427,22 @@ kbd {
 /* ==========================================
    Drag handles between the panes
    ========================================== */
-.gutter {
+.splitter {
     position: relative;
     touch-action: none;
     border-radius: 4px;
 }
 
-.gutter-x {
+.splitter-x {
     cursor: col-resize;
 }
 
-.gutter-y {
+.splitter-y {
     cursor: row-resize;
 }
 
 /* a grip in the middle, so the edge looks draggable */
-.gutter::after {
+.splitter::after {
     content: "";
     position: absolute;
     top: 50%;
@@ -453,55 +453,55 @@ kbd {
     transition: background .15s;
 }
 
-.gutter-x::after {
+.splitter-x::after {
     width: 4px;
     height: 32px;
 }
 
-.gutter-y::after {
+.splitter-y::after {
     width: 32px;
     height: 4px;
 }
 
 /* the line the edge becomes while hovered or dragged */
-.gutter::before {
+.splitter::before {
     content: "";
     position: absolute;
     background: transparent;
     transition: background .15s;
 }
 
-.gutter-x::before {
+.splitter-x::before {
     top: 0;
     bottom: 0;
     left: calc(50% - 1px);
     width: 2px;
 }
 
-.gutter-y::before {
+.splitter-y::before {
     left: 0;
     right: 0;
     top: calc(50% - 1px);
     height: 2px;
 }
 
-.gutter:hover::before,
-.gutter.is-dragging::before,
-.gutter:focus-visible::before {
+.splitter:hover::before,
+.splitter.is-dragging::before,
+.splitter:focus-visible::before {
     background: var(--focus);
 }
 
-.gutter:hover::after,
-.gutter.is-dragging::after,
-.gutter:focus-visible::after {
+.splitter:hover::after,
+.splitter.is-dragging::after,
+.splitter:focus-visible::after {
     background: var(--focus);
 }
 
-.gutter:focus-visible {
+.splitter:focus-visible {
     outline: none;
 }
 
-.gutter[hidden] {
+.splitter[hidden] {
     display: none;
 }
 
@@ -592,7 +592,7 @@ kbd {
     font-size: 12px;
 }
 
-.count {
+.tab-count {
     font-family: var(--font-mono);
     font-size: 11px;
     padding: 1px 6px;
@@ -601,7 +601,7 @@ kbd {
     color: var(--fg-2);
 }
 
-.count:empty {
+.tab-count:empty {
     display: none;
 }
 
@@ -760,9 +760,9 @@ kbd {
 .res > .verdict { grid-row: 1; }
 .res > .run-strip { grid-row: 2; }
 .res > .list { grid-row: 3; }
-.res > .gutter { grid-row: 4; border-radius: 0; border-bottom: 1px solid var(--line); }
-.res > .detail { grid-row: 5; }
-.res > .empty { grid-row: 3 / span 3; }
+.res > .splitter { grid-row: 4; border-radius: 0; border-bottom: 1px solid var(--line); }
+.res > .detail-pane { grid-row: 5; }
+.res > .blank-state { grid-row: 3 / span 3; }
 
 .res > * {
     min-width: 0;
@@ -1051,7 +1051,7 @@ kbd {
 }
 
 /* room around the cells, so the rings of the hovered and focused cell are not cut off where the strip scrolls */
-.strip {
+.cell-strip {
     display: flex;
     flex-wrap: wrap;
     gap: 3px;
@@ -1087,6 +1087,8 @@ kbd {
 
 .cell.is-filtered {
     opacity: .25;
+    cursor: default;
+    box-shadow: none;
 }
 
 .filters {
@@ -1246,7 +1248,7 @@ kbd {
     font-size: 13px;
 }
 
-.detail {
+.detail-pane {
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -1387,7 +1389,7 @@ kbd {
 /* ==========================================
    Empty, error and running states of the results
    ========================================== */
-.empty,
+.blank-state,
 .running {
     flex: 1;
     display: grid;
@@ -1398,7 +1400,7 @@ kbd {
     max-width: 560px;
 }
 
-.empty h3,
+.blank-state h3,
 .running h3 {
     margin: 0;
     font-size: 17px;
@@ -1406,14 +1408,14 @@ kbd {
     letter-spacing: -.01em;
 }
 
-.empty p,
+.blank-state p,
 .running p {
     margin: 0;
     color: var(--fg-2);
     font-size: 13.5px;
 }
 
-.empty code {
+.blank-state code {
     font-family: var(--font-mono);
     font-size: 12px;
     padding: 1px 5px;
@@ -1421,11 +1423,11 @@ kbd {
     background: var(--sunken);
 }
 
-.empty .hint {
+.blank-state .hint {
     color: var(--muted);
 }
 
-.empty kbd {
+.blank-state kbd {
     padding: 1px 6px;
     border: 1px solid var(--line);
     border-bottom-width: 2px;
@@ -1474,7 +1476,7 @@ kbd {
     color: var(--escaped);
 }
 
-.empty[hidden],
+.blank-state[hidden],
 .running[hidden] {
     display: none;
 }
@@ -1499,7 +1501,7 @@ kbd {
 .ansi-theme-container .ansi_color_fg_yellow { color: var(--uncovered); }
 .ansi-theme-container .ansi_color_fg_blue { color: var(--errored); }
 .ansi-theme-container .ansi_color_fg_magenta { color: #a347ba; }
-.ansi-theme-container .ansi_color_fg_cyan { color: #0e8a9a; }
+.ansi-theme-container .ansi_color_fg_cyan { color: #0b7785; }
 .ansi-theme-container .ansi_color_fg_white { color: var(--fg); }
 .ansi-theme-container .ansi_color_fg_\#ef7373 { color: var(--escaped); }
 
@@ -1539,7 +1541,7 @@ kbd {
         height: auto;
     }
 
-    .top {
+    .topbar {
         flex-wrap: wrap;
         position: sticky;
         top: 0;
@@ -1558,11 +1560,11 @@ kbd {
     }
 
     .btn-run kbd,
-    .btn-label {
+    .topbar .btn-label {
         display: none;
     }
 
-    .gutter {
+    .splitter {
         display: none;
     }
 
@@ -1712,24 +1714,62 @@ kbd {
         display: none;
     }
 
+    /* the change goes under the mutator name */
     .m-row {
         grid-template-columns: 22px minmax(0, 1fr) 36px;
+        row-gap: 1px;
+        padding-block: 6px;
     }
 
-    .m-row .m-id,
-    .m-row .m-change {
+    .m-row .m-id {
         display: none;
+    }
+
+    .m-row .m-sym,
+    .m-row .m-line {
+        grid-row: 1 / 3;
+    }
+
+    .m-row .m-change {
+        grid-column: 2;
+        grid-row: 2;
+        font-size: 12px;
     }
 
     .strip-head .legend {
         display: none;
     }
 
+    /* the order select wraps to its own line instead of scrolling out of view */
+    .filters {
+        flex-wrap: wrap;
+    }
+
     .sort {
-        margin-left: 0;
+        margin-left: auto;
     }
 
     .d-nav .btn-label {
+        display: none;
+    }
+}
+
+/* a printed run shows the whole page instead of one screen of fixed panes */
+@media print {
+    .workbench-page .app,
+    .ws,
+    .pane {
+        height: auto;
+        overflow: visible;
+    }
+
+    .ws {
+        display: block;
+    }
+
+    .topbar,
+    .mtabs,
+    .splitter {
         display: none;
     }
 }

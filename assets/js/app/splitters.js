@@ -4,6 +4,8 @@
  * a double click restores the default. The handles also move with the arrow keys.
  *
  * Monaco editors follow the new sizes by themselves (automaticLayout).
+ *
+ * The module starts the handles itself: entrypoints import it before Monaco, whose loading would delay it.
  */
 const STORAGE_KEY = 'playground.splits';
 const KEYBOARD_STEP = 0.02;
@@ -36,7 +38,9 @@ const SPLITS = {
     },
 };
 
-export function initSplitters() {
+initSplitters();
+
+function initSplitters() {
     const shares = readShares();
 
     document.querySelectorAll('[data-split]').forEach((handle) => {
@@ -100,8 +104,8 @@ export function initSplitters() {
         });
 
         handle.addEventListener('dblclick', () => {
-            delete shares[name];
             set(split.initial);
+            // the default is not stored: a later change of it applies
             delete shares[name];
             saveShares(shares);
         });
@@ -123,7 +127,9 @@ export function initSplitters() {
 
 function readShares() {
     try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+        const shares = JSON.parse(localStorage.getItem(STORAGE_KEY));
+
+        return shares !== null && typeof shares === 'object' && !Array.isArray(shares) ? shares : {};
     } catch (e) {
         return {};
     }

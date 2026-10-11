@@ -100,6 +100,7 @@ export const EDITOR_OPTIONS = {
     automaticLayout: true,
     renderLineHighlightOnlyWhenFocus: true,
     overviewRulerBorder: false,
+    hideCursorInOverviewRuler: true,
     scrollbar: {verticalScrollbarSize: 10, horizontalScrollbarSize: 10},
 };
 

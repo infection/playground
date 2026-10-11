@@ -6,7 +6,19 @@
 
 {% set hasRun = resultOutput is defined %}
 
-{{ form_start(form, {attr: {class: 'ws', id: 'workbench', 'data-tab': hasRun ? 'results' : 'code'}}) }}
+{# the errors of a rejected run, shown in the results pane: on phones the page opens on it #}
+{% set fieldErrors = [] %}
+{% for error in form.vars.errors %}
+    {% set fieldErrors = fieldErrors|merge([{field: null, message: error.message}]) %}
+{% endfor %}
+{% for field in ['code', 'test', 'config'] %}
+    {% for error in attribute(form, field).vars.errors %}
+        {% set fieldErrors = fieldErrors|merge([{field: field, message: error.message}]) %}
+    {% endfor %}
+{% endfor %}
+{% set showResults = hasRun or fieldErrors is not empty %}
+
+{{ form_start(form, {attr: {class: 'ws', id: 'workbench', 'data-tab': showResults ? 'results' : 'code'}}) }}
     <section class="pane p-source" aria-label="Source code">
         <div class="pane-h">
             <span class="tab static">
@@ -19,7 +31,7 @@
         <div class="hidden">{{ form_widget(form.code) }}</div>
     </section>
 
-    <div class="gutter gutter-y" data-split="rows" role="separator" aria-orientation="horizontal" aria-label="Resize the source code and test panes" aria-valuemin="15" aria-valuemax="85" tabindex="0" title="Drag to resize, double-click to reset"></div>
+    <div class="splitter splitter-y" data-split="rows" role="separator" aria-orientation="horizontal" aria-label="Resize the source code and test panes" aria-valuemin="15" aria-valuemax="85" tabindex="0" title="Drag to resize, double-click to reset"></div>
 
     <section class="pane p-test" aria-label="Test and configuration">
         <div class="pane-h" role="tablist">
@@ -38,14 +50,14 @@
         <div class="hidden">{{ form_widget(form.test) }}{{ form_widget(form.config) }}</div>
     </section>
 
-    <div class="gutter gutter-x" data-split="columns" role="separator" aria-orientation="vertical" aria-label="Resize the code and results columns" aria-valuemin="15" aria-valuemax="85" tabindex="0" title="Drag to resize, double-click to reset"></div>
+    <div class="splitter splitter-x" data-split="columns" role="separator" aria-orientation="vertical" aria-label="Resize the code and results columns" aria-valuemin="15" aria-valuemax="85" tabindex="0" title="Drag to resize, double-click to reset"></div>
 
     <section class="pane p-results" aria-label="Results">
         {{ include('playground/_results.html.twig') }}
     </section>
 
     <nav class="mtabs" role="tablist" aria-label="Section">
-        <button type="button" role="tab" data-tab="code" aria-selected="{{ hasRun ? 'false' : 'true' }}">
+        <button type="button" role="tab" data-tab="code" aria-selected="{{ showResults ? 'false' : 'true' }}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m8 7-5 5 5 5M16 7l5 5-5 5"/></svg>
             Code
         </button>
@@ -57,10 +69,14 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
             Config
         </button>
-        <button type="button" role="tab" data-tab="results" aria-selected="{{ hasRun ? 'true' : 'false' }}">
+        <button type="button" role="tab" data-tab="results" aria-selected="{{ showResults ? 'true' : 'false' }}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
             Results
-            <span class="mtab-badge" id="mtab-badge" hidden></span>
+            {% if fieldErrors is not empty %}
+                <span class="mtab-badge" id="mtab-badge" aria-label="{{ fieldErrors|length }} {{ fieldErrors|length == 1 ? 'error' : 'errors' }}">{{ fieldErrors|length }}</span>
+            {% else %}
+                <span class="mtab-badge" id="mtab-badge" hidden></span>
+            {% endif %}
         </button>
     </nav>
 

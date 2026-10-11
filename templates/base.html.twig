@@ -5,8 +5,14 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
         <script>
-            // On page load, set the theme
-            const userTheme = localStorage.getItem('theme');
+            // On page load, set the theme; storage may be blocked
+            let userTheme = null;
+
+            try {
+                userTheme = localStorage.getItem('theme');
+            } catch (e) {
+            }
+
             const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 
             if (userTheme === 'dark' || (!userTheme && systemTheme === 'dark')) {
@@ -33,7 +39,7 @@
     </head>
     <body class="{% block body_class %}{% endblock %}">
         <div class="app">
-            <header class="top">
+            <header class="topbar">
                 <a href="{{ path('playground_index') }}" class="brand" aria-label="Infection Playground home">
                     <img class="logo logo-light" src="{{ asset('images/logo.svg') }}" alt="">
                     <img class="logo logo-dark" src="{{ asset('images/logo-dark.svg') }}" alt="">
@@ -47,16 +53,17 @@
                 <div class="top-spacer"></div>
                 {% block topbar_actions %}{% endblock %}
                 <div class="pop-wrap">
-                    <button class="icon-btn" id="more-btn" type="button" aria-label="More" aria-haspopup="menu" aria-expanded="false">
+                    <button class="icon-btn" id="more-btn" type="button" aria-label="More links" aria-controls="more-pop" aria-expanded="false" data-popover>
                         <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
                     </button>
-                    <div class="pop menu" id="more-pop" role="menu" hidden>
+                    <div class="pop menu" id="more-pop" hidden>
                         {% block menu_versions %}{% endblock %}
-                        <a role="menuitem" href="https://infection.github.io/" target="_blank" rel="noopener">Documentation <small>↗</small></a>
-                        <a role="menuitem" href="https://infection.github.io/guide/mutators.html" target="_blank" rel="noopener">Mutators reference <small>↗</small></a>
-                        <a role="menuitem" href="https://github.com/infection/infection" target="_blank" rel="noopener">Infection on GitHub <small>↗</small></a>
+                        <a href="https://infection-php.dev/" target="_blank" rel="noopener">Infection website <small>↗</small></a>
+                        <a href="https://infection.github.io/" target="_blank" rel="noopener">Documentation <small>↗</small></a>
+                        <a href="https://infection.github.io/guide/mutators.html" target="_blank" rel="noopener">Mutators reference <small>↗</small></a>
+                        <a href="https://github.com/infection/infection" target="_blank" rel="noopener">Infection on GitHub <small>↗</small></a>
                         <hr>
-                        <a role="menuitem" href="https://github.com/infection/playground" target="_blank" rel="noopener">Found an issue? Contribute <small>↗</small></a>
+                        <a href="https://github.com/infection/playground" target="_blank" rel="noopener">Found an issue? Contribute <small>↗</small></a>
                     </div>
                 </div>
                 <button class="icon-btn" id="theme-toggle" type="button" aria-label="Switch between light and dark theme">
@@ -69,9 +76,23 @@
 
         {% block javascripts %}
             <script>
+                function storedTheme() {
+                    try {
+                        return localStorage.getItem('theme');
+                    } catch (e) {
+                        return null;
+                    }
+                }
+
                 function toggleTheme() {
                     const isDark = document.documentElement.classList.toggle('dark');
-                    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+
+                    try {
+                        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                    } catch (e) {
+                        // the theme then lasts for this page only
+                    }
+
                     document.dispatchEvent(new CustomEvent('themeChanged'));
                 }
 
@@ -79,7 +100,7 @@
 
                 // Follow the system color scheme while the user has not picked a theme
                 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
-                    if (localStorage.getItem('theme')) {
+                    if (storedTheme()) {
                         return;
                     }
 
@@ -87,28 +108,37 @@
                     document.dispatchEvent(new CustomEvent('themeChanged'));
                 });
 
-                // Popovers of the top bar (the menu, the share box): one open at a time, closed by a click elsewhere or Escape
+                // Popovers of the top bar (the links, the share box) are disclosures: one open at a time,
+                // closed by a click elsewhere or Escape, which gives the focus back to their button
                 function closePopovers() {
-                    document.querySelectorAll('.pop').forEach(pop => pop.hidden = true);
-                    document.querySelectorAll('[aria-expanded][data-pop]').forEach(button => button.setAttribute('aria-expanded', 'false'));
+                    document.querySelectorAll('[data-popover]').forEach(button => {
+                        document.getElementById(button.getAttribute('aria-controls')).hidden = true;
+                        button.setAttribute('aria-expanded', 'false');
+                    });
                 }
 
-                document.querySelectorAll('[aria-haspopup]').forEach(button => {
-                    const pop = button.parentElement.querySelector('.pop');
+                document.querySelectorAll('[data-popover]').forEach(button => {
+                    const pop = document.getElementById(button.getAttribute('aria-controls'));
 
-                    if (!pop) {
-                        return;
-                    }
-
-                    button.dataset.pop = '';
                     button.addEventListener('click', event => {
                         event.stopPropagation();
                         const open = pop.hidden;
                         closePopovers();
                         pop.hidden = !open;
                         button.setAttribute('aria-expanded', String(open));
+
+                        if (open) {
+                            // into the popover, so Tab goes through its links next
+                            pop.querySelector('input, a, button')?.focus();
+                        }
                     });
                     pop.addEventListener('click', event => event.stopPropagation());
+                    pop.addEventListener('keydown', event => {
+                        if (event.key === 'Escape') {
+                            closePopovers();
+                            button.focus();
+                        }
+                    });
                 });
 
                 document.addEventListener('click', closePopovers);
