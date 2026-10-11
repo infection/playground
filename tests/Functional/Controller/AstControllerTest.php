@@ -89,7 +89,7 @@ class AstControllerTest extends WebTestCase
         static::assertSame('Name', $nodes[1][0]);
         static::assertSame('Stmt\Class_', $nodes[2][0]);
         static::assertSame('Name\FullyQualified', $nodes[4][0]);
-        static::assertContains(['parts', '["N","B"]'], $nodes[4][4]);
+        static::assertContains(['name', '"N\\\\B"'], $nodes[4][4]);
 
         $method = $nodes[5];
 
@@ -127,12 +127,12 @@ class AstControllerTest extends WebTestCase
         $client = self::createExplorerClient();
         $code = '<?php $shared = ' . random_int(1, PHP_INT_MAX) . ';';
 
-        $first = self::postJson($client, '/ast/share', ['code' => $code]);
+        $first = self::share($client, $code);
         static::assertSame(200, $client->getResponse()->getStatusCode());
         static::assertSame($code, $first['code']);
         static::assertSame('/ast/' . $first['idHash'], $first['url']);
 
-        $second = self::postJson($client, '/ast/share', ['code' => $code]);
+        $second = self::share($client, $code);
         static::assertSame($first['idHash'], $second['idHash']);
     }
 
@@ -164,7 +164,7 @@ class AstControllerTest extends WebTestCase
     public function test_old_links_pin_the_same_node(): void
     {
         $client = self::createExplorerClient();
-        $idHash = self::postJson($client, '/ast/share', ['code' => self::OLD_EXAMPLE])['idHash'];
+        $idHash = self::share($client, self::OLD_EXAMPLE)['idHash'];
 
         // node 13 of this example is "$b" in "return $a + $b;" in the original explorer
         $client->request('GET', '/ast/' . $idHash . '/13');
@@ -219,7 +219,7 @@ class AstControllerTest extends WebTestCase
     {
         $client = self::createExplorerClient();
         $code = "<?php echo '<!--<script></script>&amp;'; // " . random_int(1, PHP_INT_MAX);
-        $idHash = self::postJson($client, '/ast/share', ['code' => $code])['idHash'];
+        $idHash = self::share($client, $code)['idHash'];
 
         $client->request('GET', '/ast/' . $idHash);
 
@@ -231,7 +231,7 @@ class AstControllerTest extends WebTestCase
     public function test_it_shows_shared_code_without_a_pinned_node(): void
     {
         $client = self::createExplorerClient();
-        $idHash = self::postJson($client, '/ast/share', ['code' => self::OLD_EXAMPLE])['idHash'];
+        $idHash = self::share($client, self::OLD_EXAMPLE)['idHash'];
 
         $client->request('GET', '/ast/' . $idHash);
 
@@ -253,6 +253,17 @@ class AstControllerTest extends WebTestCase
         self::ensureKernelShutdown();
 
         return static::createClient();
+    }
+
+    /**
+     * @return array{idHash: string, code: string, url: string}
+     */
+    private static function share(KernelBrowser $client, string $code): array
+    {
+        /** @var array{idHash: string, code: string, url: string} $data */
+        $data = self::postJson($client, '/ast/share', ['code' => $code]);
+
+        return $data;
     }
 
     /**

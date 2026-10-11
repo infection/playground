@@ -4,3 +4,6 @@ doctrine_migrations:
         # as migrations classes should NOT be autoloaded
         'DoctrineMigrations': '%kernel.project_dir%/migrations'
     enable_profiler: false
+    # MySQL commits every DDL statement implicitly, so a migration cannot be rolled back anyway,
+    # and wrapping one in a transaction breaks on the savepoints DBAL 4 uses.
+    transactional: false

@@ -39,6 +39,7 @@ use App\Code\Validator\CodeValidator;
 use App\Code\Validator\Error;
 use function array_map;
 use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use function sprintf;
 
@@ -54,10 +55,9 @@ final class CodeValidatorTest extends TestCase
     }
 
     /**
-     * @dataProvider provideCodeExamples
-     *
      * @param array<int, string> $expectedErrors
      */
+    #[DataProvider('provideCodeExamples')]
     public function test_it_validates_php_code(string $phpCode, array $expectedErrors): void
     {
         $errors = $this->codeValidator->validate($phpCode);
@@ -87,8 +87,7 @@ class Test
         return $a + $b;
     }
 }
-PHP
-            ,
+PHP,
             [],
         ];
 
@@ -105,8 +104,7 @@ class Test
     
     }
 }
-PHP
-            ,
+PHP,
             [
                 'Syntax error, unexpected T_STRING, expecting T_VARIABLE on line 7',
             ],
@@ -125,8 +123,7 @@ class Test
         $obj%->get();
     }
 }
-PHP
-            ,
+PHP,
             [
                 'Syntax error, unexpected T_OBJECT_OPERATOR on line 9',
             ],
@@ -145,8 +142,7 @@ class Test
         
     }
 }
-PHP
-            ,
+PHP,
             [
                 'Syntax error, unexpected T_DOUBLE_ARROW, expecting \')\' on line 7',
             ],
@@ -164,8 +160,7 @@ final abstract class Test
     {
     }
 }
-PHP
-            ,
+PHP,
             [
                 'Cannot use the final modifier on an abstract class on line 5',
             ],
@@ -184,8 +179,7 @@ final class Test
         1 +*- 2;
     }
 }
-PHP
-            ,
+PHP,
             [
                 'Syntax error, unexpected \'*\' on line 9',
             ],
@@ -202,8 +196,7 @@ final class Test
     public function test()
     {
 }
-PHP
-            ,
+PHP,
             [
                 'Syntax error, unexpected EOF on line 9',
             ],
@@ -228,8 +221,7 @@ final class Test
         $function('');
     }
 }
-PHP
-                ,
+PHP,
                 [
                     sprintf('Function "%s" on line 9 is not allowed to be used in Playground.', $function),
                 ],

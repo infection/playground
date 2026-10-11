@@ -43,7 +43,7 @@ use PhpParser\Node\Identifier;
 use PhpParser\Node\Name;
 use PhpParser\Node\Param;
 use PhpParser\Node\Stmt;
-use PhpParser\Node\Stmt\UseUse;
+use PhpParser\Node\UseItem;
 
 /**
  * Resolves the node class that should be used in Mutator::canMutate() to mutate the given node.
@@ -56,7 +56,7 @@ final class MutatorTargetNodeResolver
     {
         $parentNode = $node->getAttribute('parent');
 
-        if ($node instanceof UseUse || $node instanceof AttributeGroup) {
+        if ($node instanceof UseItem || $node instanceof AttributeGroup) {
             return $parentNode instanceof Node ? $parentNode::class : $node::class;
         }
 

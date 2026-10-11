@@ -41,6 +41,7 @@ use function array_merge;
 use Generator;
 use function implode;
 use function json_decode;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use function sprintf;
 
@@ -56,10 +57,9 @@ final class ConfigBuilderTest extends TestCase
     }
 
     /**
-     * @dataProvider provideConfigs
-     *
      * @param array<string, mixed> $expectedConfig
      */
+    #[DataProvider('provideConfigs')]
     public function test_it_merges_required_fields(string $originalConfig, array $expectedConfig): void
     {
         $resultConfig = $this->configBuilder->build($originalConfig);
@@ -81,8 +81,7 @@ final class ConfigBuilderTest extends TestCase
         "@default": true
     }
 }
-JSON
-            ,
+JSON,
             array_merge(
                 ConfigBuilder::getNotOverridableBaseConfig(),
                 [
@@ -96,8 +95,7 @@ JSON
 {
     "bootstrap": "\/path\/to\/bootstrap.php"
 }
-JSON
-            ,
+JSON,
             ConfigBuilder::getNotOverridableBaseConfig(),
         ];
 
@@ -106,8 +104,7 @@ JSON
 {
     "timeout": 33
 }
-JSON
-            ,
+JSON,
             ConfigBuilder::getNotOverridableBaseConfig(),
         ];
 
@@ -116,8 +113,7 @@ JSON
 {
     "source": {"directories": ["src"]}
 }
-JSON
-            ,
+JSON,
             ConfigBuilder::getNotOverridableBaseConfig(),
         ];
 
@@ -126,8 +122,7 @@ JSON
 {
     "phpUnit": {"customPath": "\/path\/to\/folder\/phpunit.phar"}
 }
-JSON
-            ,
+JSON,
             ConfigBuilder::getNotOverridableBaseConfig(),
         ];
 
@@ -136,8 +131,7 @@ JSON
 {
     "tmpDir": "tmp"
 }
-JSON
-            ,
+JSON,
             ConfigBuilder::getNotOverridableBaseConfig(),
         ];
 
@@ -146,8 +140,7 @@ JSON
 {
     "logs": {"text": "text.log"}
 }
-JSON
-            ,
+JSON,
             ConfigBuilder::getNotOverridableBaseConfig(),
         ];
 
@@ -157,8 +150,7 @@ JSON
     "mutators": {"ArrayItem": false, "PublicVisibility": true},
     "minMsi": 100
 }
-JSON
-            ,
+JSON,
             array_merge(
                 ConfigBuilder::getNotOverridableBaseConfig(),
                 [
@@ -173,8 +165,7 @@ JSON
 {
     "mutators": {"@default": false, "Infected\\CustomMutator1": true, "Infected\\CustomMutator2": true}
 }
-JSON
-            ,
+JSON,
             [
                 'bootstrap' => './autoload.php',
                 'timeout' => 3,

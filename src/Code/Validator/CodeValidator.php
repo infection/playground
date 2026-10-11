@@ -39,9 +39,9 @@ use App\Code\Visitor\ForbiddenCodeCollectorVisitor;
 use function array_diff;
 use function array_map;
 use function array_merge;
+use function array_values;
 use PhpParser\Error as PhpParserError;
 use PhpParser\ErrorHandler\Collecting;
-use PhpParser\Lexer;
 use PhpParser\NodeTraverser;
 use PhpParser\Parser;
 use PhpParser\ParserFactory;
@@ -188,11 +188,7 @@ final class CodeValidator
 
     public function __construct()
     {
-        $lexer = new Lexer([
-            'usedAttributes' => ['comments', 'startLine', 'endLine', 'startFilePos', 'endFilePos'],
-        ]);
-
-        $this->parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7, $lexer);
+        $this->parser = (new ParserFactory())->createForNewestSupportedVersion();
         $this->errorHandler = new Collecting();
     }
 
@@ -232,7 +228,7 @@ final class CodeValidator
      */
     public static function getListOfDisabledFunctionsOnPhpLevel(): array
     {
-        return array_diff(
+        return array_values(array_diff(
             self::FORBIDDEN_FUNCTIONS,
             [
                 // functions needed for PHPUnit itself when Infection runs it
@@ -251,6 +247,6 @@ final class CodeValidator
                 'getcwd',
                 'glob',
             ]
-        );
+        ));
     }
 }

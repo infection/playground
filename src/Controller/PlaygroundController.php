@@ -68,7 +68,7 @@ class PlaygroundController extends AbstractController
         Runner $infectionRunner,
         CodeSanitizer $codeSanitizer,
         ConfigBuilder $configBuilder,
-        ExampleRepository $exampleRepository
+        ExampleRepository $exampleRepository,
     ) {
         $this->hashids = $hashids;
         $this->infectionRunner = $infectionRunner;
@@ -99,7 +99,7 @@ class PlaygroundController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $code = $this->codeSanitizer->sanitize($createExampleRequest->code);
+            $code = $this->codeSanitizer->sanitize((string) $createExampleRequest->code);
             $test = $this->codeSanitizer->sanitize($createExampleRequest->test);
 
             $originalConfig = $createExampleRequest->config;

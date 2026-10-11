@@ -36,6 +36,7 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Controller;
 
 use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use function sprintf;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
@@ -170,9 +171,7 @@ class PlaygroundControllerTest extends WebTestCase
         static::assertFalse($client->getResponse()->isRedirect());
     }
 
-    /**
-     * @dataProvider provideForbiddenFunctions
-     */
+    #[DataProvider('provideForbiddenFunctions')]
     public function test_phpunit_test_case_fails_if_forbidden_function_is_used(string $exploitFunction): void
     {
         $client = static::createClient();

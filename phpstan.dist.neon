@@ -9,11 +9,7 @@ parameters:
     excludePaths:
         - src/Html/Ansi/*
     ignoreErrors:
-        - '#Access to an undefined property Symfony\\Component\\Validator\\Constraint::\$(.*?)#'
         - '#^Property App\\Entity\\(.*):\$id is never written, only read.$#'
-        - message: '#Parameter \#1 \$string of function trim expects string, mixed given\.#'
-          paths:
-              - src/EnvVarProcessor/SecretEnvVarProcessor.php
-        - message: '#Property App\\Request\\CreateExampleRequest::\$code has no type specified\.#'
-          paths:
-              - src/Request/CreateExampleRequest.php
+        # Symfony's front controller: the runtime passes the environment as a string
+        - identifier: argument.type
+          path: public/index.php

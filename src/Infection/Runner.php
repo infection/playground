@@ -38,6 +38,7 @@ namespace App\Infection;
 use App\Code\ClassesExtractor\ClassesExtractor;
 use function file_exists;
 use function file_get_contents;
+use const PHP_VERSION;
 use function sprintf;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
@@ -45,9 +46,10 @@ use Symfony\Component\Process\Process;
 
 class Runner
 {
-    public const CURRENT_INFECTION_VERSION = '0.32.0';
-    public const CURRENT_PHPUNIT_VERSION = '10.5.10';
-    public const CURRENT_PHP_VERSION = '8.2.13';
+    public const CURRENT_INFECTION_VERSION = '0.32.7';
+    public const CURRENT_PHPUNIT_VERSION = '10.5.66';
+    // the PHP binary the playground runs Infection with, i.e. the one of the Docker image
+    public const CURRENT_PHP_VERSION = PHP_VERSION;
 
     private const PROCESS_TIMEOUT_SEC = 30;
 
@@ -93,7 +95,11 @@ class Runner
                 '--ansi',
                 '--no-progress',
                 '--show-mutations=0',
-            ], $rootDir);
+            ], $rootDir, [
+                // the PHAR's requirement checker is not compatible with PHP 8.5 and spams deprecations;
+                // the Docker image always satisfies the requirements
+                'BOX_REQUIREMENT_CHECKER' => '0',
+            ]);
             $process->setTimeout(self::PROCESS_TIMEOUT_SEC);
 
             $process->run();
