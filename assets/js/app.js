@@ -9,5 +9,7 @@
 import '../css/app.css';
 
 import {initMutationEditors} from './app/editor.js';
+import {initSplitters} from './app/splitters.js';
 
+initSplitters();
 initMutationEditors();

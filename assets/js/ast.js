@@ -4,9 +4,9 @@ import '../css/ast.css';
 
 import monaco from './monaco.js';
 import {initXRayEditor} from './app/xray.js';
+import {initSplitters} from './app/splitters.js';
 
-const MIN_EDITOR_HEIGHT = 240;
-const MAX_EDITOR_HEIGHT = 640;
+initSplitters();
 
 const DEFAULT_CODE = [
     '<?php',
@@ -79,19 +79,6 @@ function initAstExplorer(root) {
     editor.onDidChangeModelContent(syncUrl);
     syncUrl();
     renderDetails();
-
-    // The editor grows with the code, within limits.
-    const editorNode = document.getElementById('editor-code-ast');
-    const fitHeight = () => {
-        const height = Math.min(MAX_EDITOR_HEIGHT, Math.max(MIN_EDITOR_HEIGHT, editor.getContentHeight() + 16));
-
-        if (editorNode.style.height !== height + 'px') {
-            editorNode.style.height = height + 'px';
-            editor.layout();
-        }
-    };
-    editor.onDidContentSizeChange(fitHeight);
-    fitHeight();
 
     // ---- URL & sharing -----------------------------------------------------
 

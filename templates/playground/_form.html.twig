@@ -4,61 +4,65 @@
     <div id="loaded-config" data-code="{{ example.config }}"></div>
 {% endif %}
 
-{{ form_start(form) }}
-    <div class="flex flex-col lg:flex-row gap-3 mt-4">
-        <div class="flex-1 editor-panel">
-            <div class="editor-panel-header">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                Source Code
-            </div>
-            <div id="editor-code" class="editor-area"></div>
-            <div class="hidden">{{ form_widget(form.code) }}</div>
-            {{ form_errors(form.code) }}
-        </div>
-        <div class="flex-1 editor-panel">
-            <div class="editor-panel-header">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Test
-            </div>
-            <div id="editor-test" class="editor-area"></div>
-            <div class="hidden">{{ form_widget(form.test) }}</div>
-            {{ form_errors(form.test) }}
-        </div>
-        <div class="flex-1 editor-panel">
-            <div class="editor-panel-header">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
-                Config
-            </div>
-            <div id="editor-config" class="editor-area"></div>
-            <div class="hidden">{{ form_widget(form.config) }}</div>
-            {{ form_errors(form.config) }}
-        </div>
-    </div>
+{% set hasRun = resultOutput is defined %}
 
-    <div class="flex flex-wrap items-center gap-3 mt-4">
-        <button id="js-submit" class="btn-primary" type="button">
-            <svg class="w-4 h-4 mr-2" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M4 4l12 6-12 6z"/></svg>
-            <span>Run</span>
-        </button>
-        {% if resultOutput is defined %}
-            <button id="copy-url" type="button" class="btn-secondary">
-                <svg class="w-4 h-4 mr-2" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M6 6V2c0-1.1.9-2 2-2h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-4v4a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V8c0-1.1.9-2 2-2h4zm2 0h4a2 2 0 0 1 2 2v4h4V2H8v4zM2 8v10h10V8H2z"/></svg>
-                <span id="copy-btn-text">Copy URL</span>
-            </button>
-            {% if jsonLog is defined and jsonLog is not empty %}
-                <div class="hidden" id="json-log" data-log="{{ jsonLog|e('html_attr') }}"></div>
-            {% endif %}
-        {% endif %}
-        {% if example is defined and example.infectionVersion and example.phpunitVersion %}
-            <span class="ml-0 sm:ml-2 text-sm text-gray-500 dark:text-gray-400">
-                Infection <span class="text-green-600 dark:text-green-400 font-medium">{{ example.infectionVersion }}</span>
-                &middot; PHPUnit <span class="text-green-600 dark:text-green-400 font-medium">{{ example.phpunitVersion }}</span>
-                &middot; PHP <span class="text-green-600 dark:text-green-400 font-medium">{{ example.phpVersion }}</span>
+{{ form_start(form, {attr: {class: 'ws', id: 'workbench', 'data-tab': hasRun ? 'results' : 'code'}}) }}
+    <section class="pane p-source" aria-label="Source code">
+        <div class="pane-h">
+            <span class="tab static">
+                <svg class="file-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m8 7-5 5 5 5M16 7l5 5-5 5"/></svg>
+                <span class="mono">Source code</span>
             </span>
-        {% endif %}
-        {% if jsonLog is defined and jsonLog is not empty %}
-            <div id="metrics-panel" class="hidden flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400" aria-label="Metrics"></div>
-        {% endif %}
-    </div>
+            <span class="pane-meta" id="source-meta"></span>
+        </div>
+        <div id="editor-code" class="ed"></div>
+        <div class="hidden">{{ form_widget(form.code) }}</div>
+    </section>
+
+    <div class="gutter gutter-y" data-split="rows" role="separator" aria-orientation="horizontal" aria-label="Resize the source code and test panes" aria-valuemin="15" aria-valuemax="85" tabindex="0" title="Drag to resize, double-click to reset"></div>
+
+    <section class="pane p-test" aria-label="Test and configuration">
+        <div class="pane-h" role="tablist">
+            <button class="tab" type="button" role="tab" data-side-tab="test" aria-selected="true" aria-controls="editor-test">
+                <svg class="file-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+                <span class="mono">Test</span>
+            </button>
+            <button class="tab" type="button" role="tab" data-side-tab="config" aria-selected="false" aria-controls="editor-config">
+                <svg class="file-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+                <span class="mono">infection.json5</span>
+            </button>
+            <span class="pane-meta" id="side-meta">PHPUnit test case</span>
+        </div>
+        <div id="editor-test" class="ed" role="tabpanel"></div>
+        <div id="editor-config" class="ed" role="tabpanel" hidden></div>
+        <div class="hidden">{{ form_widget(form.test) }}{{ form_widget(form.config) }}</div>
+    </section>
+
+    <div class="gutter gutter-x" data-split="columns" role="separator" aria-orientation="vertical" aria-label="Resize the code and results columns" aria-valuemin="15" aria-valuemax="85" tabindex="0" title="Drag to resize, double-click to reset"></div>
+
+    <section class="pane p-results" aria-label="Results">
+        {{ include('playground/_results.html.twig') }}
+    </section>
+
+    <nav class="mtabs" role="tablist" aria-label="Section">
+        <button type="button" role="tab" data-tab="code" aria-selected="{{ hasRun ? 'false' : 'true' }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m8 7-5 5 5 5M16 7l5 5-5 5"/></svg>
+            Code
+        </button>
+        <button type="button" role="tab" data-tab="test" aria-selected="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+            Test
+        </button>
+        <button type="button" role="tab" data-tab="config" aria-selected="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+            Config
+        </button>
+        <button type="button" role="tab" data-tab="results" aria-selected="{{ hasRun ? 'true' : 'false' }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+            Results
+            <span class="mtab-badge" id="mtab-badge" hidden></span>
+        </button>
+    </nav>
+
     <div class="hidden">{{ form_rest(form) }}</div>
 {{ form_end(form) }}

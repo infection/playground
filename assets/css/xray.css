@@ -216,16 +216,11 @@
 .xray-status {
     padding: 0.5rem 0.75rem;
     font-size: 0.75rem;
-    color: #6b7280;
-    border-top: 1px solid #e5e7eb;
+    color: var(--muted);
+    border-top: 1px solid var(--line);
+    flex-shrink: 0;
 }
 
-.dark .xray-status {
-    color: #9ca3af;
-    border-top-color: rgba(55, 65, 81, 0.5);
-}
-
-.xray-status-error,
-.dark .xray-status-error {
-    color: #dc2626;
+.xray-status-error {
+    color: var(--escaped);
 }
