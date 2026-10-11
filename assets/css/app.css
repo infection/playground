@@ -762,7 +762,10 @@ kbd {
     grid-template-rows: minmax(0, 0.5fr) var(--gutter) minmax(160px, 0.5fr);
 }
 
-.res > .splitter { border-radius: 0; border-bottom: 1px solid var(--line); }
+/* placed explicitly: a hidden part must not shift the others into its row */
+.res > .overview { grid-row: 1; }
+.res > .splitter { grid-row: 2; border-radius: 0; border-bottom: 1px solid var(--line); }
+.res > .detail-pane { grid-row: 3; }
 
 /* the list scrolls by itself while there is room, below that the whole overview scrolls */
 .overview {
