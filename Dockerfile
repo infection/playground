@@ -13,6 +13,13 @@ FROM scratch AS tailwind_arm64
 ADD --checksum=sha256:e5b2d27694daa80cc52ec29553ba2c6bd43d86bd51a9d633ed24058b9c05a676 \
 	https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.19/tailwindcss-linux-arm64 /tailwindcss
 
+# Monaco Editor npm tarball, extracted into /opt/monaco in frankenphp_base.
+# It lives in its own stage: ADD --link into /tmp of the base image would reset /tmp to 0755 and break apt.
+FROM scratch AS monaco
+ARG MONACO_VERSION=0.20.0
+ADD --checksum=sha256:887d527ee12a3bc1a71a1babc0e2e5f13559860c3ca16881368b3e31e1cecec9 \
+	https://registry.npmjs.org/monaco-editor/-/monaco-editor-${MONACO_VERSION}.tgz /monaco-editor.tgz
+
 ARG TARGETARCH
 # hadolint ignore=DL3006
 FROM tailwind_${TARGETARCH} AS tailwind
@@ -52,14 +59,10 @@ COPY --link --chmod=755 --from=tailwind /tailwindcss /usr/local/bin/tailwindcss
 
 # Monaco Editor, served by Caddy under /monaco/ (see frankenphp/Caddyfile).
 # Its AMD build loads its own CSS, languages and web workers, which AssetMapper cannot bundle,
-# so the prebuilt files are taken from the npm tarball instead of a Node.js build.
-ARG MONACO_VERSION=0.20.0
-ADD --link --checksum=sha256:887d527ee12a3bc1a71a1babc0e2e5f13559860c3ca16881368b3e31e1cecec9 \
-	https://registry.npmjs.org/monaco-editor/-/monaco-editor-${MONACO_VERSION}.tgz /tmp/monaco-editor.tgz
-RUN <<-EOF
+# so the prebuilt files are taken from the npm tarball (see the monaco stage) instead of a Node.js build.
+RUN --mount=type=bind,from=monaco,source=/monaco-editor.tgz,target=/mnt/monaco-editor.tgz <<-EOF
 	mkdir -p /opt/monaco
-	tar -xzf /tmp/monaco-editor.tgz -C /opt/monaco --strip-components=2 package/min/vs
-	rm /tmp/monaco-editor.tgz
+	tar -xzf /mnt/monaco-editor.tgz -C /opt/monaco --strip-components=2 package/min/vs
 EOF
 
 # https://getcomposer.org/doc/03-cli.md#composer-allow-superuser
