@@ -33,34 +33,49 @@
 
 declare(strict_types=1);
 
-namespace migrations;
+namespace DoctrineMigrations;
 
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
 /**
- * Auto-generated Migration: Please modify to your needs!
+ * Baseline for an empty database.
+ *
+ * The `example` table predates Doctrine Migrations, and the migrations that altered it until
+ * 2024 were declared in the `migrations` namespace, which the migrations finder never loaded.
+ * They were never executed on production and are removed; this migration creates the table in
+ * its current shape instead. Production already has the table, so there it changes nothing.
  */
-final class Version20201025092304 extends AbstractMigration
+final class Version20240310000000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return '';
+        return 'Create the example table on an empty database';
     }
 
     public function up(Schema $schema): void
     {
-        // this up() migration is auto-generated, please modify it to your needs
-        $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'mysql', 'Migration can only be executed safely on \'mysql\'.');
-
-        $this->addSql('ALTER TABLE example ADD id_hash VARCHAR(10) DEFAULT NULL');
+        $this->addSql('CREATE TABLE IF NOT EXISTS example (
+          id INT AUTO_INCREMENT NOT NULL,
+          code LONGTEXT NOT NULL,
+          test LONGTEXT NOT NULL,
+          config LONGTEXT NOT NULL,
+          result_output LONGTEXT NOT NULL,
+          json_log LONGTEXT DEFAULT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+          input_hash VARCHAR(32) NOT NULL,
+          id_hash VARCHAR(10) DEFAULT NULL,
+          infection_version VARCHAR(11) DEFAULT NULL,
+          phpunit_version VARCHAR(11) DEFAULT NULL,
+          php_version VARCHAR(12) DEFAULT \'8.1.3\' NOT NULL,
+          UNIQUE INDEX UNIQ_6EEC9B9F92D5D98F (input_hash),
+          PRIMARY KEY(id)
+        ) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
     }
 
     public function down(Schema $schema): void
     {
-        // this down() migration is auto-generated, please modify it to your needs
-        $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'mysql', 'Migration can only be executed safely on \'mysql\'.');
-
-        $this->addSql('ALTER TABLE example DROP id_hash');
+        // Production data lives in this table: dropping it is never what a rollback should do.
+        $this->throwIrreversibleMigrationException();
     }
 }

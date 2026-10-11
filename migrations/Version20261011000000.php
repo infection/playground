@@ -33,30 +33,28 @@
 
 declare(strict_types=1);
 
-namespace migrations;
+namespace DoctrineMigrations;
 
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 
-/**
- * Auto-generated Migration: Please modify to your needs!
- */
-final class Version20240309173914 extends AbstractMigration
+final class Version20261011000000 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return '';
+        return 'Drop the "(DC2Type:...)" column comments: DBAL 4 does not use them anymore';
     }
 
     public function up(Schema $schema): void
     {
-        // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('ALTER TABLE example ADD php_version VARCHAR(11) DEFAULT \'8.1.3\'');
+        // Only the comment changes, which MySQL applies in place without copying the rows.
+        $this->addSql('ALTER TABLE ast_run MODIFY created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT \'\'');
+        $this->addSql('ALTER TABLE example MODIFY created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT \'\'');
     }
 
     public function down(Schema $schema): void
     {
-        // this down() migration is auto-generated, please modify it to your needs
-        $this->addSql('ALTER TABLE example DROP php_version');
+        $this->addSql('ALTER TABLE ast_run MODIFY created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT \'(DC2Type:datetime_immutable)\'');
+        $this->addSql('ALTER TABLE example MODIFY created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT \'(DC2Type:datetime_immutable)\'');
     }
 }
