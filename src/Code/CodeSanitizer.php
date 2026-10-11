@@ -46,13 +46,11 @@ final class CodeSanitizer
 {
     private Parser $parser;
     private Standard $prettyPrinter;
-    private NodeTraverser $nodeTraverser;
 
-    public function __construct(Parser $parser, Standard $prettyPrinter, NodeTraverser $nodeTraverser)
+    public function __construct(Parser $parser, Standard $prettyPrinter)
     {
         $this->parser = $parser;
         $this->prettyPrinter = $prettyPrinter;
-        $this->nodeTraverser = $nodeTraverser;
     }
 
     public function sanitize(string $originalPhpCode): string
@@ -77,8 +75,11 @@ final class CodeSanitizer
      */
     private function replaceNamespace(array $initialNodes): array
     {
-        $this->nodeTraverser->addVisitor(new ReplaceNamespaceVisitor('Infected'));
+        // a new traverser per call: FrankenPHP's worker mode keeps this service between requests,
+        // a shared one would collect one more visitor on every run
+        $nodeTraverser = new NodeTraverser();
+        $nodeTraverser->addVisitor(new ReplaceNamespaceVisitor('Infected'));
 
-        return $this->nodeTraverser->traverse($initialNodes);
+        return $nodeTraverser->traverse($initialNodes);
     }
 }

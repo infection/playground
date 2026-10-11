@@ -37,6 +37,9 @@ namespace DoctrineMigrations;
 
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
+use function in_array;
+use function json_encode;
+use function sprintf;
 
 final class Version20261011000000 extends AbstractMigration
 {
@@ -47,9 +50,30 @@ final class Version20261011000000 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        // Only the comment changes, which MySQL applies in place without copying the rows.
-        $this->addSql('ALTER TABLE ast_run MODIFY created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT \'\'');
-        $this->addSql('ALTER TABLE example MODIFY created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT \'\'');
+        foreach (['ast_run', 'example'] as $table) {
+            // Only the comment changes, which MySQL applies in place without copying the rows.
+            // A column of any other shape (the production schema predates the migrations) is left
+            // alone: redefining it could copy the table or fail.
+            $column = $this->connection->fetchAssociative(
+                'SELECT DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT, COLUMN_COMMENT FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = \'created_at\'',
+                [$table],
+            );
+
+            if (
+                $column === false
+                || $column['DATA_TYPE'] !== 'datetime'
+                || $column['IS_NULLABLE'] !== 'NO'
+                || !in_array($column['COLUMN_DEFAULT'], ['CURRENT_TIMESTAMP', 'current_timestamp()'], true)
+                || $column['COLUMN_COMMENT'] === ''
+            ) {
+                $this->write(sprintf('Skipped %s.created_at: %s', $table, (string) json_encode($column)));
+
+                continue;
+            }
+
+            $this->addSql(sprintf('ALTER TABLE %s MODIFY created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT \'\'', $table));
+        }
     }
 
     public function down(Schema $schema): void

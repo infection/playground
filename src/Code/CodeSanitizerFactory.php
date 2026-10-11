@@ -35,7 +35,6 @@ declare(strict_types=1);
 
 namespace App\Code;
 
-use PhpParser\NodeTraverser;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter\Standard;
 
@@ -45,6 +44,6 @@ final class CodeSanitizerFactory
     {
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
 
-        return new CodeSanitizer($parser, new Standard(), new NodeTraverser());
+        return new CodeSanitizer($parser, new Standard());
     }
 }

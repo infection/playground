@@ -233,6 +233,61 @@ class PlaygroundControllerTest extends WebTestCase
         );
     }
 
+    public function test_the_code_does_not_see_the_environment_of_the_app(): void
+    {
+        $client = static::createClient();
+        $client->catchExceptions(false);
+
+        $client->followRedirects(true);
+        $client->request('GET', '/');
+
+        $client->submitForm('create_example[mutate]', [
+            'create_example[code]' => <<<'PHP'
+                <?php
+
+                declare(strict_types=1);
+
+                namespace Infected;
+
+                class SourceClass
+                {
+                    public function add(int $a, int $b): int
+                    {
+                        return $a + $b;
+                    }
+                }
+                PHP,
+            'create_example[test]' => <<<'PHP'
+                <?php
+
+                declare(strict_types=1);
+
+                namespace Infected;
+
+                use PHPUnit\Framework\TestCase;
+
+                class SourceClassTest extends TestCase
+                {
+                    public function test_it_reads_the_environment(): void
+                    {
+                        self::fail(sprintf(
+                            'Environment: DATABASE_URL=%s APP_SECRET=%s',
+                            $_SERVER['DATABASE_URL'] ?? 'absent',
+                            $_SERVER['APP_SECRET'] ?? 'absent',
+                        ));
+                    }
+                }
+                PHP,
+            'create_example[config]' => '{"mutators": {"@default": true}}',
+        ]);
+
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertStringContainsString(
+            'Environment: DATABASE_URL=absent APP_SECRET=absent',
+            (string) $client->getResponse()->getContent()
+        );
+    }
+
     public static function provideForbiddenFunctions(): Generator
     {
         yield 'exec' => ['exec'];
