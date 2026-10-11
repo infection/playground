@@ -12,31 +12,61 @@ Please read documentation here: [infection.github.io](http://infection.github.io
 
 ### Developing
 
-The project is fully dockerized, after cloning just run `docker compose up` and you are good to go.
-
-Database can be setup up by `docker compose exec php make app-reinstall`.
-
-### How to renew SSL certificate
-
-Generate certificate
+The project is based on [dunglas/symfony-docker](https://github.com/dunglas/symfony-docker):
+FrankenPHP (Caddy) and MySQL, PHP 8.5, Symfony 8. There is no Node.js: the frontend is served by
+[AssetMapper](https://symfony.com/doc/current/frontend/asset_mapper.html), Tailwind CSS is built by
+[symfonycasts/tailwind-bundle](https://symfony.com/bundles/TailwindBundle/current/index.html) and the
+Monaco Editor is taken from its npm package by the `Dockerfile`.
 
 ```bash
-docker run -it --rm --name certbot \
--v "./secrets/certbot/www/:/var/www/certbot/" \
--v "./secrets/certbot/conf/:/etc/letsencrypt/" \
--v "./secrets/digitalocean-token.ini/:/secrets/digitalocean-token.ini" \
-certbot/dns-digitalocean certonly --webroot --webroot-path /var/www/certbot/ --dry-run -d infection-php.dev --dns-digitalocean --dns-digitalocean-credentials /secrets/digitalocean-token.ini
+docker compose up --wait
 ```
 
-Renew 
+and open https://localhost (accept the self-signed certificate).
+
+The database is migrated when the container starts. To recreate the dev and test databases:
 
 ```bash
-docker run -it --rm --name certbot \
--v "./secrets/certbot/www/:/var/www/certbot/" \
--v "./secrets/certbot/conf/:/etc/letsencrypt/" \
--v "./secrets/digitalocean-token.ini/:/secrets/digitalocean-token.ini" \
-certbot/dns-digitalocean renew
-
-cp secrets/certbot/conf/live/infection-php.dev/fullchain.pem secrets/bundle.crt
-cp secrets/certbot/conf/live/infection-php.dev/privkey.pem secrets/infection-php_dev.key
+make docker-app-reinstall
 ```
+
+Tests, static analysis and coding standards:
+
+```bash
+make docker-analyze
+```
+
+Rebuild the CSS while changing templates:
+
+```bash
+make docker-tailwind-watch
+```
+
+#### Infection and PHPUnit versions
+
+Playground runs use the PHARs in `infection-builds/`, their versions are in `App\Infection\Runner`.
+The PHP version is the one of the Docker image.
+
+### Production
+
+Production runs `compose.yaml` + `compose.prod.yaml` on the droplet. Caddy gets and renews the
+Let's Encrypt certificate for `infection-php.dev` automatically (ports 80 and 443 must be reachable),
+and keeps it in the `caddy_data` volume.
+
+The deploy scripts read the settings from the git-ignored `secrets/` directory
+(`app_secret`, `mysql_db_name`, `mysql_db_user`, `mysql_password`, `mysql_root_password`, `ssh_user`, `ssh_host`)
+and talk to Docker on the droplet over SSH.
+
+```bash
+deploy/prod.sh
+```
+
+builds and pushes the image, then restarts the app; the container runs the Doctrine migrations on start.
+
+#### One-time switch from the legacy swarm stack
+
+Until 2026 production ran a Docker swarm stack (nginx + php-fpm + MySQL 5.7, certificates from certbot).
+`deploy/migrate-from-swarm.sh` moves it to this setup: it dumps the MySQL 5.7 database to `backups/`,
+removes the swarm stack, loads the dump into MySQL 8.4 on a new volume, compares the row counts and
+starts the app. The legacy volume `infection_db-data` is kept for a rollback.
+Run it with `DRY_RUN=1` first: that only takes the dump and changes nothing.

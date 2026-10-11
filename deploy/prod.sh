@@ -1,32 +1,22 @@
 #!/bin/bash
+# Builds and pushes the production image, then (re)starts the app on the droplet.
+#
+# The first deployment of the symfony-docker setup is done by deploy/migrate-from-swarm.sh instead.
 
-set -e
+set -euo pipefail
 
-SCRIPT_DIR="$(dirname "$0")"
+source "$(dirname "$0")/common.sh"
 
-docker compose -f docker-compose.prod.yml build --no-cache --force-rm
-
-"$SCRIPT_DIR/push_images.sh"
-
-rm -rf docker.sock
-ssh -nNT -L ./docker.sock:/var/run/docker.sock $(cat "$SCRIPT_DIR/../secrets/ssh_user")@$(cat "$SCRIPT_DIR/../secrets/ssh_host") & echo $! > /tmp/tunnel.pid
-
-echo "Waiting for SSH tunnel..."
-while [ ! -S ./docker.sock ]; do sleep 0.5; done
-echo "SSH tunnel established."
-
-export DOCKER_HOST=unix://$(pwd)/docker.sock
-export DOCKER_REGISTRY=maksrafalko
-export APP_SECRET=$(cat "$SCRIPT_DIR/../secrets/app_secret")
-export DATABASE_NAME=$(cat "$SCRIPT_DIR/../secrets/mysql_db_name")
-export DATABASE_USER=$(cat "$SCRIPT_DIR/../secrets/mysql_db_user")
-
-if [ "${RECREATE_SECRETS:-0}" = "1" ]; then
-    echo "Removing service and secrets before redeployment..."
-    docker service rm infection_web || true
-    docker secret rm infection_ssl_certificate || true
-    docker secret rm infection_ssl_key || true
+if remote_docker stack ls --format '{{.Name}}' 2>/dev/null | grep -qx infection; then
+    echo 'The legacy "infection" swarm stack is still running: run deploy/migrate-from-swarm.sh first.' >&2
+    exit 1
 fi
 
-docker stack deploy -c docker-stack.yml infection --with-registry-auth
+docker compose --file "$ROOT_DIR/compose.yaml" --file "$ROOT_DIR/compose.prod.yaml" build --pull php
+docker compose --file "$ROOT_DIR/compose.yaml" --file "$ROOT_DIR/compose.prod.yaml" push php
 
+remote_compose pull php
+# The entrypoint runs the Doctrine migrations before the new container serves requests.
+remote_compose up --detach --wait --no-build
+
+remote_compose ps
