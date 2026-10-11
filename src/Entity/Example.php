@@ -35,6 +35,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Explore\RunStats;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
@@ -42,8 +43,12 @@ use function md5;
 
 #[ORM\Entity]
 #[ORM\HasLifecycleCallbacks]
+#[ORM\Index(name: 'idx_example_listed_created_at', columns: ['is_listed', 'created_at'])]
+#[ORM\Index(name: 'idx_example_listed_msi', columns: ['is_listed', 'msi'])]
+#[ORM\Index(name: 'idx_example_listed_mutants_total', columns: ['is_listed', 'mutants_total'])]
 class Example
 {
+    public const MAX_TITLE_LENGTH = 80;
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
@@ -83,7 +88,46 @@ class Example
     #[ORM\Column(type: 'string', length: 12, options: ['default' => '8.1.3'])]
     private string $phpVersion;
 
-    public function __construct(string $code, string $test, string $config, string $infectionVersion, string $phpunitVersion, string $phpVersion)
+    #[ORM\Column(type: 'string', length: self::MAX_TITLE_LENGTH, nullable: true)]
+    private ?string $title = null;
+
+    // runs created before Explore were shared as unlisted links: only the new ones are listed
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $isListed = false;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $isDefaultExample = false;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $hasCustomConfig = false;
+
+    // the numbers of the JSON log, NULL when Infection stopped before it generated mutants
+    #[ORM\Column(type: 'integer', nullable: true)]
+    private ?int $mutantsTotal = null;
+
+    #[ORM\Column(name: 'killed_count', type: 'integer', nullable: true)]
+    private ?int $killed = null;
+
+    #[ORM\Column(name: 'escaped_count', type: 'integer', nullable: true)]
+    private ?int $escaped = null;
+
+    #[ORM\Column(name: 'timed_out_count', type: 'integer', nullable: true)]
+    private ?int $timedOut = null;
+
+    #[ORM\Column(name: 'not_covered_count', type: 'integer', nullable: true)]
+    private ?int $notCovered = null;
+
+    #[ORM\Column(type: 'float', nullable: true)]
+    private ?float $msi = null;
+
+    #[ORM\Column(type: 'float', nullable: true)]
+    private ?float $coveredMsi = null;
+
+    // hidden from Explore while set, the link keeps working
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?DateTimeImmutable $reportedAt = null;
+
+    public function __construct(string $code, string $test, string $config, string $infectionVersion, string $phpunitVersion, string $phpVersion, ?string $title = null)
     {
         $this->code = $code;
         $this->test = $test;
@@ -91,6 +135,8 @@ class Example
         $this->infectionVersion = $infectionVersion;
         $this->phpunitVersion = $phpunitVersion;
         $this->phpVersion = $phpVersion;
+        $this->title = $title;
+        $this->isListed = true;
         $this->inputHash = self::hashInput($code, $test, $config, $infectionVersion, $phpunitVersion, $phpVersion);
     }
 
@@ -178,5 +224,103 @@ class Example
     public function getPhpVersion(): string
     {
         return $this->phpVersion;
+    }
+
+    public function getTitle(): ?string
+    {
+        return $this->title;
+    }
+
+    /**
+     * Runs the same input again lists it, even when it was an unlisted link made before Explore:
+     * whoever submits it now was told that runs are public.
+     */
+    public function listWithTitle(?string $title): void
+    {
+        $this->isListed = true;
+        $this->title ??= $title;
+    }
+
+    public function isListed(): bool
+    {
+        return $this->isListed;
+    }
+
+    public function unlist(): void
+    {
+        $this->isListed = false;
+    }
+
+    public function isDefaultExample(): bool
+    {
+        return $this->isDefaultExample;
+    }
+
+    public function hasCustomConfig(): bool
+    {
+        return $this->hasCustomConfig;
+    }
+
+    public function updateStats(?RunStats $stats, bool $isDefaultExample, bool $hasCustomConfig): void
+    {
+        $this->isDefaultExample = $isDefaultExample;
+        $this->hasCustomConfig = $hasCustomConfig;
+        $this->mutantsTotal = $stats?->total;
+        $this->killed = $stats?->killed;
+        $this->escaped = $stats?->escaped;
+        $this->timedOut = $stats?->timedOut;
+        $this->notCovered = $stats?->notCovered;
+        $this->msi = $stats?->msi;
+        $this->coveredMsi = $stats?->coveredMsi;
+    }
+
+    public function getMutantsTotal(): ?int
+    {
+        return $this->mutantsTotal;
+    }
+
+    public function getKilled(): ?int
+    {
+        return $this->killed;
+    }
+
+    public function getEscaped(): ?int
+    {
+        return $this->escaped;
+    }
+
+    public function getTimedOut(): ?int
+    {
+        return $this->timedOut;
+    }
+
+    public function getNotCovered(): ?int
+    {
+        return $this->notCovered;
+    }
+
+    public function getMsi(): ?float
+    {
+        return $this->msi;
+    }
+
+    public function getCoveredMsi(): ?float
+    {
+        return $this->coveredMsi;
+    }
+
+    public function getReportedAt(): ?DateTimeImmutable
+    {
+        return $this->reportedAt;
+    }
+
+    public function report(): void
+    {
+        $this->reportedAt ??= new DateTimeImmutable();
+    }
+
+    public function clearReport(): void
+    {
+        $this->reportedAt = null;
     }
 }

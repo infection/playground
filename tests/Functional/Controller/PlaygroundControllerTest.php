@@ -227,6 +227,7 @@ class PlaygroundControllerTest extends WebTestCase
                 }
                 PHP,
             'create_example[config]' => '{"mutators": {"@default": true}}',
+            'create_example[title]' => 'Kills every mutant',
         ]);
 
         static::assertSame(200, $client->getResponse()->getStatusCode());
@@ -239,6 +240,10 @@ class PlaygroundControllerTest extends WebTestCase
         /** @var array<string, array<int, int>> $lineMap */
         $lineMap = json_decode($lineMapJson, true, 512, JSON_THROW_ON_ERROR);
         static::assertSame(11, $lineMap['SourceClass'][11] ?? null);
+
+        // the numbers of the log are copied for Explore: a listed run with mutants can be reported from it
+        static::assertCount(1, $client->getCrawler()->filterXPath('//form[contains(@action, "/report")]'));
+        static::assertSame('Kills every mutant', $client->getCrawler()->filterXPath('//*[@id="create_example_title"]')->attr('value'));
     }
 
     public function test_run_waits_for_a_change_on_a_run_with_the_current_versions(): void
