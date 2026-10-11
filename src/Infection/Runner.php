@@ -36,8 +36,10 @@ declare(strict_types=1);
 namespace App\Infection;
 
 use App\Code\ClassesExtractor\ClassesExtractor;
+use function array_keys;
 use function file_exists;
 use function file_get_contents;
+use function getenv;
 use const PHP_VERSION;
 use function sprintf;
 use Symfony\Component\Filesystem\Filesystem;
@@ -52,6 +54,19 @@ class Runner
     public const CURRENT_PHP_VERSION = PHP_VERSION;
 
     private const PROCESS_TIMEOUT_SEC = 30;
+
+    /**
+     * PHP_INI_SCAN_DIR loads the ini file with disable_functions for the playground.
+     */
+    private const INHERITED_ENVIRONMENT_VARIABLES = [
+        'PATH',
+        'HOME',
+        'LANG',
+        'TZ',
+        'PHP_INI_DIR',
+        'PHP_INI_SCAN_DIR',
+        'XDEBUG_MODE',
+    ];
 
     private Filesystem $filesystem;
 
@@ -95,11 +110,7 @@ class Runner
                 '--ansi',
                 '--no-progress',
                 '--show-mutations=0',
-            ], $rootDir, [
-                // the PHAR's requirement checker is not compatible with PHP 8.5 and spams deprecations;
-                // the Docker image always satisfies the requirements
-                'BOX_REQUIREMENT_CHECKER' => '0',
-            ]);
+            ], $rootDir, self::buildEnvironment());
             $process->setTimeout(self::PROCESS_TIMEOUT_SEC);
 
             $process->run();
@@ -120,6 +131,36 @@ class Runner
                 )
             );
         }
+    }
+
+    /**
+     * The submitted code runs in this process: it must not see the environment of the app,
+     * which holds DATABASE_URL and APP_SECRET. Symfony Process passes it on by default,
+     * so every variable that is not needed to run PHP is removed.
+     *
+     * @return array<string, string|false>
+     */
+    private static function buildEnvironment(): array
+    {
+        $environment = [];
+
+        foreach (array_keys($_ENV + getenv()) as $name) {
+            $environment[(string) $name] = false;
+        }
+
+        foreach (self::INHERITED_ENVIRONMENT_VARIABLES as $name) {
+            $value = getenv($name);
+
+            if ($value !== false) {
+                $environment[$name] = $value;
+            }
+        }
+
+        // the PHAR's requirement checker is not compatible with PHP 8.5 and spams deprecations;
+        // the Docker image always satisfies the requirements
+        $environment['BOX_REQUIREMENT_CHECKER'] = '0';
+
+        return $environment;
     }
 
     private function getPhpUnitXmlConfig(): string

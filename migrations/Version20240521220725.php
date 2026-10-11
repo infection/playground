@@ -51,7 +51,8 @@ final class Version20240521220725 extends AbstractMigration
     public function up(Schema $schema): void
     {
         // this up() migration is auto-generated, please modify it to your needs
-        $this->addSql('CREATE TABLE ast_run (
+        // IF NOT EXISTS: a database migrated before 2026 may have the table without this version recorded
+        $this->addSql('CREATE TABLE IF NOT EXISTS ast_run (
           id INT AUTO_INCREMENT NOT NULL,
           code LONGTEXT NOT NULL,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT \'(DC2Type:datetime_immutable)\',

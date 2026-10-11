@@ -3,17 +3,18 @@
 # to the symfony-docker setup (FrankenPHP/Caddy + MySQL 8.4).
 #
 # MySQL 5.7 data files cannot be opened by 8.4 directly, so the data is moved with a dump:
-#   1. dump the 5.7 database to backups/ on this machine (and count the rows)
-#   2. stop the swarm stack (the downtime starts here)
+#   1. stop the legacy app (the downtime starts here), dump the 5.7 database to backups/
+#      on this machine and count the rows
+#   2. remove the swarm stack
 #   3. start MySQL 8.4 on a new, empty volume and load the dump into it
 #   4. check the row counts, then start the app (it runs the Doctrine migrations)
 #
 # The legacy volume "infection_db-data" is never touched: to roll back, run
-# `docker compose down` for the new project and `docker stack deploy` the legacy stack again
-# (git show master:docker-stack.yml).
+# `docker compose down` for the new project (without -v), then redeploy the legacy stack from
+# master with its deploy/prod.sh: it attaches the same volume again.
 #
 # Usage: deploy/migrate-from-swarm.sh            the real thing, asks before step 2
-#        DRY_RUN=1 deploy/migrate-from-swarm.sh  step 1 only: changes nothing on the server or in the registry
+#        DRY_RUN=1 deploy/migrate-from-swarm.sh  dump + schema check only: changes nothing on the server or in the registry
 
 set -euo pipefail
 
@@ -34,12 +35,20 @@ count_rows() {
         query+="SELECT '$table', COUNT(*) FROM \`$table\`; "
     done
 
+    run_sql "$query" "$@"
+}
+
+# run_sql QUERY DOCKER-EXEC-COMMAND...: runs a query as root in the given MySQL container.
+run_sql() {
+    local query="$1"
+    shift
+
     # shellcheck disable=SC2016
     "$@" sh -c '
         password="${MYSQL_ROOT_PASSWORD:-}"
         if [ -n "${MYSQL_ROOT_PASSWORD_FILE:-}" ]; then password="$(cat "$MYSQL_ROOT_PASSWORD_FILE")"; fi
-        exec mysql --batch --skip-column-names -uroot -p"$password" "$MYSQL_DATABASE" -e "$1"
-    ' sh "$query" 2>/dev/null
+        MYSQL_PWD="$password" exec mysql --batch --skip-column-names -uroot "$MYSQL_DATABASE" -e "$1"
+    ' sh "$query"
 }
 
 if [ "${DRY_RUN:-0}" != '1' ]; then
@@ -54,27 +63,46 @@ if [ -z "$LEGACY_DB" ]; then
     exit 1
 fi
 
-echo "1. Dumping the legacy database to $BACKUP_FILE"
-remote_docker exec "$LEGACY_DB" sh -c \
-    'exec mysqldump --single-transaction --quick --routines --triggers --no-tablespaces --default-character-set=utf8mb4 -uroot -p"$(cat "$MYSQL_ROOT_PASSWORD_FILE")" "$MYSQL_DATABASE"' \
-    > "$BACKUP_FILE"
+dump_legacy_database() {
+    echo "Dumping the legacy database to $BACKUP_FILE"
+    remote_docker exec "$LEGACY_DB" sh -c \
+        'MYSQL_PWD="$(cat "$MYSQL_ROOT_PASSWORD_FILE")" exec mysqldump --single-transaction --quick --routines --triggers --no-tablespaces --default-character-set=utf8mb4 -uroot "$MYSQL_DATABASE"' \
+        > "$BACKUP_FILE"
 
-if ! tail -n 1 "$BACKUP_FILE" | grep -q '^-- Dump completed'; then
-    echo "The dump is incomplete, nothing was changed on the server: $BACKUP_FILE" >&2
-    exit 1
-fi
+    if ! tail -n 1 "$BACKUP_FILE" | grep -q '^-- Dump completed'; then
+        echo "The dump is incomplete: $BACKUP_FILE" >&2
+        exit 1
+    fi
 
-LEGACY_COUNTS="$(count_rows remote_docker exec "$LEGACY_DB")"
-echo "Rows in the legacy database:"
-echo "$LEGACY_COUNTS"
+    LEGACY_COUNTS="$(count_rows remote_docker exec "$LEGACY_DB")" || {
+        echo 'Could not count the rows of the legacy database.' >&2
+        exit 1
+    }
+    echo 'Rows in the legacy database:'
+    echo "$LEGACY_COUNTS"
+}
 
 if [ "${DRY_RUN:-0}" = '1' ]; then
-    echo 'DRY_RUN=1: stopping here, nothing was changed on the server.'
+    echo '1. Dry run: the app keeps serving, rows written from now on are not in this dump'
+    dump_legacy_database
+
+    # The new migrations assume this schema; check it before the switch.
+    echo 'Schema of the legacy database:'
+    run_sql 'SHOW CREATE TABLE example\G SHOW CREATE TABLE ast_run\G' remote_docker exec "$LEGACY_DB"
+    echo 'Executed migrations (the app runs the ones that are not listed on start):'
+    run_sql 'SELECT version FROM doctrine_migration_versions ORDER BY version' remote_docker exec "$LEGACY_DB"
+
+    echo 'DRY_RUN=1: nothing was changed on the server.'
     exit 0
 fi
 
-read -r -p 'Stop the legacy stack and switch production now? Type "yes": ' CONFIRMATION
+read -r -p 'Stop the legacy app and switch production now? Type "yes": ' CONFIRMATION
 [ "$CONFIRMATION" = 'yes' ] || exit 1
+
+# Nothing can write to the database after this point: the dump below has every row.
+echo '1. Stopping the legacy app (the downtime starts here), then dumping its database'
+remote_docker service scale --detach=false infection_web=0 infection_php=0
+dump_legacy_database
 
 echo '2. Removing the legacy swarm stack (its volumes are kept)'
 remote_docker stack rm infection
@@ -86,14 +114,17 @@ echo '3. Starting MySQL 8.4 and loading the dump'
 remote_compose pull
 remote_compose up --detach --wait --no-build database
 
-if [ -n "$(remote_compose exec -T database sh -c 'exec mysql --batch --skip-column-names -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE" -e "SHOW TABLES"' 2>/dev/null)" ]; then
+if [ -n "$(run_sql 'SHOW TABLES' remote_compose exec -T database)" ]; then
     echo 'The new database is not empty, refusing to load the dump into it.' >&2
     exit 1
 fi
 
-remote_compose exec -T database sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD" "$MYSQL_DATABASE"' < "$BACKUP_FILE"
+remote_compose exec -T database sh -c 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" exec mysql -uroot "$MYSQL_DATABASE"' < "$BACKUP_FILE"
 
-NEW_COUNTS="$(count_rows remote_compose exec -T database)"
+NEW_COUNTS="$(count_rows remote_compose exec -T database)" || {
+    echo 'Could not count the rows of the new database: the app is not started.' >&2
+    exit 1
+}
 echo "Rows in the new database:"
 echo "$NEW_COUNTS"
 

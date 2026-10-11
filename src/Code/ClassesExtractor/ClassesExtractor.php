@@ -68,22 +68,26 @@ final class ClassesExtractor
         /** @var Node\Stmt[] $initialStmts */
         $initialStmts = $this->parser->parse($code);
 
-        $this->traverser->traverse($initialStmts);
+        // FrankenPHP's worker mode keeps this service between requests: the visitor must not
+        // keep the classes of one run for the next one, even when this run fails
+        try {
+            $this->traverser->traverse($initialStmts);
 
-        $extractedClasses = [];
+            $extractedClasses = [];
 
-        foreach ($this->extractClassesVisitor->getClassNodes() as $classNode) {
-            Assert::notNull($classNode->name);
+            foreach ($this->extractClassesVisitor->getClassNodes() as $classNode) {
+                Assert::notNull($classNode->name);
 
-            $extractedClasses[] = new ExtractedClass(
-                $classNode->name->toString(),
-                $this->buildClassCode($classNode)
-            );
+                $extractedClasses[] = new ExtractedClass(
+                    $classNode->name->toString(),
+                    $this->buildClassCode($classNode)
+                );
+            }
+
+            return $extractedClasses;
+        } finally {
+            $this->extractClassesVisitor->clear();
         }
-
-        $this->extractClassesVisitor->clear();
-
-        return $extractedClasses;
     }
 
     private function buildClassCode(Node\Stmt\ClassLike $classNode): string
