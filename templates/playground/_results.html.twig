@@ -1,10 +1,4 @@
 {# The right column: the results of a run, the errors of a rejected run, or what a run will show #}
-{% set fieldErrors = [] %}
-{% for field in ['code', 'test', 'config'] %}
-    {% for error in attribute(form, field).vars.errors %}
-        {% set fieldErrors = fieldErrors|merge([{field: field, message: error.message}]) %}
-    {% endfor %}
-{% endfor %}
 {% set fieldLabels = {code: 'Source code', test: 'Test', config: 'infection.json5'} %}
 
 {% if resultOutput is defined %}
@@ -12,7 +6,7 @@
     {% set hasLog = jsonLog is defined and jsonLog is not empty %}
     <div class="pane-h" role="tablist">
         <button class="tab" type="button" role="tab" data-result-tab="mutants" aria-selected="{{ hasLog ? 'true' : 'false' }}" aria-controls="results-mutants">
-            Mutants <span class="count" id="mutants-count"></span>
+            Mutants <span class="tab-count" id="mutants-count"></span>
         </button>
         <button class="tab" type="button" role="tab" data-result-tab="console" aria-selected="{{ hasLog ? 'false' : 'true' }}" aria-controls="results-console">Console output</button>
         <span class="stale-note" id="stale-note" hidden>Code changed since this run · <button type="button" id="rerun">Run again</button></span>
@@ -23,7 +17,7 @@
             <div class="hidden" id="json-log" data-log="{{ jsonLog|e('html_attr') }}"></div>
             <div class="hidden" id="line-map" data-map="{{ lineMap|e('html_attr') }}"></div>
         {% else %}
-            <div class="empty empty-error">
+            <div class="blank-state blank-error">
                 <h3>Infection stopped before it generated mutants</h3>
                 <p>The console output shows why. Most often the test fails on the original code, or its class is not named <code>SourceClassTest</code>.</p>
             </div>
@@ -36,15 +30,15 @@
                 <span>One cell per mutant, in source order</span>
                 <span class="legend" id="strip-legend"></span>
             </div>
-            <div class="strip" id="strip" aria-label="Mutants in source order"></div>
+            <div class="cell-strip" id="strip" aria-label="Mutants in source order"></div>
             <div class="filters" id="status-filter" role="group" aria-label="Filter mutants by status"></div>
         </div>
 
         <div class="list" id="mutants-list" role="listbox" aria-label="Mutants" tabindex="0" hidden></div>
 
-        <div class="gutter gutter-y" data-split="results" role="separator" aria-orientation="horizontal" aria-label="Resize the mutant list and the mutant details" aria-valuemin="15" aria-valuemax="85" tabindex="0" title="Drag to resize, double-click to reset" id="results-gutter" hidden></div>
+        <div class="splitter splitter-y" data-split="results" role="separator" aria-orientation="horizontal" aria-label="Resize the mutant list and the mutant details" aria-valuemin="15" aria-valuemax="85" tabindex="0" title="Drag to resize, double-click to reset" id="results-gutter" hidden></div>
 
-        <div class="detail" id="mutant-detail" hidden>
+        <div class="detail-pane" id="mutant-detail" hidden>
             <div class="d-head">
                 <div class="d-title" id="detail-title"></div>
                 <div class="d-sub" id="detail-sub"></div>
@@ -59,7 +53,7 @@
             </div>
         </div>
 
-        <div class="empty" id="no-mutations-alert" hidden>
+        <div class="blank-state" id="no-mutations-alert" hidden>
             <h3>No mutants were generated</h3>
             <p>Infection found nothing to mutate in this code with this config. Check that the mutators in infection.json5 apply to the code, or add more logic to the class.</p>
         </div>
@@ -74,17 +68,17 @@
     </div>
 
     {% if fieldErrors is not empty %}
-        <div class="empty empty-error" id="results-intro">
+        <div class="blank-state blank-error" id="results-intro">
             <h3>Infection did not run</h3>
             <p>Fix these and run again:</p>
             <ul class="errors">
                 {% for error in fieldErrors %}
-                    <li><b>{{ fieldLabels[error.field] }}</b> {{ error.message }}</li>
+                    <li>{% if error.field %}<b>{{ fieldLabels[error.field] }}</b> {% endif %}{{ error.message }}</li>
                 {% endfor %}
             </ul>
         </div>
     {% else %}
-        <div class="empty" id="results-intro">
+        <div class="blank-state" id="results-intro">
             <h3>Run Infection on your code</h3>
             <p>Infection makes small changes to the source code, called mutants, and runs your test against each one.</p>
             <ul class="steps">

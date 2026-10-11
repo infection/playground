@@ -139,7 +139,7 @@ class PlaygroundController extends AbstractController
             return $this->redirectToRoute('playground_display_example', ['exampleIdHash' => $idHash]);
         }
 
-        return $this->render('playground/create.html.twig', [
+        return $this->render('playground/index.html.twig', [
             'form' => $form->createView(),
             'example' => $createExampleRequest,
         ]);

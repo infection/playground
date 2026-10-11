@@ -18,13 +18,13 @@
                     <svg class="file-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m8 7-5 5 5 5M16 7l5 5-5 5"/></svg>
                     <span class="mono">PHP code</span>
                 </span>
-                <span class="pane-meta">Hover over the code to inspect a node, click to pin it</span>
+                <span class="pane-meta">Hover to inspect, click to pin</span>
             </div>
             <div id="editor-code-ast" class="ed"></div>
             <div id="xray-status" class="xray-status">Building AST…</div>
         </section>
 
-        <div class="gutter gutter-x" data-split="ast" role="separator" aria-orientation="vertical" aria-label="Resize the code and node details panes" aria-valuemin="15" aria-valuemax="85" tabindex="0" title="Drag to resize, double-click to reset"></div>
+        <div class="splitter splitter-x" data-split="ast" role="separator" aria-orientation="vertical" aria-label="Resize the code and node details panes" aria-valuemin="15" aria-valuemax="85" tabindex="0" title="Drag to resize, double-click to reset"></div>
 
         <section class="pane" aria-label="Node details">
             <div class="pane-h">
@@ -37,6 +37,9 @@
                 </span>
             </div>
             <div class="ast-side">
+                <p class="ast-intro">
+                    <b>Hover</b> over the code to see its AST nodes, <b>click</b> to pin a node and see the node to use in <code>Mutator::canMutate()</code>. The AST is rebuilt as you type.
+                </p>
                 <div id="ast-details" class="ast-details"></div>
                 <p class="credit">
                     AST X-Ray is ported from <a href="https://phpstan.org/try" target="_blank" rel="noopener">PHPStan's playground</a>

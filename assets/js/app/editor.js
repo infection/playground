@@ -54,7 +54,11 @@ export function initMutationEditors() {
     testEditor = initEditor('editor-test', 'loaded-test', DEFAULT_TEST, 'php');
     configEditor = initEditor('editor-config', 'loaded-config', DEFAULT_CONFIG, 'json');
 
-    document.addEventListener('themeChanged', () => monaco.editor.setTheme(currentTheme()));
+    document.addEventListener('themeChanged', () => {
+        monaco.editor.setTheme(currentTheme());
+        // the overview ruler takes the status colors of the theme
+        showSourceMarkers();
+    });
 
     if (!IS_MAC) {
         document.querySelectorAll('.btn-run kbd, .kbd-run').forEach((kbd) => kbd.textContent = 'Ctrl↵');
@@ -212,6 +216,13 @@ function selectTab(selector, selected) {
 function initRun() {
     document.getElementById('js-submit').addEventListener('click', submit);
 
+    // Back after a run can restore this page from the cache as it was when submitted
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            resetRunState();
+        }
+    });
+
     const rerun = document.getElementById('rerun');
 
     if (rerun !== null) {
@@ -244,6 +255,16 @@ function submit() {
     document.getElementById('create_example_config').value = configEditor.getValue();
 
     document.getElementsByName('create_example')[0].submit();
+}
+
+function resetRunState() {
+    const button = document.getElementById('js-submit');
+
+    button.disabled = false;
+    button.classList.remove('is-running');
+    button.querySelector('.run-label').textContent = 'Run';
+    document.getElementById('workbench').classList.remove('is-running');
+    document.getElementById('run-state').hidden = true;
 }
 
 function initShare() {
@@ -718,17 +739,20 @@ function scaleTick(value) {
 
 function readConfiguredMinimums() {
     const configElement = document.getElementById('loaded-config');
+    // infection.json5 may have comments, trailing commas and unquoted keys, which JSON.parse rejects
+    const config = (configElement !== null ? configElement.dataset.code : '')
+        .replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '');
 
-    try {
-        const config = JSON.parse(configElement !== null ? configElement.dataset.code : '{}');
+    const read = (key) => {
+        const match = config.match(new RegExp('["\']?\\b' + key + '\\b["\']?\\s*:\\s*(-?\\d+(?:\\.\\d+)?)'));
 
-        return {
-            minMsi: config.minMsi,
-            minCoveredMsi: config.minCoveredMsi,
-        };
-    } catch (e) {
-        return {};
-    }
+        return match !== null ? Number(match[1]) : undefined;
+    };
+
+    return {
+        minMsi: read('minMsi'),
+        minCoveredMsi: read('minCoveredMsi'),
+    };
 }
 
 // ---- Strip, filter, list ---------------------------------------------------
@@ -761,11 +785,15 @@ function showStrip() {
 }
 
 function updateStrip() {
-    document.querySelectorAll('#strip .cell').forEach((cell) => {
-        const mutant = findMutant(cell.dataset.mutantId);
+    // the cells are in the order of the mutants
+    document.querySelectorAll('#strip .cell').forEach((cell, index) => {
+        const mutant = mutants[index];
+        const isFiltered = !activeStatuses.has(mutant.status);
 
         cell.setAttribute('aria-current', String(mutant === selectedMutant));
-        cell.classList.toggle('is-filtered', !activeStatuses.has(mutant.status));
+        cell.classList.toggle('is-filtered', isFiltered);
+        // a mutant hidden by the filter can't be selected
+        cell.disabled = isFiltered;
     });
 }
 
@@ -910,6 +938,7 @@ function showMutantDetail() {
         const nextEscaped = element('button', 'btn btn-sm');
         nextEscaped.type = 'button';
         nextEscaped.title = 'Go to the next escaped mutant (N)';
+        nextEscaped.setAttribute('aria-label', 'Next escaped mutant, ' + plural(escapedCount, 'escaped mutant') + ' in all');
         nextEscaped.append(element('span', 'btn-label', 'Next escaped '), '(' + escapedCount + ')');
         nextEscaped.addEventListener('click', selectNextEscaped);
         navigation.appendChild(nextEscaped);
@@ -1010,6 +1039,12 @@ function showSourceMarkers() {
     }
 
     const decorations = [];
+    const style = getComputedStyle(document.documentElement);
+    const rulerColors = {
+        bad: style.getPropertyValue('--escaped').trim(),
+        warn: style.getPropertyValue('--uncovered').trim(),
+        good: style.getPropertyValue('--killed').trim(),
+    };
 
     getVisibleMutantsByLine().forEach((lineMutants, line) => {
         const range = new monaco.Range(line, 1, line, 1);
@@ -1023,7 +1058,7 @@ function showSourceMarkers() {
                 isWholeLine: true,
                 className: isSelectedLine ? 'mutant-line-selected' : (worstMarker !== 'good' ? 'mutant-line-' + worstMarker : ''),
                 overviewRuler: {
-                    color: getComputedStyle(document.documentElement).getPropertyValue(worstMarker === 'bad' ? '--escaped' : worstMarker === 'warn' ? '--uncovered' : '--killed').trim(),
+                    color: rulerColors[worstMarker],
                     position: monaco.editor.OverviewRulerLane.Left,
                 },
             },
@@ -1044,9 +1079,12 @@ function showSourceMarkers() {
         });
     });
 
-    if (selectedMutant !== null && selectedMutant.sourceLine && activeStatuses.has(selectedMutant.status)) {
+    const model = codeEditor.getModel();
+
+    // the line may be gone when the code was edited since the run
+    if (selectedMutant !== null && selectedMutant.sourceLine && selectedMutant.sourceLine <= model.getLineCount() && activeStatuses.has(selectedMutant.status)) {
         const line = selectedMutant.sourceLine;
-        const column = codeEditor.getModel().getLineMaxColumn(line);
+        const column = model.getLineMaxColumn(line);
 
         decorations.push({
             range: new monaco.Range(line, column, line, column),

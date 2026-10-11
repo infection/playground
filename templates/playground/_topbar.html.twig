@@ -1,8 +1,4 @@
 {# Versions, Share and Run in the top bar of the playground pages #}
-{% set infectionVersion = example.infectionVersion ?? constant('App\\Infection\\Runner::CURRENT_INFECTION_VERSION') %}
-{% set phpunitVersion = example.phpunitVersion ?? constant('App\\Infection\\Runner::CURRENT_PHPUNIT_VERSION') %}
-{% set phpVersion = example.phpVersion ?? constant('App\\Infection\\Runner::CURRENT_PHP_VERSION') %}
-
 <div class="env" title="{{ resultOutput is defined ? 'Versions this run used' : 'Versions a new run uses' }}">
     <span>Infection <b>{{ infectionVersion }}</b></span>
     <span>PHPUnit <b>{{ phpunitVersion }}</b></span>
@@ -11,11 +7,11 @@
 
 {% if resultOutput is defined %}
     <div class="pop-wrap">
-        <button class="btn" id="share-btn" type="button" aria-haspopup="dialog" aria-expanded="false">
+        <button class="btn" id="share-btn" type="button" aria-label="Share this run" aria-controls="share-pop" aria-expanded="false" data-popover>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
             <span class="btn-label">Share</span>
         </button>
-        <div class="pop" id="share-pop" role="dialog" aria-label="Share this run" hidden>
+        <div class="pop" id="share-pop" role="group" aria-label="Link to this run" hidden>
             <h4>Link to this run</h4>
             <p>Opens the same code, test, config and results. Each run gets its own link.</p>
             <div class="share-row">
