@@ -11,10 +11,14 @@
 
 {# outside the form element, so it joins the form by its id #}
 {% block topbar_title %}
+    {# TODO(explore): hidden until Explore is finished, uncomment to bring it back, and drop the setRendered call below
     <label class="run-title">
         <span class="sr-only">Title of the run, optional, shown in Explore</span>
         {{ form_widget(form.title, {attr: {form: 'workbench', placeholder: 'Untitled run', title: 'An optional title, shown in Explore'}}) }}
     </label>
+    #}
+    {# keeps form_end from rendering the hidden title inside the form #}
+    {% do form.title.setRendered %}
 {% endblock %}
 
 {% block topbar_actions %}{{ include('playground/_topbar.html.twig') }}{% endblock %}

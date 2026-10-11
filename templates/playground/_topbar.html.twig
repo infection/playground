@@ -13,7 +13,10 @@
         </button>
         <div class="pop" id="share-pop" role="group" aria-label="Link to this run" hidden>
             <h4>Link to this run</h4>
+            {# TODO(explore): hidden until Explore is finished, uncomment to bring it back
             <p>Opens the same code, test, config and results. Each run gets its own link{% if isListed %} and is listed in <a href="{{ path('explore_index') }}">Explore</a>{% endif %}.</p>
+            #}
+            <p>Opens the same code, test, config and results. Each run gets its own link.</p>
             <div class="share-row">
                 <input id="share-url" type="text" readonly aria-label="Link to this run" value="{{ app.request.uri }}">
                 <button class="btn btn-sm" id="copy-url" type="button">Copy</button>
@@ -21,6 +24,7 @@
         </div>
     </div>
 
+    {# TODO(explore): hidden until Explore is finished, uncomment to bring it back
     {% if isReported %}
         <span class="btn reported" title="Hidden from Explore until it is reviewed">Reported</span>
     {% elseif isListed %}
@@ -31,6 +35,7 @@
             </button>
         </form>
     {% endif %}
+    #}
 {% endif %}
 
 <button id="js-submit" class="btn btn-run" type="button" title="Run Infection (Ctrl/⌘ + Enter)">
