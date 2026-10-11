@@ -325,25 +325,29 @@
    Mutant markers in the Source Code editor
    ========================================== */
 .mutant-glyph {
-    border-radius: 9999px;
-    margin-left: 6px;
-    width: 8px !important;
-    height: 8px !important;
-    top: 50%;
-    transform: translateY(-50%);
     cursor: pointer;
 }
-.mutant-glyph-bad { background: #ef4444; }
-.mutant-glyph-warn { background: #eab308; }
-.mutant-glyph-good { background: #22c55e; }
+.mutant-glyph::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    transform: translate(-50%, -50%);
+}
+.mutant-glyph-bad::before { background: #ef4444; }
+.mutant-glyph-warn::before { background: #eab308; }
+.mutant-glyph-good::before { background: #22c55e; }
 
-.mutant-line-bad { background: rgba(239, 68, 68, 0.08); }
-.mutant-line-warn { background: rgba(234, 179, 8, 0.1); }
-.mutant-line-good { background: rgba(34, 197, 94, 0.06); }
+.mutant-line-bad { background: rgba(239, 68, 68, 0.15); }
+.mutant-line-warn { background: rgba(234, 179, 8, 0.18); }
+.mutant-line-good { background: rgba(34, 197, 94, 0.12); }
 .mutant-line-selected { box-shadow: inset 3px 0 0 #16a34a; }
-.dark .mutant-line-bad { background: rgba(239, 68, 68, 0.14); }
-.dark .mutant-line-warn { background: rgba(234, 179, 8, 0.14); }
-.dark .mutant-line-good { background: rgba(34, 197, 94, 0.1); }
+.dark .mutant-line-bad { background: rgba(239, 68, 68, 0.2); }
+.dark .mutant-line-warn { background: rgba(234, 179, 8, 0.2); }
+.dark .mutant-line-good { background: rgba(34, 197, 94, 0.15); }
 .dark .mutant-line-selected { box-shadow: inset 3px 0 0 #4ade80; }
 
 /* ==========================================
