@@ -133,6 +133,58 @@ class PlaygroundControllerTest extends WebTestCase
         static::assertTrue($client->getResponse()->isRedirection());
     }
 
+    /**
+     * Guards the PHARs against the functions disabled on PHP level: a newer PHPUnit
+     * calling one of them breaks every run.
+     */
+    public function test_it_runs_infection_and_kills_mutants(): void
+    {
+        $client = static::createClient();
+        $client->catchExceptions(false);
+
+        $client->followRedirects(true);
+        $client->request('GET', '/');
+
+        $client->submitForm('create_example[mutate]', [
+            'create_example[code]' => <<<'PHP'
+                <?php
+
+                declare(strict_types=1);
+
+                namespace Infected;
+
+                class SourceClass
+                {
+                    public function add(int $a, int $b): int
+                    {
+                        return $a + $b;
+                    }
+                }
+                PHP,
+            'create_example[test]' => <<<'PHP'
+                <?php
+
+                declare(strict_types=1);
+
+                namespace Infected;
+
+                use PHPUnit\Framework\TestCase;
+
+                class SourceClassTest extends TestCase
+                {
+                    public function test_it_adds_2_numbers(): void
+                    {
+                        self::assertSame(3, (new SourceClass())->add(1, 2));
+                    }
+                }
+                PHP,
+            'create_example[config]' => '{"mutators": {"@default": true}}',
+        ]);
+
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertStringContainsString('mutants were killed by Test Framework', (string) $client->getResponse()->getContent());
+    }
+
     public function test_it_fails_when_config_is_not_a_valid_json(): void
     {
         $client = static::createClient();
