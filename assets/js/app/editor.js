@@ -166,8 +166,8 @@ function addSourceLines(mutants, lineMap) {
 }
 
 /**
- * MSI, MCC and Covered MSI as Infection calculates them (Infection\Metrics\Calculator),
- * with each formula filled in with the counts of this run.
+ * MSI and Covered MSI as Infection calculates them (Infection\Metrics\Calculator),
+ * shown next to the versions. Hovering a score shows its formula filled in with the counts of this run.
  */
 function showMetrics(stats) {
     const panel = document.getElementById('metrics-panel');
@@ -200,7 +200,7 @@ function showMetrics(stats) {
     const minimums = readConfiguredMinimums();
 
     panel.replaceChildren(
-        buildMetricTile({
+        buildMetric({
             title: 'MSI',
             name: 'Mutation Score Indicator',
             value: stats.msi,
@@ -210,17 +210,9 @@ function showMetrics(stats) {
             minimumKey: 'minMsi',
             minimum: minimums.minMsi,
         }),
-        buildMetricTile({
-            title: 'MCC',
-            name: 'Mutation Code Coverage',
-            value: stats.mutationCodeCoverage,
-            formula: '(total − uncovered) / total',
-            counts: '(' + total + ' − ' + count('notCoveredCount') + ') / ' + total + ' = ' + covered + ' / ' + total,
-            explanation: 'The share of mutants in code that at least one test executes.',
-        }),
-        buildMetricTile({
-            title: 'Covered Code MSI',
-            name: 'MSI of the covered code',
+        buildMetric({
+            title: 'Covered MSI',
+            name: 'Covered Code Mutation Score Indicator',
             value: stats.coveredCodeMsi,
             formula: detectedNames + ' / (total − uncovered)',
             counts: detectedValues + ' / ' + covered + ' = ' + detected + ' / ' + covered,
@@ -233,45 +225,61 @@ function showMetrics(stats) {
     panel.classList.remove('hidden');
 }
 
-function buildMetricTile(tile) {
-    const element = document.createElement('div');
-    element.className = 'metric-tile';
+function buildMetric(metric) {
+    const hasMinimum = typeof metric.minimum === 'number';
+    // Infection fails the run when the score is below the minimum
+    const passed = hasMinimum && metric.value >= metric.minimum;
 
-    const header = document.createElement('div');
-    header.className = 'metric-tile-header';
+    const element = document.createElement('div');
+    element.className = 'metric';
+    // focusable, so the details also open from the keyboard
+    element.tabIndex = 0;
+
+    const chip = document.createElement('span');
+    chip.className = 'metric-chip' + (hasMinimum ? ' metric-chip-' + (passed ? 'pass' : 'fail') : '');
 
     const title = document.createElement('span');
-    title.textContent = tile.title;
-    title.title = tile.name;
-    header.appendChild(title);
+    title.className = 'metric-chip-title';
+    title.textContent = metric.title;
 
-    if (typeof tile.minimum === 'number') {
-        // Infection fails the run when the score is below the minimum
-        const passed = tile.value >= tile.minimum;
+    const value = document.createElement('span');
+    value.className = 'metric-chip-value';
+    value.textContent = metric.value + '%';
 
+    chip.append(title, value);
+
+    const details = document.createElement('div');
+    details.className = 'metric-details';
+    details.setAttribute('role', 'tooltip');
+
+    const header = document.createElement('div');
+    header.className = 'metric-details-header';
+
+    const name = document.createElement('span');
+    name.textContent = metric.name;
+    header.appendChild(name);
+
+    if (hasMinimum) {
         const badge = document.createElement('span');
         badge.className = 'mutant-badge ' + (passed ? 'mutant-badge-killed' : 'mutant-badge-escaped');
-        badge.textContent = (passed ? 'pass' : 'fail') + ' · ' + tile.minimumKey + ' ' + tile.minimum + '%';
+        badge.textContent = (passed ? 'pass' : 'fail') + ' · ' + metric.minimumKey + ' ' + metric.minimum + '%';
         header.appendChild(badge);
     }
 
-    const value = document.createElement('p');
-    value.className = 'metric-value';
-    value.textContent = tile.value + '%';
-
     const formula = document.createElement('p');
     formula.className = 'metric-formula';
-    formula.textContent = tile.formula;
+    formula.textContent = metric.title + ' = ' + metric.formula;
 
     const counts = document.createElement('p');
     counts.className = 'metric-formula';
-    counts.textContent = '= ' + tile.counts;
+    counts.textContent = '= ' + metric.counts + ' = ' + metric.value + '%';
 
     const explanation = document.createElement('p');
     explanation.className = 'metric-explanation';
-    explanation.textContent = tile.explanation;
+    explanation.textContent = metric.explanation;
 
-    element.append(header, value, formula, counts, explanation);
+    details.append(header, formula, counts, explanation);
+    element.append(chip, details);
 
     return element;
 }
