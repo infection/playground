@@ -748,21 +748,53 @@ kbd {
     display: none;
 }
 
+/* the overview alone until there are mutants to detail, see splitters.js for the rows of the grid */
 .res {
     --gutter: 9px;
     flex: 1;
     min-height: 0;
-    display: grid;
-    grid-template-rows: auto auto minmax(80px, 0.43fr) var(--gutter) minmax(160px, 0.57fr);
+    display: flex;
+    flex-direction: column;
 }
 
-/* placed explicitly: a hidden part must not shift the others into its row */
-.res > .verdict { grid-row: 1; }
-.res > .run-strip { grid-row: 2; }
-.res > .list { grid-row: 3; }
-.res > .splitter { grid-row: 4; border-radius: 0; border-bottom: 1px solid var(--line); }
-.res > .detail-pane { grid-row: 5; }
-.res > .blank-state { grid-row: 3 / span 3; }
+.res:has(> .detail-pane:not([hidden])) {
+    display: grid;
+    grid-template-rows: minmax(0, 0.5fr) var(--gutter) minmax(160px, 0.5fr);
+}
+
+.res > .splitter { border-radius: 0; border-bottom: 1px solid var(--line); }
+
+/* the list scrolls by itself while there is room, below that the whole overview scrolls */
+.overview {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.overview > * {
+    flex-shrink: 0;
+}
+
+.overview > .list {
+    flex: 1 0 0;
+    min-height: 120px;
+}
+
+.overview > .blank-state {
+    flex: 1;
+}
+
+.res[data-collapsed="before"] > .overview,
+.res[data-collapsed="after"] .d-body {
+    display: none;
+}
+
+.res[data-collapsed="after"] .d-tabs {
+    border-bottom: 0;
+    padding-bottom: 6px;
+}
 
 .res > * {
     min-width: 0;
@@ -1315,9 +1347,35 @@ kbd {
 
 .d-tabs {
     display: flex;
-    gap: 2px;
     padding: 8px 12px 0;
     border-bottom: 1px solid var(--line);
+}
+
+.d-tablist {
+    display: flex;
+    gap: 2px;
+}
+
+.pane-toggles {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.pane-toggles .icon-btn {
+    width: 26px;
+    height: 26px;
+}
+
+.pane-toggles .icon-btn svg {
+    width: 15px;
+    height: 15px;
+}
+
+.pane-toggles .icon-btn[aria-pressed="true"] {
+    color: var(--fg);
+    background: var(--sunken);
 }
 
 .d-tabs .tab {
@@ -1602,9 +1660,29 @@ kbd {
         min-height: 0;
     }
 
-    .res {
+    .res,
+    .res:has(> .detail-pane:not([hidden])) {
         display: flex;
         flex-direction: column;
+    }
+
+    .overview {
+        overflow: visible;
+    }
+
+    .overview > .list {
+        flex: none;
+        min-height: 0;
+    }
+
+    /* one pane at a time on phones: nothing to resize, and a side collapsed on a wide screen shows */
+    .pane-toggles {
+        display: none;
+    }
+
+    .res[data-collapsed="before"] > .overview,
+    .res[data-collapsed="after"] .d-body {
+        display: flex;
     }
 
     .list {

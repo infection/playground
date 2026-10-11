@@ -16,46 +16,61 @@
         {% if hasLog %}
             <div class="hidden" id="json-log" data-log="{{ jsonLog|e('html_attr') }}"></div>
             <div class="hidden" id="line-map" data-map="{{ lineMap|e('html_attr') }}"></div>
-        {% else %}
-            <div class="blank-state blank-error">
-                <h3>Infection stopped before it generated mutants</h3>
-                <p>The console output shows why. Most often the test fails on the original code, or its class is not named <code>SourceClassTest</code>.</p>
-            </div>
         {% endif %}
 
-        <div class="verdict" id="verdict" hidden></div>
+        {# the scores, the strip and the list resize as one: the splitter can take all of it for the details #}
+        <div class="overview" id="results-overview">
+            {% if not hasLog %}
+                <div class="blank-state blank-error">
+                    <h3>Infection stopped before it generated mutants</h3>
+                    <p>The console output shows why. Most often the test fails on the original code, or its class is not named <code>SourceClassTest</code>.</p>
+                </div>
+            {% endif %}
 
-        <div class="run-strip" id="run-strip" hidden>
-            <div class="strip-head">
-                <span>One cell per mutant, in source order</span>
-                <span class="legend" id="strip-legend"></span>
+            <div class="verdict" id="verdict" hidden></div>
+
+            <div class="run-strip" id="run-strip" hidden>
+                <div class="strip-head">
+                    <span>One cell per mutant, in source order</span>
+                    <span class="legend" id="strip-legend"></span>
+                </div>
+                <div class="cell-strip" id="strip" aria-label="Mutants in source order"></div>
+                <div class="filters" id="status-filter" role="group" aria-label="Filter mutants by status"></div>
             </div>
-            <div class="cell-strip" id="strip" aria-label="Mutants in source order"></div>
-            <div class="filters" id="status-filter" role="group" aria-label="Filter mutants by status"></div>
+
+            <div class="list" id="mutants-list" role="listbox" aria-label="Mutants" tabindex="0" hidden></div>
+
+            <div class="blank-state" id="no-mutations-alert" hidden>
+                <h3>No mutants were generated</h3>
+                <p>Infection found nothing to mutate in this code with this config. Check that the mutators in infection.json5 apply to the code, or add more logic to the class.</p>
+            </div>
         </div>
 
-        <div class="list" id="mutants-list" role="listbox" aria-label="Mutants" tabindex="0" hidden></div>
-
-        <div class="splitter splitter-y" data-split="results" role="separator" aria-orientation="horizontal" aria-label="Resize the mutant list and the mutant details" aria-valuemin="15" aria-valuemax="85" tabindex="0" title="Drag to resize, double-click to reset" id="results-gutter" hidden></div>
+        <div class="splitter splitter-y" data-split="results" role="separator" aria-orientation="horizontal" aria-label="Resize the overview and the mutant details" aria-valuemin="15" aria-valuemax="85" tabindex="0" title="Drag to resize, double-click to reset" id="results-gutter" hidden></div>
 
         <div class="detail-pane" id="mutant-detail" hidden>
             <div class="d-head">
                 <div class="d-title" id="detail-title"></div>
                 <div class="d-sub" id="detail-sub"></div>
             </div>
-            <div class="d-tabs" role="tablist">
-                <button class="tab" type="button" role="tab" data-detail-tab="diff" aria-selected="true" aria-controls="editor-diff">Diff</button>
-                <button class="tab" type="button" role="tab" data-detail-tab="output" aria-selected="false" aria-controls="mutant-output">Test output</button>
+            <div class="d-tabs">
+                <div class="d-tablist" role="tablist">
+                    <button class="tab" type="button" role="tab" data-detail-tab="diff" aria-selected="true" aria-controls="editor-diff">Diff</button>
+                    <button class="tab" type="button" role="tab" data-detail-tab="output" aria-selected="false" aria-controls="mutant-output">Test output</button>
+                </div>
+                <div class="pane-toggles">
+                    <button class="icon-btn" type="button" data-collapse="results" data-collapse-side="before" aria-pressed="false" title="Expand the details over the overview">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h14M8 14l4-4 4 4M12 10v10"/></svg>
+                    </button>
+                    <button class="icon-btn" type="button" data-collapse="results" data-collapse-side="after" aria-pressed="false" title="Collapse the details">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20h14M8 10l4 4 4-4M12 14V4"/></svg>
+                    </button>
+                </div>
             </div>
             <div class="d-body">
                 <div id="editor-diff" class="diff-editor" role="tabpanel"></div>
                 <pre id="mutant-output" class="out" role="tabpanel" hidden></pre>
             </div>
-        </div>
-
-        <div class="blank-state" id="no-mutations-alert" hidden>
-            <h3>No mutants were generated</h3>
-            <p>Infection found nothing to mutate in this code with this config. Check that the mutators in infection.json5 apply to the code, or add more logic to the class.</p>
         </div>
     </div>
 
