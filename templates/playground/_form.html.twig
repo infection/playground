@@ -56,6 +56,9 @@
                 &middot; PHP <span class="text-green-600 dark:text-green-400 font-medium">{{ example.phpVersion }}</span>
             </span>
         {% endif %}
+        {% if jsonLog is defined and jsonLog is not empty %}
+            <div id="metrics-panel" class="hidden flex flex-wrap items-center gap-2" aria-label="Metrics"></div>
+        {% endif %}
     </div>
     <div class="hidden">{{ form_rest(form) }}</div>
 {{ form_end(form) }}
