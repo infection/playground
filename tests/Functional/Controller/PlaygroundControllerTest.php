@@ -37,6 +37,8 @@ namespace App\Tests\Functional\Controller;
 
 use App\Request\CreateExampleRequest;
 use Generator;
+use function json_decode;
+use const JSON_THROW_ON_ERROR;
 use PHPUnit\Framework\Attributes\DataProvider;
 use function sprintf;
 use function str_repeat;
@@ -223,6 +225,14 @@ class PlaygroundControllerTest extends WebTestCase
 
         static::assertSame(200, $client->getResponse()->getStatusCode());
         static::assertStringContainsString('mutants were killed by Test Framework', (string) $client->getResponse()->getContent());
+
+        // the editor shows the mutants on the submitted lines, `return $a + $b;` is on line 11
+        $lineMapJson = $client->getCrawler()->filterXPath('//*[@id="line-map"]')->attr('data-map');
+        static::assertIsString($lineMapJson);
+
+        /** @var array<string, array<int, int>> $lineMap */
+        $lineMap = json_decode($lineMapJson, true, 512, JSON_THROW_ON_ERROR);
+        static::assertSame(11, $lineMap['SourceClass'][11] ?? null);
     }
 
     public function test_it_fails_when_config_is_not_a_valid_json(): void

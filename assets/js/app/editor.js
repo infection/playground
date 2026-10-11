@@ -4,6 +4,36 @@ let diffEditor;
 let codeEditor;
 let testEditor;
 let configEditor;
+let sourceMarkers;
+
+let mutants = [];
+let selectedMutant = null;
+const activeStatuses = new Set();
+
+// a marker takes the color of the worst status on its line
+const MARKER_BY_STATUS = {
+    escaped: 'bad',
+    uncovered: 'bad',
+    timeouted: 'warn',
+    errored: 'good',
+    killed: 'good',
+};
+
+const MARKER_ORDER = ['bad', 'warn', 'good'];
+
+const BADGE_CLASSES = {
+    escaped: 'mutant-badge-escaped',
+    killed: 'mutant-badge-killed',
+    errored: 'mutant-badge-errored',
+    timeouted: 'mutant-badge-timeout',
+    uncovered: 'mutant-badge-uncovered'
+};
+
+const MARKER_COLORS = {
+    bad: '#ef4444',
+    warn: '#eab308',
+    good: '#22c55e',
+};
 
 export function initMutationEditors() {
     codeEditor = initCodeEditor();
@@ -66,7 +96,7 @@ function processMutantsDetails() {
     }
 
     const jsonLog = JSON.parse(logElement.dataset.log);
-    const mutants = getAllMutants(jsonLog);
+    mutants = addSourceLines(getAllMutants(jsonLog), readLineMap());
 
     if (mutants.length === 0) {
         showNoMutantsAlert();
@@ -74,12 +104,51 @@ function processMutantsDetails() {
         return;
     }
 
-    const firstMutant = mutants[0];
+    mutants.forEach((mutant) => activeStatuses.add(mutant.status));
 
-    showMutantsTable(mutants)
-    showDiffEditor(firstMutant.mutator);
-    showProcessOutput(firstMutant);
-    highlightRow(document.getElementById('mutants-table').getElementsByTagName('tr')[0]);
+    showStatusFilter();
+    showMutantsTable(mutants);
+
+    if (codeEditor) {
+        sourceMarkers = codeEditor.createDecorationsCollection([]);
+        codeEditor.onMouseDown(selectMutantFromMarker);
+    }
+
+    selectMutant(mutants[0]);
+}
+
+function readLineMap() {
+    const lineMapElement = document.getElementById('line-map');
+
+    if (lineMapElement === null) {
+        return {};
+    }
+
+    try {
+        const lineMap = JSON.parse(lineMapElement.dataset.map);
+
+        // PHP encodes an empty map as a list
+        return Array.isArray(lineMap) ? {} : lineMap;
+    } catch (e) {
+        return {};
+    }
+}
+
+/**
+ * Infection reports the line of the class file the playground generated from the submitted code,
+ * the line map translates it to the line of the Source Code editor.
+ */
+function addSourceLines(mutants, lineMap) {
+    return mutants.map((mutant, index) => {
+        const mutator = mutant.mutator;
+        const className = (mutator.originalFilePath || '').split('/').pop().replace(/\.php$/, '');
+        const classLines = lineMap[className] || {};
+
+        return Object.assign({}, mutant, {
+            id: index + 1,
+            sourceLine: classLines[mutator.originalStartLine] || null,
+        });
+    });
 }
 
 function showNoMutantsAlert() {
@@ -119,42 +188,41 @@ function getAllMutants(jsonLog) {
 function showMutantsTable(mutants) {
     const tBody = document.getElementById('mutants-table').getElementsByTagName('tbody')[0];
 
-    const badgeClasses = {
-        escaped: 'mutant-badge-escaped',
-        killed: 'mutant-badge-killed',
-        errored: 'mutant-badge-errored',
-        timeouted: 'mutant-badge-timeout',
-        uncovered: 'mutant-badge-uncovered'
-    }
-
     mutants.forEach((mutant, index) => {
         const td1 = document.createElement('td');
         td1.className = 'py-2.5 px-3';
         const span1 = document.createElement('span');
         span1.className = 'text-sm text-gray-700 dark:text-gray-300 flex items-center';
         span1.innerHTML = '<span class="text-gray-400 dark:text-gray-500 text-xs mr-2 font-mono">' + (index + 1) + '</span>' + mutant.mutator.mutatorName;
+
+        if (mutant.sourceLine) {
+            const lineSpan = document.createElement('span');
+            lineSpan.className = 'text-gray-400 dark:text-gray-500 text-xs ml-2 font-mono';
+            lineSpan.textContent = 'line ' + mutant.sourceLine;
+            span1.appendChild(lineSpan);
+        }
+
         td1.appendChild(span1);
 
         const td2 = document.createElement('td');
         td2.className = 'py-2.5 px-3 text-right';
         const span2 = document.createElement('span');
-        span2.className = 'mutant-badge ' + (badgeClasses[mutant.status] || '');
+        span2.className = 'mutant-badge ' + (BADGE_CLASSES[mutant.status] || '');
         span2.textContent = mutant.status;
         td2.appendChild(span2);
 
         const tr = document.createElement('tr');
         tr.appendChild(td1);
         tr.className = 'mutant-row';
+        tr.dataset.mutantId = String(mutant.id);
+        tr.dataset.status = mutant.status;
         tr.appendChild(td2);
 
         tBody.appendChild(tr);
 
         tr.addEventListener('click',
             function () {
-                showDiffEditor(mutant.mutator);
-                showProcessOutput(mutant);
-                unhighlightAllRows(tBody);
-                highlightRow(tr);
+                selectMutant(mutant);
 
                 return false;
             }
@@ -162,17 +230,150 @@ function showMutantsTable(mutants) {
     });
 }
 
-function unhighlightAllRows() {
-    const htmlCollection = document.getElementById('mutants-table').getElementsByTagName('tr');
-    const rows = Array.prototype.slice.call(htmlCollection);
+function selectMutant(mutant) {
+    selectedMutant = mutant;
 
-    rows.forEach((row) => {
-        row.classList.remove('mutant-row-active');
+    showDiffEditor(mutant.mutator);
+    showProcessOutput(mutant);
+
+    getMutantRows().forEach((row) => {
+        row.classList.toggle('mutant-row-active', row.dataset.mutantId === String(mutant.id));
+    });
+
+    showSourceMarkers();
+}
+
+function getMutantRows() {
+    return Array.prototype.slice.call(document.getElementById('mutants-table').getElementsByTagName('tr'));
+}
+
+function showStatusFilter() {
+    const container = document.getElementById('status-filter');
+
+    if (container === null) {
+        return;
+    }
+
+    const counts = {};
+
+    mutants.forEach((mutant) => {
+        counts[mutant.status] = (counts[mutant.status] || 0) + 1;
+    });
+
+    const label = document.createElement('span');
+    label.className = 'text-xs text-gray-500 dark:text-gray-400 mr-1';
+    label.textContent = 'Show';
+    container.appendChild(label);
+
+    Object.keys(counts).forEach((status) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'status-chip';
+        button.setAttribute('aria-pressed', 'true');
+
+        const badge = document.createElement('span');
+        badge.className = 'mutant-badge ' + (BADGE_CLASSES[status] || '');
+        badge.textContent = status + ' ' + counts[status];
+        button.appendChild(badge);
+
+        button.addEventListener('click', function () {
+            if (activeStatuses.has(status)) {
+                activeStatuses.delete(status);
+            } else {
+                activeStatuses.add(status);
+            }
+
+            button.setAttribute('aria-pressed', String(activeStatuses.has(status)));
+
+            getMutantRows().forEach((row) => {
+                row.classList.toggle('hidden', !activeStatuses.has(row.dataset.status));
+            });
+
+            showSourceMarkers();
+        });
+
+        container.appendChild(button);
     });
 }
 
-function highlightRow(row) {
-    row.classList.add('mutant-row-active');
+/**
+ * Gutter dots and line highlights in the Source Code editor, colored by the worst status on the line.
+ */
+function showSourceMarkers() {
+    if (!sourceMarkers) {
+        return;
+    }
+
+    const mutantsByLine = getVisibleMutantsByLine();
+    const decorations = [];
+
+    mutantsByLine.forEach((lineMutants, line) => {
+        const marker = lineMutants
+            .map((mutant) => MARKER_BY_STATUS[mutant.status] || 'good')
+            .sort((a, b) => MARKER_ORDER.indexOf(a) - MARKER_ORDER.indexOf(b))[0];
+        const isSelected = lineMutants.includes(selectedMutant);
+
+        decorations.push({
+            range: new monaco.Range(line, 1, line, 1),
+            options: {
+                isWholeLine: true,
+                className: 'mutant-line mutant-line-' + marker + (isSelected ? ' mutant-line-selected' : ''),
+                glyphMarginClassName: 'mutant-glyph mutant-glyph-' + marker,
+                glyphMarginHoverMessage: {
+                    value: lineMutants
+                        .map((mutant) => '#' + mutant.id + ' **' + mutant.mutator.mutatorName + '**: ' + mutant.status)
+                        .join('  \n'),
+                },
+                overviewRuler: {
+                    color: MARKER_COLORS[marker],
+                    position: monaco.editor.OverviewRulerLane.Left,
+                },
+            },
+        });
+    });
+
+    sourceMarkers.set(decorations);
+}
+
+function getVisibleMutantsByLine() {
+    const mutantsByLine = new Map();
+
+    mutants
+        .filter((mutant) => mutant.sourceLine && activeStatuses.has(mutant.status))
+        .forEach((mutant) => {
+            if (!mutantsByLine.has(mutant.sourceLine)) {
+                mutantsByLine.set(mutant.sourceLine, []);
+            }
+
+            mutantsByLine.get(mutant.sourceLine).push(mutant);
+        });
+
+    return mutantsByLine;
+}
+
+/**
+ * A click on a marker selects the first mutant of its line, the next click the next one.
+ */
+function selectMutantFromMarker(event) {
+    if (event.target.type !== monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN) {
+        return;
+    }
+
+    const lineMutants = getVisibleMutantsByLine().get(event.target.position.lineNumber);
+
+    if (!lineMutants) {
+        return;
+    }
+
+    const mutant = lineMutants[(lineMutants.indexOf(selectedMutant) + 1) % lineMutants.length];
+
+    selectMutant(mutant);
+
+    const row = document.querySelector('#mutants-table tr[data-mutant-id="' + mutant.id + '"]');
+
+    if (row) {
+        row.scrollIntoView({block: 'nearest'});
+    }
 }
 
 function showProcessOutput(mutant) {
@@ -293,6 +494,8 @@ function initCodeEditor() {
         minimap: {
             enabled: false
         },
+        // shows the mutant markers of a run
+        glyphMargin: document.getElementById('json-log') !== null,
         value: code,
         language: 'php',
         theme: isCurrentThemeDark() ? 'vs-dark' : 'vs'

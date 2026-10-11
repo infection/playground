@@ -36,7 +36,9 @@ declare(strict_types=1);
 namespace App\Code\ClassesExtractor;
 
 use App\Code\Visitor\ExtractClassesVisitor;
+use function count;
 use PhpParser\Node;
+use PhpParser\NodeFinder;
 use PhpParser\NodeTraverser;
 use PhpParser\Parser;
 use PhpParser\PrettyPrinter\Standard;
@@ -78,9 +80,12 @@ final class ClassesExtractor
             foreach ($this->extractClassesVisitor->getClassNodes() as $classNode) {
                 Assert::notNull($classNode->name);
 
+                $classCode = $this->buildClassCode($classNode);
+
                 $extractedClasses[] = new ExtractedClass(
                     $classNode->name->toString(),
-                    $this->buildClassCode($classNode)
+                    $classCode,
+                    $this->buildLineMap($classNode, $classCode),
                 );
             }
 
@@ -101,5 +106,40 @@ namespace Infected;
 
 {$this->prettyPrinter->prettyPrint([$classNode])}
 PHP;
+    }
+
+    /**
+     * The extracted class is pretty-printed, so Infection reports lines of a file the user never sees.
+     * The printer keeps the AST, so the nodes of both trees are paired in traversal order.
+     *
+     * @return array<int, int> line in the extracted file => line in the submitted code
+     */
+    private function buildLineMap(Node\Stmt\ClassLike $originalClassNode, string $classCode): array
+    {
+        $nodeFinder = new NodeFinder();
+
+        /** @var Node\Stmt[] $extractedStmts */
+        $extractedStmts = $this->parser->parse($classCode);
+
+        $extractedClassNode = $nodeFinder->findFirstInstanceOf($extractedStmts, Node\Stmt\ClassLike::class);
+
+        if ($extractedClassNode === null) {
+            return [];
+        }
+
+        $originalNodes = $nodeFinder->find([$originalClassNode], static fn (): bool => true);
+        $extractedNodes = $nodeFinder->find([$extractedClassNode], static fn (): bool => true);
+
+        if (count($originalNodes) !== count($extractedNodes)) {
+            return [];
+        }
+
+        $lineMap = [];
+
+        foreach ($extractedNodes as $index => $extractedNode) {
+            $lineMap[$extractedNode->getStartLine()] ??= $originalNodes[$index]->getStartLine();
+        }
+
+        return $lineMap;
     }
 }

@@ -37,9 +37,12 @@ namespace App\Tests\Unit\Code\ClassesExtractor;
 
 use App\Code\ClassesExtractor\ClassesExtractor;
 use App\Code\ClassesExtractor\ClassesExtractorFactory;
+use function explode;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use function sprintf;
+use function str_contains;
 
 final class ClassesExtractorTest extends TestCase
 {
@@ -64,6 +67,52 @@ final class ClassesExtractorTest extends TestCase
             self::assertSame($expectedClasses[$index]['className'], $extractedClass->getClassName());
             self::assertSame($expectedClasses[$index]['code'], $extractedClass->getCode());
         }
+    }
+
+    public function test_it_maps_lines_of_the_extracted_class_to_the_submitted_code(): void
+    {
+        $extractedClasses = $this->extractor->extract(<<<'PHP'
+            <?php
+
+            declare(strict_types=1);
+
+            namespace Infected;
+
+            // a comment the pretty printer moves
+
+            class SourceClass
+            {
+
+
+                public function add(int $a, int $b): int
+                {
+                    if ($a > 10) { return $a - $b; }
+
+                    return $a + $b;
+                }
+            }
+
+            final class Second { public function get(): int { return 1; } }
+            PHP);
+
+        self::assertCount(2, $extractedClasses);
+
+        $first = $extractedClasses[0];
+        $lines = explode("\n", $first->getCode());
+
+        $returnLine = $this->findLine($lines, 'return $a + $b;');
+        $ifLine = $this->findLine($lines, 'if ($a > 10)');
+        $minusLine = $this->findLine($lines, 'return $a - $b;');
+
+        self::assertSame(17, $first->getLineMap()[$returnLine]);
+        self::assertSame(15, $first->getLineMap()[$ifLine]);
+        // the pretty printer splits the one-line if, both lines map to the submitted line
+        self::assertSame(15, $first->getLineMap()[$minusLine]);
+
+        $second = $extractedClasses[1];
+        $secondReturnLine = $this->findLine(explode("\n", $second->getCode()), 'return 1;');
+
+        self::assertSame(21, $second->getLineMap()[$secondReturnLine]);
     }
 
     public static function provideCodeWithClasses(): Generator
@@ -276,5 +325,19 @@ PHP,
                 ],
             ],
         ];
+    }
+
+    /**
+     * @param list<string> $lines
+     */
+    private function findLine(array $lines, string $needle): int
+    {
+        foreach ($lines as $index => $line) {
+            if (str_contains($line, $needle)) {
+                return $index + 1;
+            }
+        }
+
+        self::fail(sprintf('"%s" is not in the extracted code.', $needle));
     }
 }

@@ -322,6 +322,50 @@
 }
 
 /* ==========================================
+   Mutant markers in the Source Code editor
+   ========================================== */
+.mutant-glyph {
+    border-radius: 9999px;
+    margin-left: 6px;
+    width: 8px !important;
+    height: 8px !important;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+.mutant-glyph-bad { background: #ef4444; }
+.mutant-glyph-warn { background: #eab308; }
+.mutant-glyph-good { background: #22c55e; }
+
+.mutant-line-bad { background: rgba(239, 68, 68, 0.08); }
+.mutant-line-warn { background: rgba(234, 179, 8, 0.1); }
+.mutant-line-good { background: rgba(34, 197, 94, 0.06); }
+.mutant-line-selected { box-shadow: inset 3px 0 0 #16a34a; }
+.dark .mutant-line-bad { background: rgba(239, 68, 68, 0.14); }
+.dark .mutant-line-warn { background: rgba(234, 179, 8, 0.14); }
+.dark .mutant-line-good { background: rgba(34, 197, 94, 0.1); }
+.dark .mutant-line-selected { box-shadow: inset 3px 0 0 #4ade80; }
+
+/* ==========================================
+   Status filter
+   ========================================== */
+.status-chip {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    border-radius: 9999px;
+    transition: opacity 0.15s ease;
+}
+.status-chip[aria-pressed="false"] {
+    opacity: 0.35;
+}
+.status-chip:focus-visible {
+    outline: 2px solid #16a34a;
+    outline-offset: 2px;
+}
+
+/* ==========================================
    ANSI Theme - Light mode
    ========================================== */
 .ansi-theme-container .ansi_color_fg_black { color: black; }
