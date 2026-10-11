@@ -13,13 +13,24 @@
         </button>
         <div class="pop" id="share-pop" role="group" aria-label="Link to this run" hidden>
             <h4>Link to this run</h4>
-            <p>Opens the same code, test, config and results. Each run gets its own link.</p>
+            <p>Opens the same code, test, config and results. Each run gets its own link{% if isListed %} and is listed in <a href="{{ path('explore_index') }}">Explore</a>{% endif %}.</p>
             <div class="share-row">
                 <input id="share-url" type="text" readonly aria-label="Link to this run" value="{{ app.request.uri }}">
                 <button class="btn btn-sm" id="copy-url" type="button">Copy</button>
             </div>
         </div>
     </div>
+
+    {% if isReported %}
+        <span class="btn reported" title="Hidden from Explore until it is reviewed">Reported</span>
+    {% elseif isListed %}
+        <form method="post" action="{{ path('playground_report_example', {exampleIdHash: app.request.attributes.get('exampleIdHash')}) }}">
+            <button class="btn" type="submit" title="Hide this run from Explore until it is reviewed: spam, or code that should not be public">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>
+                <span class="btn-label">Report</span>
+            </button>
+        </form>
+    {% endif %}
 {% endif %}
 
 <button id="js-submit" class="btn btn-run" type="button" title="Run Infection (Ctrl/⌘ + Enter)">

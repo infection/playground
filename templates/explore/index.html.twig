@@ -1,0 +1,129 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Explore runs · Infection Playground{% endblock %}
+
+{% block body_class %}explore-page{% endblock %}
+
+{% macro level(score) %}{{ score < 50 ? 'level-low' : (score < 90 ? 'level-medium' : 'level-high') }}{% endmacro %}
+
+{% macro percent(score) %}{{ score == score|round(0, 'floor') ? score|number_format(0) : score|number_format(1) }}%{% endmacro %}
+
+{% block body %}
+    {% set escapedQuery = escapedMutator is not null ? {escaped: escapedMutator} : {} %}
+    <main class="explore">
+        <div class="explore-head">
+            <div>
+                <h1>Explore runs</h1>
+                <p>Runs made on the playground. Open one to see its code, its test and every mutant.</p>
+            </div>
+            <div class="filters" role="group" aria-label="Filter by escaped mutator">
+                <span class="filters-label">Escaped mutator:</span>
+                {% for mutator in filterMutators|merge(escapedMutator is not null and escapedMutator not in filterMutators ? [escapedMutator] : []) %}
+                    {% set active = mutator == escapedMutator %}
+                    <a class="chip" href="{{ path('explore_index', {sort: ranking.value}|merge(active ? {} : {escaped: mutator})) }}" aria-pressed="{{ active ? 'true' : 'false' }}">{{ mutator }}</a>
+                {% else %}
+                    <span class="filters-empty">none yet</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <nav class="explore-tabs" aria-label="Ranking">
+            {% for item in rankings %}
+                <a class="explore-tab" href="{{ path('explore_index', {sort: item.value}|merge(escapedQuery)) }}" {% if item == ranking %}aria-current="page"{% endif %}>
+                    {{ item.label }}
+                    {% if item.value == 'version' %}<small>{{ currentInfectionVersion }}</small>{% endif %}
+                </a>
+            {% endfor %}
+        </nav>
+
+        <section class="explore-list" aria-label="{{ ranking.label }}">
+            <p class="explore-lede">
+                {{ ranking.description }}
+                {% if escapedMutator is not null %}Only runs where <b>{{ escapedMutator }}</b> escaped.{% endif %}
+            </p>
+
+            {% for run in runs %}
+                <a class="run-card" href="{{ path('playground_display_example', {exampleIdHash: run.idHash}) }}">
+                    <div class="run-name">
+                        <h2>{{ run.title }}</h2>
+                        {% if run.subject %}<span class="run-subject">{{ run.subject }}</span>{% endif %}
+                    </div>
+                    <div class="run-score">
+                        <b class="{{ _self.level(run.msi) }}">{{ _self.percent(run.msi) }}</b>
+                        <span>MSI</span>
+                    </div>
+                    {% if run.total > 0 %}
+                        <div class="run-bar" role="img" aria-label="{{ run.killed }} killed, {{ run.escaped }} escaped, {{ run.timedOut }} timed out, {{ run.notCovered }} not covered">
+                            {% set counted = run.killed + run.escaped + run.timedOut + run.notCovered %}
+                            {% for part in [['killed', run.killed], ['escaped', run.escaped], ['timeout', run.timedOut], ['uncovered', run.notCovered]] %}
+                                {% if part[1] > 0 %}<i style="--c: var(--{{ part[0] }}); flex-grow: {{ part[1] }}"></i>{% endif %}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <div class="run-meta">
+                        <span>{{ run.total }} {{ run.total == 1 ? 'mutant' : 'mutants' }}</span>
+                        <span class="m-killed">{{ run.killed }} killed</span>
+                        <span class="m-escaped">{{ run.escaped }} escaped</span>
+                        {% if run.timedOut > 0 %}<span class="m-timeout">{{ run.timedOut }} timed out</span>{% endif %}
+                        {% if run.notCovered > 0 %}<span class="m-uncovered">{{ run.notCovered }} not covered</span>{% endif %}
+                        <span>Covered MSI <b class="{{ _self.level(run.coveredMsi) }}">{{ _self.percent(run.coveredMsi) }}</b></span>
+                        {% for change in run.configChanges|slice(0, 4) %}<span class="tag tag-config">{{ change }}</span>{% endfor %}
+                        {% if run.configChanges|length > 4 %}<span class="tag tag-config">+{{ run.configChanges|length - 4 }} more</span>{% endif %}
+                        {% if run.infectionVersion != currentInfectionVersion %}<span class="tag">Infection {{ run.infectionVersion ?? 'unknown' }}</span>{% endif %}
+                        <time class="run-date" datetime="{{ run.createdAt|date('c') }}">{{ run.createdAt|date('M j, Y') }}</time>
+                    </div>
+                </a>
+            {% else %}
+                <div class="run-card run-empty">
+                    <h2>No runs here yet</h2>
+                    <p>{% if escapedMutator is not null %}Try another tab, or <a href="{{ path('explore_index', {sort: ranking.value}) }}">clear the mutator filter</a>.{% else %}Runs show up here once they are made. <a href="{{ path('playground_index') }}">Make one</a>.{% endif %}</p>
+                </div>
+            {% endfor %}
+
+            {% if page > 1 or hasNextPage %}
+                <nav class="pager" aria-label="Pages">
+                    {% if page > 1 %}<a class="btn btn-sm" href="{{ path('explore_index', {sort: ranking.value, page: page - 1}|merge(escapedQuery)) }}">Newer page</a>{% endif %}
+                    <span>Page {{ page }}</span>
+                    {% if hasNextPage %}<a class="btn btn-sm" href="{{ path('explore_index', {sort: ranking.value, page: page + 1}|merge(escapedQuery)) }}">Next page</a>{% endif %}
+                </nav>
+            {% endif %}
+        </section>
+
+        <aside class="explore-side">
+            <section class="panel">
+                <h2>All time</h2>
+                <dl class="totals">
+                    <div><dt>runs</dt><dd>{{ totals.runs|number_format }}</dd></div>
+                    <div><dt>listed in Explore</dt><dd>{{ totals.listed|number_format }}</dd></div>
+                    <div><dt>median MSI</dt><dd {% if totals.medianMsi is not null %}class="{{ _self.level(totals.medianMsi) }}"{% endif %}>{{ totals.medianMsi is not null ? _self.percent(totals.medianMsi|round) : '–' }}</dd></div>
+                    <div><dt>median mutants per run</dt><dd>{{ totals.medianMutants is not null ? totals.medianMutants|round|number_format : '–' }}</dd></div>
+                </dl>
+                <p>Over every run ever made, including the ones from before Explore, which stay unlisted.</p>
+            </section>
+
+            <section class="panel">
+                <h2>Mutators that escape most</h2>
+                {% if escapingMutators is empty %}
+                    <p>Not enough runs yet.</p>
+                {% else %}
+                    {% set topShare = (escapingMutators|first).escaped / (escapingMutators|first).total %}
+                    <ul class="leaderboard">
+                        {% for item in escapingMutators %}
+                            {% set share = item.escaped / item.total %}
+                            <li>
+                                <a href="{{ path('explore_index', {sort: ranking.value, escaped: item.mutator}) }}" title="{{ item.escaped }} of {{ item.total }} mutants escaped">{{ item.mutator }}</a>
+                                <span class="track"><i style="width: {{ topShare > 0 ? (share / topShare * 100)|round(1) : 0 }}%"></i></span>
+                                <span class="share">{{ (share * 100)|round }}%</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <p>The share of each mutator's mutants that escaped, over every run ever made. Only counts, no code.</p>
+            </section>
+
+            <p class="explore-note">Every run is public and listed here. A run can be reported from its page, which hides it from Explore until it is reviewed.</p>
+        </aside>
+    </main>
+{% endblock %}
+
+{% block importmap %}{{ importmap('explore') }}{% endblock %}

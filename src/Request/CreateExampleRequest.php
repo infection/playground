@@ -39,6 +39,7 @@ use App\Entity\Example;
 use App\Infection\Runner;
 use App\Validator as AppAssert;
 use Symfony\Component\Validator\Constraints as Assert;
+use function trim;
 
 class CreateExampleRequest
 {
@@ -65,6 +66,9 @@ class CreateExampleRequest
     #[Assert\Length(max: self::MAX_CONFIG_LENGTH)]
     public string $config;
 
+    #[Assert\Length(max: Example::MAX_TITLE_LENGTH)]
+    public ?string $title = null;
+
     #[Assert\NotBlank]
     public ?string $infectionVersion = Runner::CURRENT_INFECTION_VERSION;
 
@@ -81,10 +85,18 @@ class CreateExampleRequest
         $self->code = $example->getCode();
         $self->test = $example->getTest();
         $self->config = $example->getConfig();
+        $self->title = $example->getTitle();
         $self->infectionVersion = $example->getInfectionVersion();
         $self->phpunitVersion = $example->getPhpunitVersion();
         $self->phpVersion = $example->getPhpVersion();
 
         return $self;
+    }
+
+    public function getTrimmedTitle(): ?string
+    {
+        $title = trim((string) $this->title);
+
+        return $title === '' ? null : $title;
     }
 }
