@@ -33,9 +33,11 @@ updates:
       interval: weekly
       day: monday
 
-  # Actions used in .github/workflows
+  # Actions used in .github/workflows and the local composite action
   - package-ecosystem: github-actions
-    directory: /
+    directories:
+      - /
+      - /.github/merge-queue-ci-skipper
     schedule:
       interval: weekly
       day: monday

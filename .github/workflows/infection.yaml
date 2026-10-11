@@ -13,9 +13,31 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Detects whether this merge-group run is redundant (the queued PR is already
+  # green, up to date with master and unchanged), so the check jobs below can skip
+  # themselves. Inert for other events - see .github/merge-queue-ci-skipper/action.yml.
+  merge-queue-ci-skipper:
+    name: Merge queue CI skipper
+    if: ${{ github.event_name == 'merge_group' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      skip-checks: ${{ steps.skipper.outputs.skip-check }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - id: skipper
+        uses: ./.github/merge-queue-ci-skipper
+
   infection:
     name: Changed line mutation tests
     runs-on: ubuntu-latest
+    needs: [merge-queue-ci-skipper]
+    # A skipped job reports as a passing required check. Runs when the skipper is skipped or fails.
+    if: ${{ !cancelled() && needs.merge-queue-ci-skipper.outputs.skip-checks != 'true' }}
     timeout-minutes: 60
 
     steps:
