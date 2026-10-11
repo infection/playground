@@ -4,7 +4,7 @@ let diffEditor;
 let codeEditor;
 let testEditor;
 let configEditor;
-let sourceMarkers;
+let sourceMarkerIds = [];
 
 let mutants = [];
 let selectedMutant = null;
@@ -110,7 +110,6 @@ function processMutantsDetails() {
     showMutantsTable(mutants);
 
     if (codeEditor) {
-        sourceMarkers = codeEditor.createDecorationsCollection([]);
         codeEditor.onMouseDown(selectMutantFromMarker);
     }
 
@@ -300,7 +299,7 @@ function showStatusFilter() {
  * Gutter dots and line highlights in the Source Code editor, colored by the worst status on the line.
  */
 function showSourceMarkers() {
-    if (!sourceMarkers) {
+    if (!codeEditor) {
         return;
     }
 
@@ -332,7 +331,8 @@ function showSourceMarkers() {
         });
     });
 
-    sourceMarkers.set(decorations);
+    // the Monaco version of the Docker image has no decorations collections yet
+    sourceMarkerIds = codeEditor.deltaDecorations(sourceMarkerIds, decorations);
 }
 
 function getVisibleMutantsByLine() {
