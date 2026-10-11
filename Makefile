@@ -5,7 +5,7 @@ INFECTION=php -d memory_limit=1G vendor/bin/infection
 INFECTION_THREADS ?= 4
 
 # Compare changed lines against the PR base branch, or master for local runs.
-BASE_REF ?= master
+BASE_REF ?= origin/master
 
 # Extra arguments for a one-off run: make infection ARGS="--filter=src/Html"
 ARGS ?=
@@ -44,9 +44,9 @@ tests: prerequisites
 infection: prerequisites
 	$(INFECTION) --no-interaction --threads=$(INFECTION_THREADS) $(ARGS)
 
-# Runs the CI mutation check on lines changed from origin/$(BASE_REF)
+# Runs the CI mutation check on lines changed from $(BASE_REF) (a ref or a commit SHA)
 infection-diff: prerequisites
-	$(INFECTION) --no-interaction --threads=$(INFECTION_THREADS) --git-diff-lines --git-diff-base=origin/$(BASE_REF) --ignore-msi-with-no-mutations --max-timeouts=0 --min-msi=100 $(ARGS)
+	$(INFECTION) --no-interaction --threads=$(INFECTION_THREADS) --git-diff-lines --git-diff-base=$(BASE_REF) --ignore-msi-with-no-mutations --max-timeouts=0 --min-msi=100 $(ARGS)
 
 # Recreates the dev and test databases from the migrations
 .PHONY: app-reinstall
