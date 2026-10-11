@@ -58,6 +58,17 @@ const BLANK_OR_COMMENT = /^\s*(?:\/\/.*|#.*|\/\*.*|\*.*)?$/;
 const MONO_DARK = 'xray-mono-dark';
 const MONO_LIGHT = 'xray-mono-light';
 
+// Monaco colours bracket pairs by default; in the monochrome themes they get the text colour.
+function monoBracketColors(color) {
+    const colors = {'editorBracketHighlight.unexpectedBracket.foreground': color};
+
+    for (let i = 1; i <= 6; i++) {
+        colors['editorBracketHighlight.foreground' + i] = color;
+    }
+
+    return colors;
+}
+
 monaco.editor.defineTheme(MONO_DARK, {
     base: 'vs-dark',
     inherit: false,
@@ -71,6 +82,7 @@ monaco.editor.defineTheme(MONO_DARK, {
         'editor.lineHighlightBorder': '#00000000',
         'editorCursor.foreground': '#ffffff',
         'editor.selectionBackground': '#ffffff38',
+        ...monoBracketColors('#d4d4d4'),
     },
 });
 
@@ -87,6 +99,7 @@ monaco.editor.defineTheme(MONO_LIGHT, {
         'editor.lineHighlightBorder': '#00000000',
         'editorCursor.foreground': '#000000',
         'editor.selectionBackground': '#00000029',
+        ...monoBracketColors('#1f1f1f'),
     },
 });
 
@@ -125,7 +138,7 @@ export function initXRayEditor({editorNode, statusNode, endpoint, code, initialD
         scrollBeyondLastLine: false,
         automaticLayout: true,
         renderLineHighlight: 'none',
-        renderIndentGuides: false,
+        guides: {indentation: false},
         // its highlight would look like one more box
         matchBrackets: 'never',
         theme: isDarkPage() ? 'vs-dark' : 'vs',
