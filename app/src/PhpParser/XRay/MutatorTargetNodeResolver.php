@@ -48,8 +48,7 @@ use PhpParser\Node\Stmt\UseUse;
 /**
  * Resolves the node class that should be used in Mutator::canMutate() to mutate the given node.
  *
- * Same logic as AstController::resolveTargetNodeClass(), but tolerant to nodes without a parent.
- * Requires the "parent" attribute set by ParentConnectingVisitor.
+ * Tolerant to nodes without a parent. Requires the "parent" attribute set by ParentConnectingVisitor.
  */
 final class MutatorTargetNodeResolver
 {

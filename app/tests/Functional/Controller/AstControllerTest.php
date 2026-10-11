@@ -35,6 +35,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Controller;
 
+use App\Entity\AstRun;
+use Doctrine\ORM\EntityManagerInterface;
+use Hashids\Hashids;
 use function json_decode;
 use function json_encode;
 use const PHP_INT_MAX;
@@ -179,6 +182,50 @@ class AstControllerTest extends WebTestCase
         static::assertSame([['name', '"b"']], $node[4]);
         static::assertSame('PhpParser\Node\Expr\BinaryOp\Plus', $node[5]);
         static::assertSame('Expr\BinaryOp\Plus', $nodes[$node[3]][0]);
+    }
+
+    /**
+     * The original AST explorer stored code as typed, without adding the opening tag.
+     */
+    public function test_old_links_to_code_without_an_opening_tag_pin_the_same_node(): void
+    {
+        $client = self::createExplorerClient();
+        $code = "function add(int \$a, int \$b): int\n{\n    return \$a + \$b;\n}\n// " . random_int(1, PHP_INT_MAX);
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        /** @var Hashids $hashids */
+        $hashids = static::getContainer()->get(Hashids::class);
+
+        $astRun = new AstRun($code);
+        $em->persist($astRun);
+        $em->flush();
+        $idHash = $hashids->encode($astRun->getId());
+        $astRun->setIdHash($idHash);
+        $em->flush();
+
+        // node 13 of this example is "$b" in "return $a + $b;" in the original explorer
+        $client->request('GET', '/ast/' . $idHash . '/13');
+
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertSame('<?php ' . $code, self::initialData($client)['code']);
+
+        $node = self::initialNodes($client)[13 - 1];
+        static::assertSame('Expr\Variable', $node[0]);
+        static::assertSame([['name', '"b"']], $node[4]);
+    }
+
+    public function test_shared_code_can_not_break_out_of_the_initial_data(): void
+    {
+        $client = self::createExplorerClient();
+        $code = "<?php echo '<!--<script></script>&amp;'; // " . random_int(1, PHP_INT_MAX);
+        $idHash = self::postJson($client, '/ast/share', ['code' => $code])['idHash'];
+
+        $client->request('GET', '/ast/' . $idHash);
+
+        $html = (string) $client->getResponse()->getContent();
+        static::assertStringNotContainsString('<!--<script>', $html);
+        static::assertSame($code, self::initialData($client)['code']);
     }
 
     public function test_it_shows_shared_code_without_a_pinned_node(): void

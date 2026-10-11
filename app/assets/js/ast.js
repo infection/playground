@@ -2,6 +2,7 @@ import '../css/app.css';
 import '../css/xray.css';
 import '../css/ast.css';
 
+import * as monaco from 'monaco-editor';
 import {initXRayEditor} from './app/xray';
 
 const MIN_EDITOR_HEIGHT = 240;
@@ -103,7 +104,8 @@ function initAstExplorer(root) {
             return baseUrl;
         }
 
-        const pinned = xray.pinned();
+        // Node ids are only valid for the X-Ray data of the current text (it is stale while a request is pending).
+        const pinned = xray.isSynced() ? xray.pinned() : -1;
 
         return baseUrl + '/' + saved.idHash + (pinned >= 0 ? '/' + (pinned + 1) : '');
     }
@@ -129,6 +131,8 @@ function initAstExplorer(root) {
                 await save();
             }
 
+            // A link with a pinned node must use the node ids of the shared code.
+            await xray.sync();
             syncUrl();
             await copyToClipboard(window.location.origin + currentUrl());
             shareLabel.textContent = 'Link copied!';
@@ -155,8 +159,21 @@ function initAstExplorer(root) {
         }
 
         // The server adds an opening tag when it is missing, the editor must show exactly what was saved.
-        if (payload.code !== editor.getValue()) {
-            editor.setValue(payload.code);
+        // An edit (unlike setValue) keeps the undo history and moves the node boxes along.
+        const current = editor.getValue();
+
+        if (payload.code !== current) {
+            const model = editor.getModel();
+            const range = payload.code.endsWith(current)
+                ? new monaco.Range(1, 1, 1, 1)
+                : model.getFullModelRange();
+            const text = payload.code.endsWith(current)
+                ? payload.code.slice(0, payload.code.length - current.length)
+                : payload.code;
+
+            editor.pushUndoStop();
+            editor.executeEdits('ast-share', [{range, text}]);
+            editor.pushUndoStop();
         }
 
         saved = {idHash: payload.idHash, code: payload.code};
