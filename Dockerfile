@@ -16,8 +16,8 @@ ADD --checksum=sha256:e5b2d27694daa80cc52ec29553ba2c6bd43d86bd51a9d633ed24058b9c
 # Monaco Editor npm tarball, extracted into /opt/monaco in frankenphp_base.
 # It lives in its own stage: ADD --link into /tmp of the base image would reset /tmp to 0755 and break apt.
 FROM scratch AS monaco
-ARG MONACO_VERSION=0.20.0
-ADD --checksum=sha256:887d527ee12a3bc1a71a1babc0e2e5f13559860c3ca16881368b3e31e1cecec9 \
+ARG MONACO_VERSION=0.57.0
+ADD --checksum=sha256:3ea1712fbacd3290cf4751007e3a5b57cc279767607812d4c3e57925fb0b05c2 \
 	https://registry.npmjs.org/monaco-editor/-/monaco-editor-${MONACO_VERSION}.tgz /monaco-editor.tgz
 
 ARG TARGETARCH

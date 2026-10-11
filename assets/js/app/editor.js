@@ -218,10 +218,17 @@ function copyValuesFromEditorsToTextAreas(codeEditor, testEditor, configEditor) 
 }
 
 function showDiffEditor(mutator) {
-    const originalModel = monaco.editor.createModel(mutator.originalSourceCode, 'php');
-    const modifiedModel = monaco.editor.createModel(mutator.mutatedSourceCode, 'php');
+    if (diffEditor) {
+        // Reuse the models instead of creating 2 new ones for every clicked mutant
+        const {original, modified} = diffEditor.getModel();
 
-    diffEditor = diffEditor ? diffEditor : monaco.editor.createDiffEditor(document.getElementById('editor-diff'), {
+        original.setValue(mutator.originalSourceCode);
+        modified.setValue(mutator.mutatedSourceCode);
+
+        return;
+    }
+
+    diffEditor = monaco.editor.createDiffEditor(document.getElementById('editor-diff'), {
         enableSplitViewResizing: false,
         // Render the diff inline
         renderSideBySide: false,
@@ -230,8 +237,8 @@ function showDiffEditor(mutator) {
     });
 
     diffEditor.setModel({
-        original: originalModel,
-        modified: modifiedModel
+        original: monaco.editor.createModel(mutator.originalSourceCode, 'php'),
+        modified: monaco.editor.createModel(mutator.mutatedSourceCode, 'php')
     });
 }
 
