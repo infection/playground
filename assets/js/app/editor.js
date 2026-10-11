@@ -5,6 +5,9 @@ let codeEditor;
 let testEditor;
 let configEditor;
 let sourceMarkerIds = [];
+let markerTooltip = null;
+let markerTooltipLine = null;
+let hideMarkerTooltipTimeout = null;
 
 let mutants = [];
 let selectedMutant = null;
@@ -111,6 +114,9 @@ function processMutantsDetails() {
 
     if (codeEditor) {
         codeEditor.onMouseDown(selectMutantFromMarker);
+        codeEditor.onMouseMove(showMarkerTooltipOnHover);
+        codeEditor.onMouseLeave(scheduleHideMarkerTooltip);
+        codeEditor.onDidScrollChange(hideMarkerTooltip);
     }
 
     selectMutant(mutants[0]);
@@ -289,6 +295,7 @@ function showStatusFilter() {
             });
 
             showSourceMarkers();
+            hideMarkerTooltip();
         });
 
         container.appendChild(button);
@@ -318,11 +325,6 @@ function showSourceMarkers() {
                 isWholeLine: true,
                 className: 'mutant-line mutant-line-' + marker + (isSelected ? ' mutant-line-selected' : ''),
                 glyphMarginClassName: 'mutant-glyph mutant-glyph-' + marker,
-                glyphMarginHoverMessage: {
-                    value: lineMutants
-                        .map((mutant) => '#' + mutant.id + ' **' + mutant.mutator.mutatorName + '**: ' + mutant.status)
-                        .join('  \n'),
-                },
                 overviewRuler: {
                     color: MARKER_COLORS[marker],
                     position: monaco.editor.OverviewRulerLane.Left,
@@ -368,12 +370,168 @@ function selectMutantFromMarker(event) {
     const mutant = lineMutants[(lineMutants.indexOf(selectedMutant) + 1) % lineMutants.length];
 
     selectMutant(mutant);
+    scrollToMutantRow(mutant);
 
+    if (markerTooltipLine !== null) {
+        renderMarkerTooltip(markerTooltipLine);
+    }
+}
+
+function scrollToMutantRow(mutant) {
     const row = document.querySelector('#mutants-table tr[data-mutant-id="' + mutant.id + '"]');
 
     if (row) {
         row.scrollIntoView({block: 'nearest'});
     }
+}
+
+/**
+ * Monaco's own hover can only show Markdown, so the mutants of a line are listed in a tooltip of ours,
+ * where each mutant opens its diff and output below the editors.
+ */
+function showMarkerTooltipOnHover(event) {
+    if (event.target.type !== monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN || !event.target.position) {
+        scheduleHideMarkerTooltip();
+
+        return;
+    }
+
+    const line = event.target.position.lineNumber;
+
+    if (!getVisibleMutantsByLine().has(line)) {
+        scheduleHideMarkerTooltip();
+
+        return;
+    }
+
+    cancelHideMarkerTooltip();
+
+    if (markerTooltipLine !== line) {
+        renderMarkerTooltip(line);
+    }
+}
+
+function renderMarkerTooltip(line) {
+    const lineMutants = getVisibleMutantsByLine().get(line);
+
+    if (!lineMutants) {
+        hideMarkerTooltip();
+
+        return;
+    }
+
+    const tooltip = getMarkerTooltip();
+
+    const header = document.createElement('div');
+    header.className = 'mutant-tooltip-header';
+    header.textContent = 'Line ' + line + ' · ' + lineMutants.length + (lineMutants.length === 1 ? ' mutant' : ' mutants');
+
+    const list = document.createElement('div');
+    list.className = 'mutant-tooltip-list';
+
+    lineMutants.forEach((mutant) => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'mutant-tooltip-item' + (mutant === selectedMutant ? ' mutant-tooltip-item-active' : '');
+
+        const number = document.createElement('span');
+        number.className = 'mutant-tooltip-id';
+        number.textContent = '#' + mutant.id;
+
+        const name = document.createElement('span');
+        name.className = 'mutant-tooltip-name';
+        name.textContent = mutant.mutator.mutatorName;
+
+        const badge = document.createElement('span');
+        badge.className = 'mutant-badge ' + (BADGE_CLASSES[mutant.status] || '');
+        badge.textContent = mutant.status;
+
+        item.append(number, name, badge);
+
+        item.addEventListener('click', function () {
+            selectMutant(mutant);
+            scrollToMutantRow(mutant);
+            hideMarkerTooltip();
+
+            document.getElementById('mutants-log').scrollIntoView({behavior: 'smooth', block: 'start'});
+        });
+
+        list.appendChild(item);
+    });
+
+    tooltip.replaceChildren(header, list);
+
+    positionMarkerTooltip(tooltip, line);
+
+    markerTooltipLine = line;
+}
+
+function positionMarkerTooltip(tooltip, line) {
+    const position = codeEditor.getScrolledVisiblePosition({lineNumber: line, column: 1});
+    const editorRect = codeEditor.getDomNode().getBoundingClientRect();
+    const layoutInfo = codeEditor.getLayoutInfo();
+
+    if (!position) {
+        hideMarkerTooltip();
+
+        return;
+    }
+
+    tooltip.classList.remove('hidden');
+
+    const left = editorRect.left + layoutInfo.glyphMarginLeft + layoutInfo.glyphMarginWidth + 4;
+    let top = editorRect.top + position.top;
+
+    // keep the tooltip inside the window, above the line when there is no room below
+    if (top + tooltip.offsetHeight > window.innerHeight - 8) {
+        top = Math.max(8, editorRect.top + position.top + position.height - tooltip.offsetHeight);
+    }
+
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
+}
+
+function getMarkerTooltip() {
+    if (markerTooltip === null) {
+        markerTooltip = document.createElement('div');
+        markerTooltip.className = 'mutant-tooltip hidden';
+        markerTooltip.setAttribute('role', 'dialog');
+        markerTooltip.addEventListener('mouseenter', cancelHideMarkerTooltip);
+        markerTooltip.addEventListener('mouseleave', scheduleHideMarkerTooltip);
+
+        document.body.appendChild(markerTooltip);
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                hideMarkerTooltip();
+            }
+        });
+    }
+
+    return markerTooltip;
+}
+
+// a delay lets the mouse move from the marker into the tooltip
+function scheduleHideMarkerTooltip() {
+    if (markerTooltip === null || hideMarkerTooltipTimeout !== null) {
+        return;
+    }
+
+    hideMarkerTooltipTimeout = setTimeout(hideMarkerTooltip, 250);
+}
+
+function cancelHideMarkerTooltip() {
+    clearTimeout(hideMarkerTooltipTimeout);
+    hideMarkerTooltipTimeout = null;
+}
+
+function hideMarkerTooltip() {
+    cancelHideMarkerTooltip();
+
+    if (markerTooltip !== null) {
+        markerTooltip.classList.add('hidden');
+    }
+
+    markerTooltipLine = null;
 }
 
 function showProcessOutput(mutant) {
