@@ -63,6 +63,19 @@ deploy/prod.sh
 
 builds and pushes the image, then restarts the app; the container runs the Doctrine migrations on start.
 
+```bash
+deploy/backup.sh
+```
+
+dumps the production database to the git-ignored `backups/` directory. Nothing backs it up automatically.
+
+#### Server requirements
+
+- Docker Engine 20.10.10 or newer: the images are built on glibc 2.34+, whose threads need the `clone3` syscall,
+  which the seccomp profile of older Docker versions rejects. The deploy scripts check this and refuse to run.
+- Ports 80/tcp and 443/tcp (and 443/udp for HTTP/3) reachable from the internet. MySQL is not published.
+- Some swap: the droplet has 2 GB of RAM for MySQL 8.4, FrankenPHP and the playground runs.
+
 #### One-time switch from the legacy swarm stack
 
 Until 2026 production ran a Docker swarm stack (nginx + php-fpm + MySQL 5.7, certificates from certbot).
@@ -70,3 +83,4 @@ Until 2026 production ran a Docker swarm stack (nginx + php-fpm + MySQL 5.7, cer
 removes the swarm stack, loads the dump into MySQL 8.4 on a new volume, compares the row counts and
 starts the app. The legacy volume `infection_db-data` is kept for a rollback.
 Run it with `DRY_RUN=1` first: that only takes the dump and changes nothing.
+The droplet ran Docker 19.03 at that time, so Docker has to be upgraded before the switch (see the requirements above).

@@ -12,6 +12,8 @@ if remote_docker stack ls --format '{{.Name}}' 2>/dev/null | grep -qx infection;
     exit 1
 fi
 
+require_supported_docker
+
 docker compose --file "$ROOT_DIR/compose.yaml" --file "$ROOT_DIR/compose.prod.yaml" build --pull php
 docker compose --file "$ROOT_DIR/compose.yaml" --file "$ROOT_DIR/compose.prod.yaml" push php
 

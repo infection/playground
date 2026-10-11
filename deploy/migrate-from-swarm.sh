@@ -51,6 +51,9 @@ run_sql() {
     ' sh "$query"
 }
 
+# Checked in the dry run too, so that it reports the problem before the day of the switch.
+require_supported_docker
+
 if [ "${DRY_RUN:-0}" != '1' ]; then
     echo '0. Building and pushing the production image'
     docker compose --file "$ROOT_DIR/compose.yaml" --file "$ROOT_DIR/compose.prod.yaml" build --pull php

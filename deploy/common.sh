@@ -34,3 +34,17 @@ remote_compose() {
         --file "$ROOT_DIR/compose.prod.yaml" \
         "$@"
 }
+
+# The images are built on glibc >= 2.34, which creates threads with clone3: the seccomp profile of
+# Docker < 20.10.10 rejects that syscall, so neither FrankenPHP nor MySQL 8.4 could start.
+MINIMUM_DOCKER_VERSION=20.10.10
+
+require_supported_docker() {
+    local version
+    version="$(remote_docker version --format '{{.Server.Version}}')"
+
+    if [ "$(printf '%s\n%s\n' "$MINIMUM_DOCKER_VERSION" "$version" | sort -V | head -n 1)" != "$MINIMUM_DOCKER_VERSION" ]; then
+        echo "Docker $version on the droplet is too old, upgrade it to $MINIMUM_DOCKER_VERSION or newer first." >&2
+        exit 1
+    fi
+}
