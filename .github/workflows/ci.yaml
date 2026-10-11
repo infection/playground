@@ -2,6 +2,7 @@ name: 'CI: tests, static analysis'
 
 on:
   pull_request:
+  merge_group:
   push:
     branches: ['master']
 
@@ -14,6 +15,7 @@ concurrency:
 
 jobs:
   build:
+    name: Tests and static analysis
     runs-on: ubuntu-latest
 
     steps:
@@ -54,6 +56,7 @@ jobs:
         run: make docker-analyze CI=1
 
   build-prod-image:
+    name: Production image build
     runs-on: ubuntu-latest
 
     steps:
