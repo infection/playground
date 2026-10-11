@@ -14,7 +14,7 @@
         "doctrine/doctrine-migrations-bundle": "^4.0",
         "doctrine/orm": "^3.6",
         "hashids/hashids": "^5.0",
-        "justinrainbow/json-schema": "^5.2",
+        "justinrainbow/json-schema": "^6.13",
         "nikic/php-parser": "^5.9",
         "ramsey/uuid": "^4.7",
         "symfony/asset": "8.1.*",
