@@ -42,17 +42,27 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class CreateExampleRequest
 {
+    /**
+     * Longer code produces too many mutants to run them in a reasonable time.
+     */
+    public const MAX_CODE_LENGTH = 10_000;
+
+    public const MAX_CONFIG_LENGTH = 5_000;
+
     /** @var string|null */
     #[AppAssert\ValidPhpCode]
     #[Assert\NotBlank]
+    #[Assert\Length(max: self::MAX_CODE_LENGTH)]
     public $code;
 
     #[AppAssert\ValidPhpCode]
     #[Assert\NotBlank]
+    #[Assert\Length(max: self::MAX_CODE_LENGTH)]
     public string $test;
 
     #[AppAssert\JsonSchema(schemaFile: 'infection-config-schema.json')]
     #[Assert\NotBlank]
+    #[Assert\Length(max: self::MAX_CONFIG_LENGTH)]
     public string $config;
 
     #[Assert\NotBlank]
