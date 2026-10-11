@@ -60,7 +60,7 @@ final class ConfigBuilder
         $basicConfig = self::getNotOverridableBaseConfig();
 
         /** @var array{mutators?: array<string, bool>} $decodedOriginalConfig */
-        $decodedOriginalConfig = json_decode($userProvidedConfig, true, JSON_THROW_ON_ERROR);
+        $decodedOriginalConfig = json_decode($userProvidedConfig, true, 512, JSON_THROW_ON_ERROR);
 
         if ($this->containsCustomMutator($decodedOriginalConfig['mutators'] ?? [])) {
             // @phpstan-ignore-next-line

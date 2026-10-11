@@ -58,7 +58,7 @@ class JsonSchemaValidator extends ConstraintValidator
 
     public function validate(mixed $value, Constraint $constraint): void
     {
-        /* @var $constraint \App\Validator\JsonSchema */
+        Assert::isInstanceOf($constraint, JsonSchema::class);
 
         if ($value === null) {
             return;
@@ -83,11 +83,14 @@ class JsonSchemaValidator extends ConstraintValidator
             return;
         }
 
+        /** @var list<array{property: string, message: string}> $validationErrors */
+        $validationErrors = $validator->getErrors();
+
         $errors = array_map(
             static function (array $error): string {
                 return sprintf('[%s] %s%s', $error['property'], $error['message'], PHP_EOL);
             },
-            $validator->getErrors()
+            $validationErrors,
         );
 
         $this->context->buildViolation(implode(PHP_EOL, $errors))->addViolation();

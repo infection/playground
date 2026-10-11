@@ -85,6 +85,7 @@ $finder = Finder::create()
         'var',
         'vendor',
     ])
+    ->notPath('importmap.php')
     ->ignoreDotFiles(false)
     ->name('*php')
 ;
@@ -93,10 +94,10 @@ return (new Config())
     ->setParallelConfig(ParallelConfigFactory::detect())
     ->setRiskyAllowed(true)
     ->setRules([
-        '@PHP71Migration' => true,
-        '@PHP71Migration:risky' => true,
-        '@PHPUnit60Migration:risky' => true,
-        '@PHPUnit75Migration:risky' => true,
+        '@PHP7x1Migration' => true,
+        '@PHP7x1Migration:risky' => true,
+        '@PHPUnit6x0Migration:risky' => true,
+        '@PHPUnit7x5Migration:risky' => true,
         '@Symfony' => true,
         '@Symfony:risky' => true,
         'blank_line_before_statement' => [
@@ -120,8 +121,10 @@ return (new Config())
                 'yield',
             ],
         ],
+        'blank_line_after_opening_tag' => false, // the license header follows the opening tag
         'blank_line_between_import_groups' => false,
         'compact_nullable_type_declaration' => true,
+        'declare_strict_types' => ['strategy' => 'enforce'],
         'concat_space' => ['spacing' => 'one'],
         'fully_qualified_strict_types' => true,
         'global_namespace_import' => [

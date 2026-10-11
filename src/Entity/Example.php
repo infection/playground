@@ -73,11 +73,12 @@ class Example
     #[ORM\Column(type: 'string', length: 10, nullable: true)]
     private ?string $idHash = null;
 
+    // rows created before the versions were recorded have NULL here
     #[ORM\Column(type: 'string', length: 11, nullable: true)]
-    private ?string $infectionVersion;
+    private ?string $infectionVersion; // @phpstan-ignore property.unusedType
 
     #[ORM\Column(type: 'string', length: 11, nullable: true)]
-    private ?string $phpunitVersion;
+    private ?string $phpunitVersion; // @phpstan-ignore property.unusedType
 
     #[ORM\Column(type: 'string', length: 12, options: ['default' => '8.1.3'])]
     private string $phpVersion;

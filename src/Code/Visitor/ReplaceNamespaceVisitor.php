@@ -50,7 +50,7 @@ final class ReplaceNamespaceVisitor extends NodeVisitorAbstract
         $this->desiredNamespaceName = $desiredNamespaceName;
     }
 
-    public function enterNode(Node $node)
+    public function enterNode(Node $node): ?Node
     {
         if ($node instanceof Node\Stmt\Namespace_) {
             $node->name = new Node\Name($this->desiredNamespaceName);

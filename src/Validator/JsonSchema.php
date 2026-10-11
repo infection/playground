@@ -47,7 +47,14 @@ class JsonSchema extends Constraint
     public $message = 'The value "{{ value }}" is not valid JSON.';
 
     /**
-     * @var string
+     * @param string $schemaFile file name in src/Json/
+     * @param string[]|null $groups
      */
-    public $schemaFile;
+    public function __construct(
+        public string $schemaFile,
+        ?array $groups = null,
+        mixed $payload = null,
+    ) {
+        parent::__construct(null, $groups, $payload);
+    }
 }

@@ -42,6 +42,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 class CreateExampleRequest
 {
+    /** @var string|null */
     #[AppAssert\ValidPhpCode]
     #[Assert\NotBlank]
     public $code;
@@ -50,7 +51,7 @@ class CreateExampleRequest
     #[Assert\NotBlank]
     public string $test;
 
-    #[AppAssert\JsonSchema(['schemaFile' => 'infection-config-schema.json'])]
+    #[AppAssert\JsonSchema(schemaFile: 'infection-config-schema.json')]
     #[Assert\NotBlank]
     public string $config;
 

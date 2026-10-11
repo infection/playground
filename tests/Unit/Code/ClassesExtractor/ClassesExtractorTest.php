@@ -38,6 +38,7 @@ namespace App\Tests\Unit\Code\ClassesExtractor;
 use App\Code\ClassesExtractor\ClassesExtractor;
 use App\Code\ClassesExtractor\ClassesExtractorFactory;
 use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class ClassesExtractorTest extends TestCase
@@ -52,10 +53,9 @@ final class ClassesExtractorTest extends TestCase
     }
 
     /**
-     * @dataProvider provideCodeWithClasses
-     *
      * @param array<int, array{className: string, code: string}> $expectedClasses
      */
+    #[DataProvider('provideCodeWithClasses')]
     public function test_it_extracts_classes_from_source_code(string $code, array $expectedClasses): void
     {
         $extractedClasses = $this->extractor->extract($code);
@@ -80,8 +80,7 @@ class ClassName
 {
 
 }
-PHP
-            ,
+PHP,
             [
                 [
                     'className' => 'ClassName',
@@ -95,7 +94,7 @@ namespace Infected;
 class ClassName
 {
 }
-PHP
+PHP,
                 ],
             ],
         ];
@@ -120,8 +119,7 @@ class SourceClass
         return new ($this->getClassName())();
     }
 }
-PHP
-            ,
+PHP,
             [
                 [
                     'className' => 'SourceClass',
@@ -134,16 +132,16 @@ namespace Infected;
 
 class SourceClass
 {
-    public function getClassName() : string
+    public function getClassName(): string
     {
         return self::class;
     }
-    public function newObject() : static
+    public function newObject(): static
     {
         return new ($this->getClassName())();
     }
 }
-PHP
+PHP,
                 ],
             ],
         ];
@@ -160,8 +158,7 @@ class Class_Name_123
 {
 
 }
-PHP
-            ,
+PHP,
             [
                 [
                     'className' => 'Class_Name_123',
@@ -175,7 +172,7 @@ namespace Infected;
 class Class_Name_123
 {
 }
-PHP
+PHP,
                 ],
             ],
         ];
@@ -197,8 +194,7 @@ class Class2
 {
 
 }
-PHP
-            ,
+PHP,
             [
                 [
                     'className' => 'Class1',
@@ -212,7 +208,7 @@ namespace Infected;
 class Class1
 {
 }
-PHP
+PHP,
                 ],
                 [
                     'className' => 'Class2',
@@ -226,7 +222,7 @@ namespace Infected;
 class Class2
 {
 }
-PHP
+PHP,
                 ],
             ],
         ];
@@ -248,8 +244,7 @@ class Class2 extends Class1
 {
 
 }
-PHP
-            ,
+PHP,
             [
                 [
                     'className' => 'Class1',
@@ -263,7 +258,7 @@ namespace Infected;
 class Class1
 {
 }
-PHP
+PHP,
                 ],
                 [
                     'className' => 'Class2',
@@ -277,7 +272,7 @@ namespace Infected;
 class Class2 extends Class1
 {
 }
-PHP
+PHP,
                 ],
             ],
         ];

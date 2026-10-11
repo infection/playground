@@ -38,6 +38,7 @@ namespace App\Tests\Unit\Code;
 use App\Code\CodeSanitizer;
 use App\Code\CodeSanitizerFactory;
 use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 final class CodeSanitizerTest extends TestCase
@@ -54,9 +55,7 @@ final class CodeSanitizerTest extends TestCase
         $this->codeSanitizer = CodeSanitizerFactory::create();
     }
 
-    /**
-     * @dataProvider provideCodeExamples
-     */
+    #[DataProvider('provideCodeExamples')]
     public function test_it_sanitizes_original_php_code(string $originalCode, ?string $expectedSanitizedCode = null): void
     {
         $sanitizedCode = $this->codeSanitizer->sanitize($originalCode);
@@ -83,7 +82,7 @@ class Test
         return $a + $b;
     }
 }
-PHP
+PHP,
         ];
 
         yield 'Replaces any namespace name to Infected' => [
@@ -95,8 +94,7 @@ namespace Xyz;
 class Test
 {
 }
-PHP
-            ,
+PHP,
             <<<'PHP'
 <?php
 
@@ -105,7 +103,7 @@ namespace Infected;
 class Test
 {
 }
-PHP
+PHP,
         ];
 
         yield 'Does not remove needed' => [
@@ -126,8 +124,7 @@ class SourceClass
         return new ($this->getClassName())();
     }
 }
-PHP
-            ,
+PHP,
             <<<'PHP'
 <?php
 
@@ -145,7 +142,7 @@ class SourceClass
         return new ($this->getClassName())();
     }
 }
-PHP
+PHP,
         ];
 
         // todo https://stackoverflow.com/questions/3115559/exploitable-php-functions

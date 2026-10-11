@@ -86,9 +86,8 @@ use function mb_strlen;
 use function mb_substr;
 use function ord;
 use PhpParser\Error;
-use PhpParser\Lexer\Emulative;
+use PhpParser\Modifiers;
 use PhpParser\Node;
-use PhpParser\Node\Stmt\Class_;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\NameResolver;
 use PhpParser\NodeVisitor\ParentConnectingVisitor;
@@ -118,13 +117,16 @@ final class XRayBuilder
     private const MAX_SCALAR_LENGTH = 1000;
 
     private const MODIFIERS = [
-        Class_::MODIFIER_PUBLIC => 'MODIFIER_PUBLIC',
-        Class_::MODIFIER_PROTECTED => 'MODIFIER_PROTECTED',
-        Class_::MODIFIER_PRIVATE => 'MODIFIER_PRIVATE',
-        Class_::MODIFIER_STATIC => 'MODIFIER_STATIC',
-        Class_::MODIFIER_ABSTRACT => 'MODIFIER_ABSTRACT',
-        Class_::MODIFIER_FINAL => 'MODIFIER_FINAL',
-        Class_::MODIFIER_READONLY => 'MODIFIER_READONLY',
+        Modifiers::PUBLIC => 'MODIFIER_PUBLIC',
+        Modifiers::PROTECTED => 'MODIFIER_PROTECTED',
+        Modifiers::PRIVATE => 'MODIFIER_PRIVATE',
+        Modifiers::STATIC => 'MODIFIER_STATIC',
+        Modifiers::ABSTRACT => 'MODIFIER_ABSTRACT',
+        Modifiers::FINAL => 'MODIFIER_FINAL',
+        Modifiers::READONLY => 'MODIFIER_READONLY',
+        Modifiers::PUBLIC_SET => 'MODIFIER_PUBLIC_SET',
+        Modifiers::PROTECTED_SET => 'MODIFIER_PROTECTED_SET',
+        Modifiers::PRIVATE_SET => 'MODIFIER_PRIVATE_SET',
     ];
 
     private Parser $parser;
@@ -142,11 +144,7 @@ final class XRayBuilder
     public function __construct(
         private MutatorTargetNodeResolver $mutatorTargetNodeResolver,
     ) {
-        $lexer = new Emulative([
-            'usedAttributes' => ['comments', 'startLine', 'endLine', 'startFilePos', 'endFilePos'],
-        ]);
-
-        $this->parser = (new ParserFactory())->create(ParserFactory::PREFER_PHP7, $lexer);
+        $this->parser = (new ParserFactory())->createForNewestSupportedVersion();
     }
 
     /**

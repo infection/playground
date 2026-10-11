@@ -36,7 +36,6 @@ declare(strict_types=1);
 namespace App\Code;
 
 use App\Code\Visitor\ReplaceNamespaceVisitor;
-use PhpParser\Lexer\Emulative;
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor\CloningVisitor;
@@ -49,17 +48,11 @@ final class CodeSanitizer
     private Standard $prettyPrinter;
     private NodeTraverser $nodeTraverser;
 
-    /**
-     * @var Emulative
-     */
-    private $lexer;
-
-    public function __construct(Parser $parser, Standard $prettyPrinter, NodeTraverser $nodeTraverser, Emulative $lexer)
+    public function __construct(Parser $parser, Standard $prettyPrinter, NodeTraverser $nodeTraverser)
     {
         $this->parser = $parser;
         $this->prettyPrinter = $prettyPrinter;
         $this->nodeTraverser = $nodeTraverser;
-        $this->lexer = $lexer;
     }
 
     public function sanitize(string $originalPhpCode): string
@@ -74,7 +67,7 @@ final class CodeSanitizer
 
         $newStmts = $this->replaceNamespace($newStmts);
 
-        return $this->prettyPrinter->printFormatPreserving($newStmts, $initialStmts, $this->lexer->getTokens());
+        return $this->prettyPrinter->printFormatPreserving($newStmts, $initialStmts, $this->parser->getTokens());
     }
 
     /**
