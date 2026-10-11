@@ -8,7 +8,7 @@
          data-base-url="{{ path('app_ast_index') }}"
          data-xray-endpoint="{{ path('app_ast_xray') }}"
          data-share-endpoint="{{ path('app_ast_share') }}">
-        <script type="application/json" id="ast-initial">{{ {code: code, idHash: idHash, activeNodeId: activeNodeId, xray: xray}|json_encode|raw }}</script>
+        <script type="application/json" id="ast-initial">{{ {code: code, idHash: idHash, activeNodeId: activeNodeId, xray: xray}|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP'))|raw }}</script>
 
         <p class="py-6 dark:text-gray-200">
             <span class="font-bold">Hover</span> over the code to see its AST nodes, <span class="font-bold">click</span> to pin a node and see the node to use in <code class="dark:bg-gray-700 dark:text-gray-200">Mutator::canMutate()</code>. The AST is rebuilt as you type.

@@ -143,6 +143,8 @@ export function initXRayEditor({editorNode, statusNode, endpoint, code, initialD
         boxes: [],
         hits: [],
         requestSeq: 0,
+        // model version the nodes were built for; offsets and indexes match the text only for this version
+        dataVersion: null,
     };
 
     // ---- DOM ---------------------------------------------------------------
@@ -245,7 +247,7 @@ export function initXRayEditor({editorNode, statusNode, endpoint, code, initialD
         }
 
         monaco.editor.setModelMarkers(model, 'xray', []);
-        applyData(payload);
+        applyData(payload, version);
         setStatus(state.nodes.length + ' nodes. Hover over the code to inspect them, click to pin.', false);
     }
 
@@ -270,7 +272,7 @@ export function initXRayEditor({editorNode, statusNode, endpoint, code, initialD
         setStatus(error.message + (error.startLine > 0 ? ' on line ' + error.startLine : ''), true);
     }
 
-    function applyData(data) {
+    function applyData(data, version) {
         const previouslyPinned = state.pinned >= 0 ? state.nodes[state.pinned] : null;
         const nodes = data.nodes.map(([kind, from, to, parent, props, target]) => ({
             kind,
@@ -295,6 +297,7 @@ export function initXRayEditor({editorNode, statusNode, endpoint, code, initialD
             options: {stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges},
         })));
         state.nodes = nodes;
+        state.dataVersion = version;
         state.hovered = -1;
 
         // The same node (kind and range, mapped through the edits) stays pinned; its index may differ.
@@ -988,6 +991,20 @@ export function initXRayEditor({editorNode, statusNode, endpoint, code, initialD
         tooltip.hidden = true;
     }
 
+    function isSynced() {
+        return state.dataVersion === model.getAlternativeVersionId();
+    }
+
+    // Fetches the X-Ray data for the current text right away, unless it is already there.
+    async function sync() {
+        if (isSynced() || !state.enabled) {
+            return;
+        }
+
+        clearTimeout(fetchTimer);
+        await fetchXRay();
+    }
+
     // ---- Wiring ------------------------------------------------------------
 
     editor.onDidChangeModelContent(() => {
@@ -1026,7 +1043,7 @@ export function initXRayEditor({editorNode, statusNode, endpoint, code, initialD
     applyTheme();
 
     if (initialData !== null) {
-        applyData(initialData);
+        applyData(initialData, model.getAlternativeVersionId());
         setStatus(state.nodes.length + ' nodes. Hover over the code to inspect them, click to pin.', false);
     } else {
         fetchXRay();
@@ -1037,5 +1054,7 @@ export function initXRayEditor({editorNode, statusNode, endpoint, code, initialD
         pin,
         nodes: () => state.nodes,
         pinned: () => state.pinned,
+        isSynced,
+        sync,
     };
 }
