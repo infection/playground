@@ -2,8 +2,8 @@ import '../css/app.css';
 import '../css/xray.css';
 import '../css/ast.css';
 
-import * as monaco from 'monaco-editor';
-import {initXRayEditor} from './app/xray';
+import monaco from './monaco.js';
+import {initXRayEditor} from './app/xray.js';
 
 const MIN_EDITOR_HEIGHT = 240;
 const MAX_EDITOR_HEIGHT = 640;

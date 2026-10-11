@@ -1,0 +1,6 @@
+symfonycasts_tailwind:
+    input_css:
+        - '%kernel.project_dir%/assets/css/app.css'
+    # Tailwind CSS 3 (configured by tailwind.config.js). The Dockerfile installs its standalone CLI,
+    # the bundle cannot download it: curl_multi_exec() is disabled for the playground.
+    binary: '/usr/local/bin/tailwindcss'

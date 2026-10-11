@@ -38,7 +38,7 @@
  * overlay on top of the editor. Code is monospace and folding/word wrap are
  * off, so every box is computed from line/column alone, without measuring DOM.
  */
-import * as monaco from 'monaco-editor';
+import monaco from '../monaco.js';
 
 const PAD_BASE = 3;
 const PAD_STEP = 4;

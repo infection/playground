@@ -16,22 +16,21 @@
             }
         </script>
 
-        <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('build/icons/apple-touch-icon.png') }}">
-        <link rel="icon" type="image/png" sizes="192x192"  href="{{ asset('build/icons/android-icon-192x192.png') }}">
-        <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('build/icons/favicon-32x32.png') }}">
-        <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('build/icons/favicon-16x16.png') }}">
-        <link rel="icon" href="{{ asset('build/logo.png') }}" type="image/png">
+        <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/icons/apple-icon-180x180.png') }}">
+        <link rel="icon" type="image/png" sizes="192x192"  href="{{ asset('images/icons/android-icon-192x192.png') }}">
+        <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/icons/favicon-32x32.png') }}">
+        <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('images/icons/favicon-16x16.png') }}">
+        <link rel="icon" href="{{ asset('images/logo.png') }}" type="image/png">
 
         <title>{% block title %}Welcome!{% endblock %}</title>
-        {% block stylesheets %}
-            {# 'app' must match the first argument to addEntry() in webpack.config.js #}
-            {{ encore_entry_link_tags('app') }}
-        {% endblock %}
+        {% block stylesheets %}{% endblock %}
+        {# Module scripts are deferred: the entrypoint runs once the page is parsed, its CSS loads right away. #}
+        {% block importmap %}{{ importmap('app') }}{% endblock %}
     </head>
     <body class="bg-gray-50 dark:bg-gray-950 transition-colors duration-300 min-h-screen">
         <nav class="navbar-glass sticky top-0 w-full z-20 flex items-center justify-between flex-wrap py-3 px-4 sm:px-6 transition-all duration-300">
             <a href="https://infection-php.dev/" class="no-underline flex items-center flex-no-shrink mr-8 group">
-                <img class="h-7 w-7 mr-2.5 transition-transform duration-300 group-hover:scale-110" src="{{ asset('build/logo.png') }}" alt="Infection logo">
+                <img class="h-7 w-7 mr-2.5 transition-transform duration-300 group-hover:scale-110" src="{{ asset('images/logo.png') }}" alt="Infection logo">
                 <span class="font-bold text-lg tracking-tight text-green-600 dark:text-green-400">Infection</span>
                 <span class="font-light text-lg tracking-tight text-gray-500 dark:text-gray-400 ml-1">Playground</span>
             </a>

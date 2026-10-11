@@ -1,4 +1,4 @@
-import * as monaco from 'monaco-editor';
+import monaco from '../monaco.js';
 
 let diffEditor;
 let codeEditor;
