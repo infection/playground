@@ -1,0 +1,206 @@
+/*
+ * AST X-Ray styles, ported from PHPStan's playground (MIT license):
+ * https://github.com/phpstan/phpstan/blob/HEAD/website/src/js/editor/xray.ts
+ */
+
+.xray-host {
+    position: relative;
+}
+
+.xray-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 5;
+}
+
+/*
+ * Four 1px dashed edges, each a gradient strip anchored to the layer grid via
+ * --xray-dx/--xray-dy (set per box), so that coinciding edges of different
+ * boxes paint the very same pixels. The strips are one period longer than the
+ * box so the shift never leaves a gap.
+ */
+.xray-box {
+    --xray-dash-h: repeating-linear-gradient(90deg, var(--xray-dash) 0 3px, transparent 3px 6px);
+    --xray-dash-v: repeating-linear-gradient(180deg, var(--xray-dash) 0 3px, transparent 3px 6px);
+    position: absolute;
+    box-sizing: border-box;
+    background-image: var(--xray-dash-h), var(--xray-dash-h), var(--xray-dash-v), var(--xray-dash-v);
+    background-size: calc(100% + 6px) 1px, calc(100% + 6px) 1px, 1px calc(100% + 6px), 1px calc(100% + 6px);
+    background-position: var(--xray-dx) 0, var(--xray-dx) 100%, 0 var(--xray-dy), 100% var(--xray-dy);
+    background-repeat: no-repeat;
+}
+
+.xray-box-hovered {
+    background-image: none;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 3px;
+}
+
+.xray-box-block.xray-box-hovered {
+    border-radius: 5px;
+}
+
+/* Opaque greys on purpose: with alpha, shared edges would composite brighter. */
+.xray-bg-dark .xray-box {
+    --xray-dash: #5c5c5c;
+}
+
+.xray-bg-dark .xray-box-ancestor {
+    --xray-dash: #b8b8b8;
+}
+
+.xray-bg-dark .xray-box-hovered {
+    border-color: #fff;
+    background-color: rgba(74, 222, 128, 0.16);
+}
+
+.xray-bg-dark .xray-box-block.xray-box-hovered {
+    background-color: rgba(74, 222, 128, 0.06);
+}
+
+.xray-bg-light .xray-box {
+    --xray-dash: #ababab;
+}
+
+.xray-bg-light .xray-box-ancestor {
+    --xray-dash: #5a5a5a;
+}
+
+.xray-bg-light .xray-box-hovered {
+    border-color: #000;
+    background-color: rgba(22, 163, 74, 0.14);
+}
+
+.xray-bg-light .xray-box-block.xray-box-hovered {
+    background-color: rgba(22, 163, 74, 0.05);
+}
+
+/* Never in the pointer's way: a tooltip catching the pointer would end the hover. */
+.xray-tooltip {
+    position: fixed;
+    z-index: 50;
+    pointer-events: none;
+}
+
+.xray-tooltip[hidden] {
+    display: none;
+}
+
+.xray-popup {
+    max-width: 36rem;
+    padding: 7px 11px 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: #111;
+    color: #fff;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.xray-popup-path {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 11px;
+}
+
+.xray-popup-kind {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.xray-popup-rows {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: 14px;
+    margin-top: 4px;
+}
+
+.xray-popup-label {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.xray-popup-target {
+    color: #4ade80;
+}
+
+.xray-toggle {
+    position: absolute;
+    top: 0;
+    /* leave Monaco's vertical scrollbar uncovered */
+    right: 14px;
+    z-index: 20;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 11px 6px 10px;
+    border-radius: 0 0 6px 6px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-top: none;
+    background: #111;
+    color: #fff;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    transition: color 200ms ease, text-shadow 200ms ease;
+}
+
+.xray-toggle:hover {
+    background: #000;
+}
+
+.xray-toggle-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.35);
+    transition: background 200ms ease, box-shadow 200ms ease;
+}
+
+.xray-toggle-active {
+    color: #4ade80;
+    text-shadow: 0 0 6px rgba(74, 222, 128, 0.9), 0 0 14px rgba(74, 222, 128, 0.5);
+}
+
+.xray-toggle-active .xray-toggle-dot {
+    background: #4ade80;
+    box-shadow: 0 0 6px rgba(74, 222, 128, 0.9), 0 0 12px rgba(74, 222, 128, 0.6);
+    animation: xray-pulse 1.8s ease-in-out infinite;
+}
+
+.xray-toggle-busy .xray-toggle-dot {
+    animation-duration: 0.6s;
+}
+
+@keyframes xray-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
+}
+
+.xray-status {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+    border-top: 1px solid #e5e7eb;
+}
+
+.dark .xray-status {
+    color: #9ca3af;
+    border-top-color: rgba(55, 65, 81, 0.5);
+}
+
+.xray-status-error,
+.dark .xray-status-error {
+    color: #dc2626;
+}

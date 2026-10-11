@@ -30,6 +30,7 @@ Encore
      */
     .addEntry('app', './assets/js/app.js')
     .addEntry('ast', './assets/js/ast.js')
+    .addEntry('ast2', './assets/js/ast2.js')
 
     // When enabled, Webpack "splits" your files into smaller pieces for greater optimization.
     .splitEntryChunks()
