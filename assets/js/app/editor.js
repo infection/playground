@@ -4,7 +4,7 @@ let diffEditor;
 let codeEditor;
 let testEditor;
 let configEditor;
-let sourceMarkerIds = [];
+let sourceMarkers = null;
 let markerTooltip = null;
 let markerTooltipLine = null;
 let hideMarkerTooltipTimeout = null;
@@ -13,7 +13,7 @@ let mutants = [];
 let selectedMutant = null;
 const activeStatuses = new Set();
 
-// a marker takes the color of the worst status on its line
+// a line gets one dot per marker, and the color of its worst marker
 const MARKER_BY_STATUS = {
     escaped: 'bad',
     uncovered: 'bad',
@@ -23,6 +23,13 @@ const MARKER_BY_STATUS = {
 };
 
 const MARKER_ORDER = ['bad', 'warn', 'good'];
+
+// each marker has its own lane in the glyph margin, so the dots of a line sit side by side in this order
+const MARKER_LANES = {
+    bad: monaco.editor.GlyphMarginLane.Left,
+    warn: monaco.editor.GlyphMarginLane.Center,
+    good: monaco.editor.GlyphMarginLane.Right,
+};
 
 const BADGE_CLASSES = {
     escaped: 'mutant-badge-escaped',
@@ -246,6 +253,10 @@ function selectMutant(mutant) {
     });
 
     showSourceMarkers();
+
+    if (codeEditor && mutant.sourceLine) {
+        codeEditor.revealLineInCenterIfOutsideViewport(mutant.sourceLine, monaco.editor.ScrollType.Smooth);
+    }
 }
 
 function getMutantRows() {
@@ -303,38 +314,59 @@ function showStatusFilter() {
 }
 
 /**
- * Gutter dots and line highlights in the Source Code editor, colored by the worst status on the line.
+ * Gutter dots and line highlights in the Source Code editor: a dot for each marker of the line's mutants,
+ * the line colored by its worst marker.
  */
 function showSourceMarkers() {
     if (!codeEditor) {
         return;
     }
 
-    const mutantsByLine = getVisibleMutantsByLine();
     const decorations = [];
 
-    mutantsByLine.forEach((lineMutants, line) => {
-        const marker = lineMutants
-            .map((mutant) => MARKER_BY_STATUS[mutant.status] || 'good')
-            .sort((a, b) => MARKER_ORDER.indexOf(a) - MARKER_ORDER.indexOf(b))[0];
-        const isSelected = lineMutants.includes(selectedMutant);
+    getVisibleMutantsByLine().forEach((lineMutants, line) => {
+        const range = new monaco.Range(line, 1, line, 1);
+        const markers = MARKER_ORDER.filter((marker) => lineMutants.some((mutant) => getMarker(mutant) === marker));
+        const worstMarker = markers[0];
 
         decorations.push({
-            range: new monaco.Range(line, 1, line, 1),
+            range: range,
             options: {
                 isWholeLine: true,
-                className: 'mutant-line mutant-line-' + marker + (isSelected ? ' mutant-line-selected' : ''),
-                glyphMarginClassName: 'mutant-glyph mutant-glyph-' + marker,
+                className: 'mutant-line mutant-line-' + worstMarker + (lineMutants.includes(selectedMutant) ? ' mutant-line-selected' : ''),
                 overviewRuler: {
-                    color: MARKER_COLORS[marker],
+                    color: MARKER_COLORS[worstMarker],
                     position: monaco.editor.OverviewRulerLane.Left,
                 },
             },
         });
+
+        markers.forEach((marker) => {
+            const isSelected = selectedMutant !== null
+                && selectedMutant.sourceLine === line
+                && getMarker(selectedMutant) === marker;
+
+            decorations.push({
+                range: range,
+                options: {
+                    glyphMarginClassName: 'mutant-glyph mutant-glyph-' + marker + (isSelected ? ' mutant-glyph-selected' : ''),
+                    glyphMargin: {
+                        position: MARKER_LANES[marker],
+                    },
+                },
+            });
+        });
     });
 
-    // the Monaco version of the Docker image has no decorations collections yet
-    sourceMarkerIds = codeEditor.deltaDecorations(sourceMarkerIds, decorations);
+    if (sourceMarkers === null) {
+        sourceMarkers = codeEditor.createDecorationsCollection();
+    }
+
+    sourceMarkers.set(decorations);
+}
+
+function getMarker(mutant) {
+    return MARKER_BY_STATUS[mutant.status] || 'good';
 }
 
 function getVisibleMutantsByLine() {
@@ -342,6 +374,8 @@ function getVisibleMutantsByLine() {
 
     mutants
         .filter((mutant) => mutant.sourceLine && activeStatuses.has(mutant.status))
+        // worst first, as the dots and the tooltip show them
+        .sort((a, b) => MARKER_ORDER.indexOf(getMarker(a)) - MARKER_ORDER.indexOf(getMarker(b)) || a.id - b.id)
         .forEach((mutant) => {
             if (!mutantsByLine.has(mutant.sourceLine)) {
                 mutantsByLine.set(mutant.sourceLine, []);
@@ -354,16 +388,18 @@ function getVisibleMutantsByLine() {
 }
 
 /**
- * A click on a marker selects the first mutant of its line, the next click the next one.
+ * A click on a dot selects the first of its mutants, the next click the next one.
  */
 function selectMutantFromMarker(event) {
     if (event.target.type !== monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN) {
         return;
     }
 
-    const lineMutants = getVisibleMutantsByLine().get(event.target.position.lineNumber);
+    const lane = event.target.detail.glyphMarginLane;
+    const lineMutants = (getVisibleMutantsByLine().get(event.target.position.lineNumber) || [])
+        .filter((mutant) => lane === undefined || MARKER_LANES[getMarker(mutant)] === lane);
 
-    if (!lineMutants) {
+    if (lineMutants.length === 0) {
         return;
     }
 
@@ -379,9 +415,19 @@ function selectMutantFromMarker(event) {
 
 function scrollToMutantRow(mutant) {
     const row = document.querySelector('#mutants-table tr[data-mutant-id="' + mutant.id + '"]');
+    const panel = row ? row.closest('.mutant-list-panel') : null;
 
-    if (row) {
-        row.scrollIntoView({block: 'nearest'});
+    if (panel === null) {
+        return;
+    }
+
+    // scrolls only the list: row.scrollIntoView() would scroll the page away from the clicked marker too
+    const rowTop = row.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop;
+
+    if (rowTop < panel.scrollTop) {
+        panel.scrollTop = rowTop;
+    } else if (rowTop + row.offsetHeight > panel.scrollTop + panel.clientHeight) {
+        panel.scrollTop = rowTop + row.offsetHeight - panel.clientHeight;
     }
 }
 
