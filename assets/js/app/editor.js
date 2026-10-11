@@ -627,6 +627,10 @@ function showDiffEditor(mutator) {
 
     const previousModel = diffEditor.getModel();
 
+    // New models first show the whole class, until the diff is computed and the unchanged regions collapse.
+    // The box stays hidden meanwhile and fades in with the collapsed diff.
+    hideDiffUntilComputed();
+
     // New models instead of setValue() on the old ones: only a new model collapses the unchanged regions again.
     diffEditor.setModel({
         original: monaco.editor.createModel(mutator.originalSourceCode, 'php'),
@@ -639,8 +643,29 @@ function showDiffEditor(mutator) {
     }
 }
 
+let showDiffTimeout = null;
+
+function hideDiffUntilComputed() {
+    const container = document.getElementById('editor-diff');
+
+    container.classList.add('mutant-diff-pending');
+
+    clearTimeout(showDiffTimeout);
+    // in case no diff update comes, e.g. for 2 equal models
+    showDiffTimeout = setTimeout(showComputedDiff, 500);
+}
+
+function showComputedDiff() {
+    clearTimeout(showDiffTimeout);
+
+    // the unchanged regions collapse in the 2nd frame after the diff update
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        document.getElementById('editor-diff').classList.remove('mutant-diff-pending');
+    }));
+}
+
 function createDiffEditor() {
-    return monaco.editor.createDiffEditor(document.getElementById('editor-diff'), {
+    const editor = monaco.editor.createDiffEditor(document.getElementById('editor-diff'), {
         enableSplitViewResizing: false,
         // Side by side only when the box is wide enough, inline otherwise (as in the 1/3 wide column)
         renderSideBySide: true,
@@ -666,6 +691,10 @@ function createDiffEditor() {
         automaticLayout: true,
         theme: isCurrentThemeDark() ? 'vs-dark' : 'vs'
     });
+
+    editor.onDidUpdateDiff(showComputedDiff);
+
+    return editor;
 }
 
 function initCodeEditor() {
