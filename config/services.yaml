@@ -39,3 +39,10 @@ services:
 
     App\Code\ClassesExtractor\ClassesExtractor:
         factory: [ 'App\Code\ClassesExtractor\ClassesExtractorFactory', 'create' ]
+
+when@test:
+    services:
+        # Without Monolog, Symfony logs errors to stderr. Infection stops the test run
+        # on the first stderr output, so the expected 404 in the functional tests would fail it.
+        logger:
+            class: Psr\Log\NullLogger

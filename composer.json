@@ -14,7 +14,7 @@
         "doctrine/doctrine-migrations-bundle": "^4.0",
         "doctrine/orm": "^3.6",
         "hashids/hashids": "^5.0",
-        "justinrainbow/json-schema": "^5.2",
+        "justinrainbow/json-schema": "^6.0",
         "nikic/php-parser": "^5.9",
         "ramsey/uuid": "^4.7",
         "symfony/asset": "8.1.*",
@@ -39,7 +39,8 @@
             "php-http/discovery": true,
             "symfony/flex": true,
             "symfony/runtime": true,
-            "phpstan/extension-installer": true
+            "phpstan/extension-installer": true,
+            "infection/extension-installer": true
         },
         "sort-packages": true
     },
@@ -91,6 +92,7 @@
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.51",
+        "infection/infection": "^0.35.6",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.1",
         "phpstan/phpstan-strict-rules": "^2.0",
