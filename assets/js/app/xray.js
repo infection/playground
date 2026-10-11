@@ -39,6 +39,7 @@
  * off, so every box is computed from line/column alone, without measuring DOM.
  */
 import monaco from '../monaco.js';
+import {DARK, DARK_BACKGROUND, EDITOR_FONT_FAMILY, isDarkPage, LIGHT, LIGHT_BACKGROUND} from './theme.js';
 
 const PAD_BASE = 3;
 const PAD_STEP = 4;
@@ -54,7 +55,7 @@ const FETCH_DEBOUNCE_MS = 300;
 const BLANK_OR_COMMENT = /^\s*(?:\/\/.*|#.*|\/\*.*|\*.*)?$/;
 
 // Monochrome themes for X-Ray mode: no syntax colours, so the boxes stand out.
-// Same background as Monaco's own vs-dark / vs, so the editor does not flip polarity.
+// Same background as the playground's own themes, so the editor does not flip polarity.
 const MONO_DARK = 'xray-mono-dark';
 const MONO_LIGHT = 'xray-mono-light';
 
@@ -72,9 +73,9 @@ function monoBracketColors(color) {
 monaco.editor.defineTheme(MONO_DARK, {
     base: 'vs-dark',
     inherit: false,
-    rules: [{token: '', foreground: 'd4d4d4', background: '1e1e1e'}],
+    rules: [{token: '', foreground: 'd4d4d4', background: DARK_BACKGROUND.slice(1)}],
     colors: {
-        'editor.background': '#1e1e1e',
+        'editor.background': DARK_BACKGROUND,
         'editor.foreground': '#d4d4d4',
         'editorLineNumber.foreground': '#5a5a5a',
         'editorLineNumber.activeForeground': '#9a9a9a',
@@ -89,9 +90,9 @@ monaco.editor.defineTheme(MONO_DARK, {
 monaco.editor.defineTheme(MONO_LIGHT, {
     base: 'vs',
     inherit: false,
-    rules: [{token: '', foreground: '1f1f1f', background: 'fffffe'}],
+    rules: [{token: '', foreground: '1f1f1f', background: LIGHT_BACKGROUND.slice(1)}],
     colors: {
-        'editor.background': '#fffffe',
+        'editor.background': LIGHT_BACKGROUND,
         'editor.foreground': '#1f1f1f',
         'editorLineNumber.foreground': '#9a9a9a',
         'editorLineNumber.activeForeground': '#5a5a5a',
@@ -102,10 +103,6 @@ monaco.editor.defineTheme(MONO_LIGHT, {
         ...monoBracketColors('#1f1f1f'),
     },
 });
-
-function isDarkPage() {
-    return document.documentElement.classList.contains('dark');
-}
 
 function isHiddenKind(kind) {
     return kind.startsWith('Name') || kind.startsWith('Identifier') || kind === 'VarLikeIdentifier' || kind === 'Stmt\\Nop';
@@ -133,6 +130,7 @@ export function initXRayEditor({editorNode, statusNode, endpoint, code, initialD
         // Room between rows for the boxes.
         lineHeight: 24,
         fontSize: 14,
+        fontFamily: EDITOR_FONT_FAMILY,
         folding: false,
         wordWrap: 'off',
         scrollBeyondLastLine: false,
@@ -141,7 +139,7 @@ export function initXRayEditor({editorNode, statusNode, endpoint, code, initialD
         guides: {indentation: false},
         // its highlight would look like one more box
         matchBrackets: 'never',
-        theme: isDarkPage() ? 'vs-dark' : 'vs',
+        theme: isDarkPage() ? DARK : LIGHT,
     });
     const model = editor.getModel();
 
@@ -196,7 +194,7 @@ export function initXRayEditor({editorNode, statusNode, endpoint, code, initialD
         if (state.enabled) {
             monaco.editor.setTheme(dark ? MONO_DARK : MONO_LIGHT);
         } else {
-            monaco.editor.setTheme(dark ? 'vs-dark' : 'vs');
+            monaco.editor.setTheme(dark ? DARK : LIGHT);
         }
 
         // xray-bg-dark / xray-bg-light name the editor background, the box colours depend on it.

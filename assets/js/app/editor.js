@@ -1,4 +1,5 @@
 import monaco from '../monaco.js';
+import {currentTheme, EDITOR_OPTIONS} from './theme.js';
 
 let diffEditor;
 let codeEditor;
@@ -11,15 +12,27 @@ let hideMarkerTooltipTimeout = null;
 
 let mutants = [];
 let selectedMutant = null;
+let sortOrder = 'status';
 const activeStatuses = new Set();
 
-// a line gets one dot per marker, and the color of its worst marker
-const MARKER_BY_STATUS = {
-    escaped: 'bad',
-    uncovered: 'bad',
-    timeouted: 'warn',
-    errored: 'good',
-    killed: 'good',
+/**
+ * label, Infection's progress symbol, order of "worst first", and the marker in the Source Code editor.
+ * A line gets one dot per marker, and the color of its worst marker.
+ */
+const STATUSES = {
+    escaped: {label: 'Escaped', symbol: 'M', rank: 0, color: 'var(--escaped)', marker: 'bad'},
+    uncovered: {label: 'Uncovered', symbol: 'U', rank: 1, color: 'var(--uncovered)', marker: 'warn'},
+    timeouted: {label: 'Timed out', symbol: 'T', rank: 2, color: 'var(--timeout)', marker: 'warn'},
+    errored: {label: 'Errored', symbol: 'E', rank: 3, color: 'var(--errored)', marker: 'good'},
+    killed: {label: 'Killed', symbol: '.', rank: 4, color: 'var(--killed)', marker: 'good'},
+};
+
+const STATUS_EXPLANATIONS = {
+    escaped: 'The tests passed with this change in place, so no test checks this behavior.',
+    uncovered: 'No test executes this line, so Infection did not run any test for this mutant.',
+    timeouted: 'The tests ran longer than the timeout with this change. Infection counts it as detected.',
+    errored: 'The tests ended with a fatal error with this change. Infection counts it as detected.',
+    killed: 'A test failed with this change in place, so the tests detect it.',
 };
 
 const MARKER_ORDER = ['bad', 'warn', 'good'];
@@ -31,72 +44,297 @@ const MARKER_LANES = {
     good: monaco.editor.GlyphMarginLane.Right,
 };
 
-const BADGE_CLASSES = {
-    escaped: 'mutant-badge-escaped',
-    killed: 'mutant-badge-killed',
-    errored: 'mutant-badge-errored',
-    timeouted: 'mutant-badge-timeout',
-    uncovered: 'mutant-badge-uncovered'
-};
-
-const MARKER_COLORS = {
-    bad: '#ef4444',
-    warn: '#eab308',
-    good: '#22c55e',
-};
+const IS_MAC = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
 
 export function initMutationEditors() {
-    codeEditor = initCodeEditor();
-    testEditor = initTestEditor();
-    configEditor = initConfigEditor();
+    codeEditor = initEditor('editor-code', 'loaded-code', DEFAULT_CODE, 'php', {
+        // shows the mutant markers of a run
+        glyphMargin: document.getElementById('json-log') !== null,
+    });
+    testEditor = initEditor('editor-test', 'loaded-test', DEFAULT_TEST, 'php');
+    configEditor = initEditor('editor-config', 'loaded-config', DEFAULT_CONFIG, 'json');
 
-    // Set initial theme based on current mode
-    updateEditorsTheme();
+    document.addEventListener('themeChanged', () => monaco.editor.setTheme(currentTheme()));
 
-    // Listen for theme changes
-    document.addEventListener('themeChanged', updateEditorsTheme);
-
-    processMutantsDetails();
-
-    document.getElementById('js-submit').addEventListener(
-        'click',
-        function () {
-            disableButton(this);
-
-            copyValuesFromEditorsToTextAreas(
-                codeEditor,
-                testEditor,
-                configEditor
-            );
-            document.getElementsByName("create_example")[0].submit()
-
-            return false;
-        }
-    );
-
-    const copyUrlButton = document.getElementById('copy-url');
-
-    if (copyUrlButton !== null) {
-        copyUrlButton.addEventListener(
-            'click',
-            function () {
-                document.getElementById('copy-btn-text').textContent = 'Copied!'
-                copyUrlToClipboard()
-
-                return false;
-            }
-        );
+    if (!IS_MAC) {
+        document.querySelectorAll('.btn-run kbd, .kbd-run').forEach((kbd) => kbd.textContent = 'Ctrl↵');
     }
 
-    window.addEventListener('resize', function() {
-        setTimeout(function () {
-            codeEditor.layout();
-            testEditor.layout();
-            configEditor.layout();
-        }, 50);
+    initTabs();
+    initRun();
+    initShare();
+    initKeyboard();
 
-    }, true);
+    processMutantsDetails();
+    watchForChangesSinceRun();
 }
+
+// ---- Editors ---------------------------------------------------------------
+
+function initEditor(nodeId, loadedId, defaultValue, language, options = {}) {
+    const editorNode = document.getElementById(nodeId);
+
+    if (!editorNode) {
+        return null;
+    }
+
+    const loaded = document.getElementById(loadedId);
+
+    const editor = monaco.editor.create(editorNode, Object.assign({}, EDITOR_OPTIONS, {
+        value: loaded !== null ? loaded.dataset.code : defaultValue,
+        language: language,
+        theme: currentTheme(),
+    }, options));
+
+    // Ctrl/Cmd + Enter runs Infection from inside the editors too
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, submit);
+
+    return editor;
+}
+
+const DEFAULT_CODE = [
+    '<?php',
+    '',
+    'declare(strict_types=1);',
+    '',
+    'namespace Infected;',
+    '',
+    'class SourceClass',
+    '{',
+    '    public function add(int $a, int $b): int',
+    '    {',
+    '        return $a + $b;',
+    '    }',
+    '}'
+].join('\n');
+
+const DEFAULT_TEST = [
+    '<?php',
+    '',
+    'declare(strict_types=1);',
+    '',
+    'namespace Infected\\Tests;',
+    '',
+    'use Infected\\SourceClass;',
+    'use PHPUnit\\Framework\\TestCase;',
+    '',
+    'class SourceClassTest extends TestCase',
+    '{',
+    '    public function test_it_adds_2_numbers(): void',
+    '    {',
+    '        $source = new SourceClass();',
+    '',
+    '        $result = $source->add(1, 2);',
+    '',
+    '        self::assertSame(3, $result);',
+    '    }',
+    '}'
+].join('\n');
+
+const DEFAULT_CONFIG = [
+    '{',
+    '    "mutators": {',
+    '        "@default": true',
+    '    }',
+    '}'
+].join('\n');
+
+// ---- Tabs ------------------------------------------------------------------
+
+function initTabs() {
+    const workbench = document.getElementById('workbench');
+
+    // Test / infection.json5
+    document.querySelectorAll('[data-side-tab]').forEach((tab) => {
+        tab.addEventListener('click', () => showSideTab(tab.dataset.sideTab));
+    });
+
+    // Mutants / Console output
+    document.querySelectorAll('[data-result-tab]').forEach((tab) => {
+        tab.addEventListener('click', () => {
+            selectTab('[data-result-tab]', tab);
+            document.getElementById('results-mutants').hidden = tab.dataset.resultTab !== 'mutants';
+            document.getElementById('results-console').hidden = tab.dataset.resultTab !== 'console';
+        });
+    });
+
+    // Diff / Test output of the selected mutant
+    document.querySelectorAll('[data-detail-tab]').forEach((tab) => {
+        tab.addEventListener('click', () => {
+            selectTab('[data-detail-tab]', tab);
+            document.getElementById('editor-diff').hidden = tab.dataset.detailTab !== 'diff';
+            document.getElementById('mutant-output').hidden = tab.dataset.detailTab !== 'output';
+        });
+    });
+
+    // the bottom bar of narrow screens: one pane at a time
+    document.querySelectorAll('.mtabs [data-tab]').forEach((tab) => {
+        tab.addEventListener('click', () => showPane(tab.dataset.tab));
+    });
+
+    if (workbench && (workbench.dataset.tab === 'test' || workbench.dataset.tab === 'config')) {
+        showSideTab(workbench.dataset.tab);
+    }
+}
+
+function showSideTab(name) {
+    selectTab('[data-side-tab]', document.querySelector('[data-side-tab="' + name + '"]'));
+    document.getElementById('editor-test').hidden = name !== 'test';
+    document.getElementById('editor-config').hidden = name !== 'config';
+    document.getElementById('side-meta').textContent = name === 'test'
+        ? 'PHPUnit test case'
+        : 'Validated against Infection\'s JSON schema';
+}
+
+function showPane(name) {
+    const workbench = document.getElementById('workbench');
+
+    workbench.dataset.tab = name;
+    document.querySelectorAll('.mtabs [data-tab]').forEach((tab) => {
+        tab.setAttribute('aria-selected', String(tab.dataset.tab === name));
+    });
+
+    if (name === 'test' || name === 'config') {
+        showSideTab(name);
+    }
+
+    window.scrollTo({top: 0});
+}
+
+function selectTab(selector, selected) {
+    document.querySelectorAll(selector).forEach((tab) => {
+        tab.setAttribute('aria-selected', String(tab === selected));
+    });
+}
+
+// ---- Run, share, keyboard --------------------------------------------------
+
+function initRun() {
+    document.getElementById('js-submit').addEventListener('click', submit);
+
+    const rerun = document.getElementById('rerun');
+
+    if (rerun !== null) {
+        rerun.addEventListener('click', submit);
+    }
+}
+
+function submit() {
+    const button = document.getElementById('js-submit');
+
+    if (button.disabled) {
+        return;
+    }
+
+    button.disabled = true;
+    button.classList.add('is-running');
+    button.querySelector('.run-label').textContent = 'Running';
+
+    // the request takes as long as the run: the results pane says so meanwhile
+    hideMarkerTooltip();
+    document.getElementById('workbench').classList.add('is-running');
+    document.getElementById('run-state').hidden = false;
+
+    if (window.matchMedia('(max-width: 900px)').matches) {
+        showPane('results');
+    }
+
+    document.getElementById('create_example_code').value = codeEditor.getValue();
+    document.getElementById('create_example_test').value = testEditor.getValue();
+    document.getElementById('create_example_config').value = configEditor.getValue();
+
+    document.getElementsByName('create_example')[0].submit();
+}
+
+function initShare() {
+    const copyButton = document.getElementById('copy-url');
+
+    if (copyButton === null) {
+        return;
+    }
+
+    copyButton.addEventListener('click', async () => {
+        const input = document.getElementById('share-url');
+
+        input.value = window.location.toString();
+
+        try {
+            await navigator.clipboard.writeText(input.value);
+        } catch (e) {
+            input.select();
+            document.execCommand('copy');
+        }
+
+        copyButton.textContent = 'Copied';
+        setTimeout(() => copyButton.textContent = 'Copy', 1500);
+    });
+}
+
+/**
+ * Ctrl/Cmd + Enter runs, J/K go to the next/previous mutant, N to the next escaped one.
+ */
+function initKeyboard() {
+    document.addEventListener('keydown', (event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+            event.preventDefault();
+            submit();
+
+            return;
+        }
+
+        if (event.key === 'Escape') {
+            hideMarkerTooltip();
+
+            return;
+        }
+
+        const target = event.target;
+        const isTyping = target.closest('.monaco-editor') !== null || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName);
+
+        if (isTyping || event.metaKey || event.ctrlKey || event.altKey || mutants.length === 0) {
+            return;
+        }
+
+        const inList = target.closest('#mutants-list') !== null;
+
+        if (event.key === 'j' || (inList && event.key === 'ArrowDown')) {
+            event.preventDefault();
+            stepMutant(1);
+        } else if (event.key === 'k' || (inList && event.key === 'ArrowUp')) {
+            event.preventDefault();
+            stepMutant(-1);
+        } else if (event.key === 'n') {
+            selectNextEscaped();
+        }
+    });
+}
+
+/**
+ * The results are of the code as it was run: once it is edited, the markers fade and the results say so.
+ */
+function watchForChangesSinceRun() {
+    if (document.getElementById('json-log') === null) {
+        return;
+    }
+
+    const editors = [codeEditor, testEditor, configEditor];
+    const runValues = editors.map((editor) => editor.getValue());
+
+    const update = () => {
+        const stale = editors.some((editor, index) => editor.getValue() !== runValues[index]);
+
+        document.getElementById('editor-code').classList.toggle('is-stale', stale);
+        document.getElementById('stale-note').hidden = !stale;
+
+        if (stale) {
+            hideMarkerTooltip();
+        }
+    };
+
+    editors.forEach((editor) => editor.onDidChangeModelContent(update));
+}
+
+// ---- Mutants ---------------------------------------------------------------
 
 function processMutantsDetails() {
     const logElement = document.getElementById('json-log');
@@ -118,8 +356,17 @@ function processMutantsDetails() {
 
     mutants.forEach((mutant) => activeStatuses.add(mutant.status));
 
+    document.getElementById('mutants-count').textContent = String(mutants.length);
+    document.getElementById('run-strip').hidden = false;
+    document.getElementById('mutants-list').hidden = false;
+    document.getElementById('results-gutter').hidden = false;
+    document.getElementById('mutant-detail').hidden = false;
+
+    showSourceMeta();
+    showResultsBadge();
+    showStrip();
     showStatusFilter();
-    showMutantsTable(mutants);
+    showMutantsList();
 
     if (codeEditor) {
         codeEditor.onMouseDown(selectMutantFromMarker);
@@ -128,7 +375,24 @@ function processMutantsDetails() {
         codeEditor.onDidScrollChange(hideMarkerTooltip);
     }
 
-    selectMutant(mutants[0]);
+    document.getElementById('mutants-list').addEventListener('click', (event) => {
+        const row = event.target.closest('[data-mutant-id]');
+
+        if (row !== null) {
+            selectMutant(findMutant(row.dataset.mutantId), {scrollList: false});
+        }
+    });
+
+    document.getElementById('strip').addEventListener('click', (event) => {
+        const cell = event.target.closest('[data-mutant-id]');
+
+        if (cell !== null) {
+            selectMutant(findMutant(cell.dataset.mutantId));
+        }
+    });
+
+    // the first escaped mutant, as the list shows them worst first
+    selectMutant(getVisibleMutants()[0], {scrollList: false});
 }
 
 function readLineMap() {
@@ -151,28 +415,148 @@ function readLineMap() {
 /**
  * Infection reports the line of the class file the playground generated from the submitted code,
  * the line map translates it to the line of the Source Code editor.
+ * The mutants are numbered in the order of their lines, so #1 is the topmost.
  */
 function addSourceLines(mutants, lineMap) {
-    return mutants.map((mutant, index) => {
-        const mutator = mutant.mutator;
-        const className = (mutator.originalFilePath || '').split('/').pop().replace(/\.php$/, '');
-        const classLines = lineMap[className] || {};
+    return mutants
+        .map((mutant, index) => {
+            const mutator = mutant.mutator;
+            const className = (mutator.originalFilePath || '').split('/').pop().replace(/\.php$/, '');
+            const classLines = lineMap[className] || {};
 
-        return Object.assign({}, mutant, {
-            id: index + 1,
-            sourceLine: classLines[mutator.originalStartLine] || null,
-        });
-    });
+            return Object.assign({}, mutant, {
+                logIndex: index,
+                sourceLine: classLines[mutator.originalStartLine] || null,
+                change: getChange(mutator),
+            });
+        })
+        .sort((a, b) => (a.sourceLine || Infinity) - (b.sourceLine || Infinity)
+            || (a.mutator.originalStartLine || 0) - (b.mutator.originalStartLine || 0)
+            || a.logIndex - b.logIndex)
+        .map((mutant, index) => Object.assign(mutant, {id: index + 1}));
 }
 
 /**
- * MSI and Covered MSI as Infection calculates them (Infection\Metrics\Calculator),
- * shown next to the versions. Hovering a score shows its formula filled in with the counts of this run.
+ * The part of the code the mutator changed, e.g. ">" and ">=", for the list and the line in the editor.
+ */
+function getChange(mutator) {
+    const original = (mutator.originalSourceCode || '').split('\n');
+    const mutated = (mutator.mutatedSourceCode || '').split('\n');
+
+    let start = 0;
+
+    while (start < original.length && start < mutated.length && original[start] === mutated[start]) {
+        start++;
+    }
+
+    let end = 0;
+
+    while (end < original.length - start && end < mutated.length - start
+        && original[original.length - 1 - end] === mutated[mutated.length - 1 - end]) {
+        end++;
+    }
+
+    const from = tokenize(original.slice(start, original.length - end).join(' '));
+    const to = tokenize(mutated.slice(start, mutated.length - end).join(' '));
+
+    // the tokens between the common start and the common end of the two
+    let prefix = 0;
+
+    while (prefix < from.length && prefix < to.length && from[prefix] === to[prefix]) {
+        prefix++;
+    }
+
+    let suffix = 0;
+
+    while (suffix < from.length - prefix && suffix < to.length - prefix
+        && from[from.length - 1 - suffix] === to[to.length - 1 - suffix]) {
+        suffix++;
+    }
+
+    return {
+        from: shorten(joinTokens(from.slice(prefix, from.length - suffix))),
+        to: shorten(joinTokens(to.slice(prefix, to.length - suffix))),
+    };
+}
+
+// a space only between two words, e.g. "$prices as" but "-1" and "[]"
+function joinTokens(tokens) {
+    return tokens.reduce((code, token, index) => {
+        const between = index > 0 && /\w$/.test(tokens[index - 1]) && /^[$\w]/.test(token) ? ' ' : '';
+
+        return code + between + token;
+    }, '');
+}
+
+// PHP tokens, roughly: variables and words, multi-character operators, any other single character
+const TOKEN = /\$?\w+|<=>|===|!==|\?\?=|\*\*=|==|!=|<=|>=|&&|\|\||\+\+|--|\+=|-=|\*=|\/=|\.=|%=|\?\?|->|=>|::|\*\*|<<|>>|\S/g;
+
+function tokenize(code) {
+    return code.match(TOKEN) || [];
+}
+
+function shorten(text) {
+    return text.length > 48 ? text.slice(0, 47) + '…' : text;
+}
+
+function getAllMutants(jsonLog) {
+    return Object.keys(STATUSES).flatMap((status) => (jsonLog[status] || []).map((mutant) => {
+        return Object.assign({}, mutant, {status: status});
+    }));
+}
+
+function findMutant(id) {
+    return mutants.find((mutant) => mutant.id === Number(id));
+}
+
+function getVisibleMutants() {
+    const visible = mutants.filter((mutant) => activeStatuses.has(mutant.status));
+
+    if (sortOrder === 'status') {
+        return visible.sort((a, b) => STATUSES[a.status].rank - STATUSES[b.status].rank || a.id - b.id);
+    }
+
+    return visible.sort((a, b) => a.id - b.id);
+}
+
+function showSourceMeta() {
+    const escaped = mutants.filter((mutant) => mutant.status === 'escaped').length;
+    const lines = new Set(mutants.map((mutant) => mutant.sourceLine).filter(Boolean)).size;
+    const meta = document.getElementById('source-meta');
+
+    meta.replaceChildren();
+
+    if (escaped > 0) {
+        meta.append(element('span', 'dot'), escaped + ' escaped · ');
+    }
+
+    meta.append(plural(mutants.length, 'mutant') + (lines > 0 ? ' on ' + plural(lines, 'line') : ''));
+}
+
+function showResultsBadge() {
+    const escaped = mutants.filter((mutant) => mutant.status === 'escaped').length;
+    const badge = document.getElementById('mtab-badge');
+
+    badge.textContent = String(escaped);
+    badge.hidden = escaped === 0;
+    badge.setAttribute('aria-label', plural(escaped, 'escaped mutant'));
+}
+
+function showNoMutantsAlert() {
+    document.getElementById('no-mutations-alert').hidden = false;
+    document.getElementById('mutants-count').textContent = '0';
+}
+
+// ---- Metrics ---------------------------------------------------------------
+
+/**
+ * MSI, Covered MSI and MCC as Infection calculates them (Infection\Metrics\Calculator),
+ * each on the scale of Infection's thresholds, with the formulas filled in with the counts of this run.
  */
 function showMetrics(stats) {
-    const panel = document.getElementById('metrics-panel');
+    const verdict = document.getElementById('verdict');
 
-    if (panel === null || !stats) {
+    if (verdict === null || !stats) {
         return;
     }
 
@@ -199,42 +583,65 @@ function showMetrics(stats) {
     const detectedValues = '(' + detectedTerms.map(([, value]) => value).join(' + ') + ')';
     const minimums = readConfiguredMinimums();
 
-    const divider = document.createElement('span');
-    divider.className = 'metric-divider';
-    divider.setAttribute('aria-hidden', 'true');
-
-    const separator = document.createElement('span');
-    separator.textContent = '·';
-    separator.setAttribute('aria-hidden', 'true');
-
-    const metrics = document.createElement('span');
-    metrics.className = 'flex items-center gap-1.5';
-    metrics.append(
-        buildMetric({
+    const scores = element('div', 'scores');
+    scores.append(
+        buildScore({
             title: 'MSI',
-            name: 'Mutation Score Indicator',
+            name: 'Mutation Score Indicator: the share of all mutants that the tests detect. This is the main score.',
             value: stats.msi,
-            formula: detectedNames + ' / total',
-            counts: detectedValues + ' / ' + total + ' = ' + detected + ' / ' + total,
-            explanation: 'The share of all mutants that the tests detect. This is the main score.',
             minimumKey: 'minMsi',
             minimum: minimums.minMsi,
+            primary: true,
         }),
-        separator,
-        buildMetric({
+        buildScore({
             title: 'Covered MSI',
-            name: 'Covered Code Mutation Score Indicator',
+            name: 'Covered Code MSI: the MSI of the code the tests execute, how strong the existing tests are.',
             value: stats.coveredCodeMsi,
-            formula: detectedNames + ' / (total − uncovered)',
-            counts: detectedValues + ' / ' + covered + ' = ' + detected + ' / ' + covered,
-            explanation: 'The MSI of the code the tests execute: how strong the existing tests are.',
             minimumKey: 'minCoveredMsi',
             minimum: minimums.minCoveredMsi,
+        }),
+        buildScore({
+            title: 'MCC',
+            name: 'Mutation Code Coverage: the share of mutants on lines the tests execute.',
+            value: stats.mutationCodeCoverage,
         })
     );
 
-    panel.replaceChildren(divider, metrics);
-    panel.classList.remove('hidden');
+    const grid = element('dl', 'formula-grid');
+
+    [
+        ['MSI', detectedNames + ' / total', detectedValues + ' / ' + total, stats.msi],
+        ['Covered MSI', detectedNames + ' / (total − uncovered)', detectedValues + ' / ' + covered, stats.coveredCodeMsi],
+        ['MCC', '(total − uncovered) / total', covered + ' / ' + total, stats.mutationCodeCoverage],
+    ].forEach(([title, formula, counts, value]) => {
+        if (typeof value !== 'number') {
+            return;
+        }
+
+        const dd = element('dd');
+        dd.append(formula + ' ', element('span', '', '='), ' ' + counts + ' ', element('span', '', '='), ' ' + value + '%');
+        grid.append(element('dt', '', title), dd);
+    });
+
+    const legend = element('div', 'formula-legend');
+
+    [['low', 'low, below 50%'], ['medium', 'medium, 50–90%'], ['high', 'high, 90% and above']].forEach(([level, label]) => {
+        const item = element('span', 'level-' + level);
+        item.append(element('i'), label);
+        legend.appendChild(item);
+    });
+
+    if (typeof minimums.minMsi === 'number' || typeof minimums.minCoveredMsi === 'number') {
+        legend.appendChild(element('span', '', 'Infection fails the run when a score is below its minimum from infection.json5.'));
+    }
+
+    grid.appendChild(legend);
+
+    const formulas = element('details', 'formulas');
+    formulas.append(element('summary', '', 'How these scores are calculated'), grid);
+
+    verdict.replaceChildren(scores, formulas);
+    verdict.hidden = false;
 }
 
 /**
@@ -248,87 +655,65 @@ function getMetricLevel(value) {
     return value < 90 ? 'medium' : 'high';
 }
 
-const LEVEL_BADGE_CLASSES = {
-    low: 'mutant-badge-escaped',
-    medium: 'mutant-badge-medium',
-    high: 'mutant-badge-killed',
-};
+function buildScore(score) {
+    const container = element('div', 'score' + (score.primary ? ' score-primary' : ''));
 
-function buildMetric(metric) {
-    const level = getMetricLevel(metric.value);
-
-    const element = document.createElement('span');
-    element.className = 'metric';
-    // focusable, so the details also open from the keyboard
-    element.tabIndex = 0;
-
-    const value = document.createElement('span');
-    value.className = 'metric-value metric-value-' + level;
-    value.textContent = metric.value + '%';
-
-    element.append(metric.title + ' ', value, buildMetricDetails(metric, level));
-
-    return element;
-}
-
-function buildMetricDetails(metric, level) {
-    const details = document.createElement('span');
-    details.className = 'metric-details';
-    details.setAttribute('role', 'tooltip');
-
-    const header = document.createElement('span');
-    header.className = 'metric-details-header';
-
-    const name = document.createElement('span');
-    name.textContent = metric.name;
-
-    const badges = document.createElement('span');
-    badges.className = 'flex gap-1.5';
-
-    const levelBadge = document.createElement('span');
-    levelBadge.className = 'mutant-badge ' + LEVEL_BADGE_CLASSES[level];
-    levelBadge.textContent = level;
-    badges.appendChild(levelBadge);
-
-    if (typeof metric.minimum === 'number') {
-        // Infection fails the run when the score is below the minimum
-        const passed = metric.value >= metric.minimum;
-
-        const minimumBadge = document.createElement('span');
-        minimumBadge.className = 'mutant-badge ' + (passed ? 'mutant-badge-killed' : 'mutant-badge-escaped');
-        minimumBadge.textContent = (passed ? 'pass' : 'fail') + ' · ' + metric.minimumKey + ' ' + metric.minimum + '%';
-        badges.appendChild(minimumBadge);
+    if (typeof score.value !== 'number') {
+        return container;
     }
 
-    header.append(name, badges);
+    const level = getMetricLevel(score.value);
 
-    const formula = document.createElement('span');
-    formula.className = 'metric-formula';
-    formula.textContent = metric.title + ' = ' + metric.formula;
+    const label = element('div', 'score-label');
+    const abbr = element('abbr', '', score.title);
+    abbr.title = score.name;
+    label.appendChild(abbr);
 
-    const counts = document.createElement('span');
-    counts.className = 'metric-formula';
-    counts.textContent = '= ' + metric.counts + ' = ' + metric.value + '%';
+    if (typeof score.minimum === 'number') {
+        const passed = score.value >= score.minimum;
+        label.appendChild(element(
+            'span',
+            'gate ' + (passed ? 'gate-pass' : 'gate-fail'),
+            (passed ? '✓ meets ' : '✕ below ') + score.minimumKey + ' ' + score.minimum + '%'
+        ));
+    }
 
-    const explanation = document.createElement('span');
-    explanation.className = 'metric-explanation';
-    explanation.textContent = metric.explanation;
+    const [integer, decimals] = score.value.toFixed(2).split('.');
+    const value = element('div', 'score-val level-' + level, integer);
+    value.appendChild(element('small', '', '.' + decimals + '%'));
 
-    const legend = document.createElement('span');
-    legend.className = 'metric-legend';
+    const scale = element('div', 'scale level-' + level);
+    scale.setAttribute('aria-hidden', 'true');
 
-    [['low', 'below 50%'], ['medium', '50–90%'], ['high', '90% and above']].forEach(([legendLevel, label]) => {
-        const item = document.createElement('span');
-        const dot = document.createElement('span');
-        dot.className = 'metric-value-' + legendLevel;
-        dot.textContent = '● ';
-        item.append(dot, label);
-        legend.appendChild(item);
-    });
+    const track = element('div', 'scale-track');
+    track.append(element('i', 'zone-low'), element('i', 'zone-medium'), element('i', 'zone-high'));
 
-    details.append(header, formula, counts, explanation, legend);
+    const fill = element('div', 'scale-fill');
+    fill.style.width = Math.max(0, Math.min(100, score.value)) + '%';
 
-    return details;
+    scale.append(track, fill);
+
+    if (typeof score.minimum === 'number') {
+        const minimum = element('div', 'scale-min');
+        minimum.style.left = score.minimum + '%';
+        minimum.dataset.label = 'min ' + score.minimum;
+        scale.appendChild(minimum);
+    } else {
+        scale.appendChild(scaleTick(50));
+    }
+
+    scale.appendChild(scaleTick(90));
+
+    container.append(label, value, scale);
+
+    return container;
+}
+
+function scaleTick(value) {
+    const tick = element('span', 'scale-tick', String(value));
+    tick.style.left = value + '%';
+
+    return tick;
 }
 
 function readConfiguredMinimums() {
@@ -346,134 +731,58 @@ function readConfiguredMinimums() {
     }
 }
 
-function showNoMutantsAlert() {
-    document.getElementById('mutants-log').classList.add('hidden');
-    document.getElementById('no-mutations-alert').classList.remove('hidden');
+// ---- Strip, filter, list ---------------------------------------------------
+
+function showStrip() {
+    const strip = document.getElementById('strip');
+
+    strip.replaceChildren(...mutants.map((mutant) => {
+        const status = STATUSES[mutant.status];
+        const cell = element('button', 'cell', status.symbol);
+
+        cell.type = 'button';
+        cell.dataset.mutantId = String(mutant.id);
+        cell.style.setProperty('--c', status.color);
+        cell.title = '#' + mutant.id + ' ' + mutant.mutator.mutatorName + ' · ' + status.label + (mutant.sourceLine ? ' · line ' + mutant.sourceLine : '');
+        cell.setAttribute('aria-label', 'Mutant ' + mutant.id + ', ' + status.label);
+
+        return cell;
+    }));
+
+    const legend = document.getElementById('strip-legend');
+    const present = Object.keys(STATUSES).filter((status) => mutants.some((mutant) => mutant.status === status));
+
+    legend.replaceChildren(...present.map((status) => {
+        const item = element('span', '', STATUSES[status].symbol + ' ' + STATUSES[status].label.toLowerCase());
+        item.style.setProperty('--c', STATUSES[status].color);
+
+        return item;
+    }));
 }
 
-function getAllMutants(jsonLog) {
-    return []
-        .concat(
-            jsonLog.escaped.map((mutant) => {
-                return Object.assign({}, mutant, {status: 'escaped'});
-            })
-        )
-        .concat(
-            jsonLog.killed.map((mutant) => {
-                return Object.assign({}, mutant, {status: 'killed'});
-            })
-        )
-        .concat(
-            jsonLog.errored.map((mutant) => {
-                return Object.assign({}, mutant, {status: 'errored'});
-            })
-        )
-        .concat(
-            jsonLog.timeouted.map((mutant) => {
-                return Object.assign({}, mutant, {status: 'timeouted'});
-            })
-        )
-        .concat(
-            jsonLog.uncovered.map((mutant) => {
-                return Object.assign({}, mutant, {status: 'uncovered'});
-            })
-        )
-}
+function updateStrip() {
+    document.querySelectorAll('#strip .cell').forEach((cell) => {
+        const mutant = findMutant(cell.dataset.mutantId);
 
-function showMutantsTable(mutants) {
-    const tBody = document.getElementById('mutants-table').getElementsByTagName('tbody')[0];
-
-    mutants.forEach((mutant, index) => {
-        const td1 = document.createElement('td');
-        td1.className = 'py-2.5 px-3';
-        const span1 = document.createElement('span');
-        span1.className = 'text-sm text-gray-700 dark:text-gray-300 flex items-center';
-        span1.innerHTML = '<span class="text-gray-400 dark:text-gray-500 text-xs mr-2 font-mono">' + (index + 1) + '</span>' + mutant.mutator.mutatorName;
-
-        if (mutant.sourceLine) {
-            const lineSpan = document.createElement('span');
-            lineSpan.className = 'text-gray-400 dark:text-gray-500 text-xs ml-2 font-mono';
-            lineSpan.textContent = 'line ' + mutant.sourceLine;
-            span1.appendChild(lineSpan);
-        }
-
-        td1.appendChild(span1);
-
-        const td2 = document.createElement('td');
-        td2.className = 'py-2.5 px-3 text-right';
-        const span2 = document.createElement('span');
-        span2.className = 'mutant-badge ' + (BADGE_CLASSES[mutant.status] || '');
-        span2.textContent = mutant.status;
-        td2.appendChild(span2);
-
-        const tr = document.createElement('tr');
-        tr.appendChild(td1);
-        tr.className = 'mutant-row';
-        tr.dataset.mutantId = String(mutant.id);
-        tr.dataset.status = mutant.status;
-        tr.appendChild(td2);
-
-        tBody.appendChild(tr);
-
-        tr.addEventListener('click',
-            function () {
-                selectMutant(mutant);
-
-                return false;
-            }
-        );
+        cell.setAttribute('aria-current', String(mutant === selectedMutant));
+        cell.classList.toggle('is-filtered', !activeStatuses.has(mutant.status));
     });
-}
-
-function selectMutant(mutant) {
-    selectedMutant = mutant;
-
-    showDiffEditor(mutant.mutator);
-    showProcessOutput(mutant);
-
-    getMutantRows().forEach((row) => {
-        row.classList.toggle('mutant-row-active', row.dataset.mutantId === String(mutant.id));
-    });
-
-    showSourceMarkers();
-
-    if (codeEditor && mutant.sourceLine) {
-        codeEditor.revealLineInCenterIfOutsideViewport(mutant.sourceLine, monaco.editor.ScrollType.Smooth);
-    }
-}
-
-function getMutantRows() {
-    return Array.prototype.slice.call(document.getElementById('mutants-table').getElementsByTagName('tr'));
 }
 
 function showStatusFilter() {
     const container = document.getElementById('status-filter');
-
-    if (container === null) {
-        return;
-    }
-
     const counts = {};
 
     mutants.forEach((mutant) => {
         counts[mutant.status] = (counts[mutant.status] || 0) + 1;
     });
 
-    const label = document.createElement('span');
-    label.className = 'text-xs text-gray-500 dark:text-gray-400 mr-1';
-    label.textContent = 'Show';
-    container.appendChild(label);
-
-    Object.keys(counts).forEach((status) => {
-        const button = document.createElement('button');
+    Object.keys(STATUSES).filter((status) => counts[status]).forEach((status) => {
+        const button = element('button', 'chip');
         button.type = 'button';
-        button.className = 'status-chip';
+        button.style.setProperty('--c', STATUSES[status].color);
         button.setAttribute('aria-pressed', 'true');
-
-        const badge = document.createElement('span');
-        badge.className = 'mutant-badge ' + (BADGE_CLASSES[status] || '');
-        badge.textContent = status + ' ' + counts[status];
-        button.appendChild(badge);
+        button.append(element('i'), STATUSES[status].label, element('b', '', String(counts[status])));
 
         button.addEventListener('click', function () {
             if (activeStatuses.has(status)) {
@@ -484,21 +793,216 @@ function showStatusFilter() {
 
             button.setAttribute('aria-pressed', String(activeStatuses.has(status)));
 
-            getMutantRows().forEach((row) => {
-                row.classList.toggle('hidden', !activeStatuses.has(row.dataset.status));
-            });
-
-            showSourceMarkers();
             hideMarkerTooltip();
+            showMutantsList();
+
+            const visible = getVisibleMutants();
+
+            if (!visible.includes(selectedMutant) && visible.length > 0) {
+                selectMutant(visible[0]);
+            } else {
+                showSourceMarkers();
+                updateStrip();
+                showMutantDetail();
+            }
         });
 
         container.appendChild(button);
     });
+
+    const sort = element('label', 'sort', 'Order ');
+    const select = element('select');
+    select.id = 'mutants-order';
+    [['status', 'Escaped first'], ['line', 'By line']].forEach(([value, label]) => {
+        const option = element('option', '', label);
+        option.value = value;
+        select.appendChild(option);
+    });
+    select.addEventListener('change', () => {
+        sortOrder = select.value;
+        showMutantsList();
+        showMutantDetail();
+    });
+    sort.appendChild(select);
+    container.appendChild(sort);
+}
+
+function showMutantsList() {
+    const list = document.getElementById('mutants-list');
+    const visible = getVisibleMutants();
+
+    if (visible.length === 0) {
+        list.replaceChildren(element('div', 'list-empty', 'No mutants match these filters.'));
+
+        return;
+    }
+
+    list.replaceChildren(...visible.map((mutant) => {
+        const row = buildMutantRow(mutant);
+
+        row.setAttribute('role', 'option');
+        row.setAttribute('aria-selected', String(mutant === selectedMutant));
+        row.dataset.mutantId = String(mutant.id);
+        row.append(element('span', 'm-line', mutant.sourceLine ? 'L' + mutant.sourceLine : '—'));
+
+        return row;
+    }));
+}
+
+function buildMutantRow(mutant) {
+    const status = STATUSES[mutant.status];
+    const row = element('button', 'm-row');
+
+    row.type = 'button';
+    row.style.setProperty('--c', status.color);
+
+    const symbol = element('span', 'm-sym', status.symbol);
+    symbol.title = status.label;
+
+    const change = element('span', 'm-change');
+    change.append(element('del', '', mutant.change.from || '∅'), ' → ', element('ins', '', mutant.change.to || '∅'));
+
+    row.append(symbol, element('span', 'm-id', '#' + mutant.id), element('span', 'm-name', mutant.mutator.mutatorName), change);
+
+    return row;
+}
+
+// ---- Selection and detail --------------------------------------------------
+
+function selectMutant(mutant, options = {}) {
+    if (!mutant) {
+        return;
+    }
+
+    selectedMutant = mutant;
+
+    showDiffEditor(mutant.mutator);
+    document.getElementById('mutant-output').textContent = mutant.processOutput || STATUS_EXPLANATIONS[mutant.status];
+
+    document.querySelectorAll('#mutants-list [data-mutant-id]').forEach((row) => {
+        row.setAttribute('aria-selected', String(row.dataset.mutantId === String(mutant.id)));
+    });
+
+    if (options.scrollList !== false) {
+        scrollToMutantRow(mutant);
+    }
+
+    updateStrip();
+    showMutantDetail();
+    showSourceMarkers();
+
+    if (codeEditor && mutant.sourceLine) {
+        codeEditor.revealLineInCenterIfOutsideViewport(mutant.sourceLine, monaco.editor.ScrollType.Smooth);
+    }
+}
+
+function showMutantDetail() {
+    const mutant = selectedMutant;
+    const title = document.getElementById('detail-title');
+    const status = STATUSES[mutant.status];
+
+    title.style.setProperty('--c', status.color);
+
+    const navigation = element('div', 'd-nav');
+    const escapedCount = getVisibleMutants().filter((m) => m.status === 'escaped').length;
+
+    if (escapedCount > 0) {
+        const nextEscaped = element('button', 'btn btn-sm');
+        nextEscaped.type = 'button';
+        nextEscaped.title = 'Go to the next escaped mutant (N)';
+        nextEscaped.append(element('span', 'btn-label', 'Next escaped '), '(' + escapedCount + ')');
+        nextEscaped.addEventListener('click', selectNextEscaped);
+        navigation.appendChild(nextEscaped);
+    }
+
+    navigation.append(
+        navigationButton('Previous mutant (K)', 'm15 18-6-6 6-6', () => stepMutant(-1)),
+        navigationButton('Next mutant (J)', 'm9 18 6-6-6-6', () => stepMutant(1))
+    );
+
+    title.replaceChildren(
+        element('span', 'm-sym', status.symbol),
+        element('span', 'm-id', '#' + mutant.id),
+        element('h3', '', mutant.mutator.mutatorName),
+        navigation
+    );
+
+    const sub = document.getElementById('detail-sub');
+    const level = {escaped: 'level-low', uncovered: '', timeouted: 'level-medium', errored: '', killed: 'level-high'}[mutant.status];
+    const label = element('b', level, status.label + '.');
+
+    if (level === '') {
+        label.style.color = status.color;
+    }
+
+    sub.replaceChildren(label, ' ' + STATUS_EXPLANATIONS[mutant.status]);
+
+    if (mutant.sourceLine) {
+        sub.append(' ', element('span', 'line-ref', 'Line ' + mutant.sourceLine + '.'));
+    }
+}
+
+function navigationButton(label, path, onClick) {
+    const button = element('button', 'icon-btn');
+    button.type = 'button';
+    button.title = label;
+    button.setAttribute('aria-label', label);
+    button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="' + path + '"/></svg>';
+    button.addEventListener('click', onClick);
+
+    return button;
+}
+
+function stepMutant(direction) {
+    const visible = getVisibleMutants();
+
+    if (visible.length === 0) {
+        return;
+    }
+
+    const index = visible.indexOf(selectedMutant);
+
+    selectMutant(visible[(index + direction + visible.length) % visible.length]);
 }
 
 /**
+ * The next escaped mutant down the code, from the top again after the last one.
+ */
+function selectNextEscaped() {
+    const escaped = getVisibleMutants()
+        .filter((mutant) => mutant.status === 'escaped')
+        .sort((a, b) => a.id - b.id);
+
+    if (escaped.length === 0) {
+        return;
+    }
+
+    selectMutant(escaped.find((mutant) => mutant.id > selectedMutant.id) || escaped[0]);
+}
+
+function scrollToMutantRow(mutant) {
+    const list = document.getElementById('mutants-list');
+    const row = list.querySelector('[data-mutant-id="' + mutant.id + '"]');
+
+    if (row === null) {
+        return;
+    }
+
+    // scrolls only the list: row.scrollIntoView() would scroll the page too
+    const rowTop = row.getBoundingClientRect().top - list.getBoundingClientRect().top + list.scrollTop;
+
+    if (rowTop < list.scrollTop) {
+        list.scrollTop = rowTop - 4;
+    } else if (rowTop + row.offsetHeight > list.scrollTop + list.clientHeight) {
+        list.scrollTop = rowTop + row.offsetHeight - list.clientHeight + 4;
+    }
+}
+
+// ---- Markers in the Source Code editor -------------------------------------
+
+/**
  * Gutter dots and line highlights in the Source Code editor: a dot for each marker of the line's mutants,
- * the line colored by its worst marker.
+ * the line colored by its worst marker, and the change of the selected mutant after its line.
  */
 function showSourceMarkers() {
     if (!codeEditor) {
@@ -511,23 +1015,22 @@ function showSourceMarkers() {
         const range = new monaco.Range(line, 1, line, 1);
         const markers = MARKER_ORDER.filter((marker) => lineMutants.some((mutant) => getMarker(mutant) === marker));
         const worstMarker = markers[0];
+        const isSelectedLine = lineMutants.includes(selectedMutant);
 
         decorations.push({
             range: range,
             options: {
                 isWholeLine: true,
-                className: 'mutant-line mutant-line-' + worstMarker + (lineMutants.includes(selectedMutant) ? ' mutant-line-selected' : ''),
+                className: isSelectedLine ? 'mutant-line-selected' : (worstMarker !== 'good' ? 'mutant-line-' + worstMarker : ''),
                 overviewRuler: {
-                    color: MARKER_COLORS[worstMarker],
+                    color: getComputedStyle(document.documentElement).getPropertyValue(worstMarker === 'bad' ? '--escaped' : worstMarker === 'warn' ? '--uncovered' : '--killed').trim(),
                     position: monaco.editor.OverviewRulerLane.Left,
                 },
             },
         });
 
         markers.forEach((marker) => {
-            const isSelected = selectedMutant !== null
-                && selectedMutant.sourceLine === line
-                && getMarker(selectedMutant) === marker;
+            const isSelected = isSelectedLine && getMarker(selectedMutant) === marker;
 
             decorations.push({
                 range: range,
@@ -541,6 +1044,22 @@ function showSourceMarkers() {
         });
     });
 
+    if (selectedMutant !== null && selectedMutant.sourceLine && activeStatuses.has(selectedMutant.status)) {
+        const line = selectedMutant.sourceLine;
+        const column = codeEditor.getModel().getLineMaxColumn(line);
+
+        decorations.push({
+            range: new monaco.Range(line, column, line, column),
+            options: {
+                showIfCollapsed: true,
+                after: {
+                    content: '#' + selectedMutant.id + '  ' + (selectedMutant.change.from || '∅') + ' → ' + (selectedMutant.change.to || '∅'),
+                    inlineClassName: 'mutant-ghost',
+                },
+            },
+        });
+    }
+
     if (sourceMarkers === null) {
         sourceMarkers = codeEditor.createDecorationsCollection();
     }
@@ -549,7 +1068,7 @@ function showSourceMarkers() {
 }
 
 function getMarker(mutant) {
-    return MARKER_BY_STATUS[mutant.status] || 'good';
+    return STATUSES[mutant.status].marker;
 }
 
 function getVisibleMutantsByLine() {
@@ -557,8 +1076,8 @@ function getVisibleMutantsByLine() {
 
     mutants
         .filter((mutant) => mutant.sourceLine && activeStatuses.has(mutant.status))
-        // worst first, as the dots and the tooltip show them
-        .sort((a, b) => MARKER_ORDER.indexOf(getMarker(a)) - MARKER_ORDER.indexOf(getMarker(b)) || a.id - b.id)
+        // worst first, as the dots and the popover show them
+        .sort((a, b) => STATUSES[a.status].rank - STATUSES[b.status].rank || a.id - b.id)
         .forEach((mutant) => {
             if (!mutantsByLine.has(mutant.sourceLine)) {
                 mutantsByLine.set(mutant.sourceLine, []);
@@ -586,37 +1105,15 @@ function selectMutantFromMarker(event) {
         return;
     }
 
-    const mutant = lineMutants[(lineMutants.indexOf(selectedMutant) + 1) % lineMutants.length];
-
-    selectMutant(mutant);
-    scrollToMutantRow(mutant);
+    selectMutant(lineMutants[(lineMutants.indexOf(selectedMutant) + 1) % lineMutants.length]);
 
     if (markerTooltipLine !== null) {
         renderMarkerTooltip(markerTooltipLine);
     }
 }
 
-function scrollToMutantRow(mutant) {
-    const row = document.querySelector('#mutants-table tr[data-mutant-id="' + mutant.id + '"]');
-    const panel = row ? row.closest('.mutant-list-panel') : null;
-
-    if (panel === null) {
-        return;
-    }
-
-    // scrolls only the list: row.scrollIntoView() would scroll the page away from the clicked marker too
-    const rowTop = row.getBoundingClientRect().top - panel.getBoundingClientRect().top + panel.scrollTop;
-
-    if (rowTop < panel.scrollTop) {
-        panel.scrollTop = rowTop;
-    } else if (rowTop + row.offsetHeight > panel.scrollTop + panel.clientHeight) {
-        panel.scrollTop = rowTop + row.offsetHeight - panel.clientHeight;
-    }
-}
-
 /**
- * Monaco's own hover can only show Markdown, so the mutants of a line are listed in a tooltip of ours,
- * where each mutant opens its diff and output below the editors.
+ * Monaco's own hover can only show Markdown, so the mutants of a line are listed in a popover of ours.
  */
 function showMarkerTooltipOnHover(event) {
     if (event.target.type !== monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN || !event.target.position) {
@@ -651,44 +1148,23 @@ function renderMarkerTooltip(line) {
 
     const tooltip = getMarkerTooltip();
 
-    const header = document.createElement('div');
-    header.className = 'mutant-tooltip-header';
-    header.textContent = 'Line ' + line + ' · ' + lineMutants.length + (lineMutants.length === 1 ? ' mutant' : ' mutants');
+    const header = element('div', 'mutant-tooltip-header');
+    header.append(element('b', '', 'Line ' + line), plural(lineMutants.length, 'mutant'));
 
-    const list = document.createElement('div');
-    list.className = 'mutant-tooltip-list';
+    const items = lineMutants.map((mutant) => {
+        const item = buildMutantRow(mutant);
 
-    lineMutants.forEach((mutant) => {
-        const item = document.createElement('button');
-        item.type = 'button';
-        item.className = 'mutant-tooltip-item' + (mutant === selectedMutant ? ' mutant-tooltip-item-active' : '');
-
-        const number = document.createElement('span');
-        number.className = 'mutant-tooltip-id';
-        number.textContent = '#' + mutant.id;
-
-        const name = document.createElement('span');
-        name.className = 'mutant-tooltip-name';
-        name.textContent = mutant.mutator.mutatorName;
-
-        const badge = document.createElement('span');
-        badge.className = 'mutant-badge ' + (BADGE_CLASSES[mutant.status] || '');
-        badge.textContent = mutant.status;
-
-        item.append(number, name, badge);
-
+        item.style.gridTemplateColumns = '22px 34px minmax(0, 1fr) auto';
+        item.setAttribute('aria-selected', String(mutant === selectedMutant));
         item.addEventListener('click', function () {
             selectMutant(mutant);
-            scrollToMutantRow(mutant);
             hideMarkerTooltip();
-
-            document.getElementById('mutants-log').scrollIntoView({behavior: 'smooth', block: 'start'});
         });
 
-        list.appendChild(item);
+        return item;
     });
 
-    tooltip.replaceChildren(header, list);
+    tooltip.replaceChildren(header, ...items);
 
     positionMarkerTooltip(tooltip, line);
 
@@ -706,40 +1182,38 @@ function positionMarkerTooltip(tooltip, line) {
         return;
     }
 
-    tooltip.classList.remove('hidden');
+    tooltip.hidden = false;
 
-    const left = editorRect.left + layoutInfo.glyphMarginLeft + layoutInfo.glyphMarginWidth + 4;
+    const left = Math.min(
+        editorRect.left + layoutInfo.glyphMarginLeft + layoutInfo.glyphMarginWidth + 4,
+        window.innerWidth - tooltip.offsetWidth - 16
+    );
     let top = editorRect.top + position.top;
 
-    // keep the tooltip inside the window, above the line when there is no room below
+    // keep the popover inside the window, above the line when there is no room below
     if (top + tooltip.offsetHeight > window.innerHeight - 8) {
         top = Math.max(8, editorRect.top + position.top + position.height - tooltip.offsetHeight);
     }
 
-    tooltip.style.left = left + 'px';
+    tooltip.style.left = Math.max(16, left) + 'px';
     tooltip.style.top = top + 'px';
 }
 
 function getMarkerTooltip() {
     if (markerTooltip === null) {
-        markerTooltip = document.createElement('div');
-        markerTooltip.className = 'mutant-tooltip hidden';
+        markerTooltip = element('div', 'mutant-tooltip');
+        markerTooltip.hidden = true;
         markerTooltip.setAttribute('role', 'dialog');
         markerTooltip.addEventListener('mouseenter', cancelHideMarkerTooltip);
         markerTooltip.addEventListener('mouseleave', scheduleHideMarkerTooltip);
 
         document.body.appendChild(markerTooltip);
-        document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape') {
-                hideMarkerTooltip();
-            }
-        });
     }
 
     return markerTooltip;
 }
 
-// a delay lets the mouse move from the marker into the tooltip
+// a delay lets the mouse move from the marker into the popover
 function scheduleHideMarkerTooltip() {
     if (markerTooltip === null || hideMarkerTooltipTimeout !== null) {
         return;
@@ -757,53 +1231,13 @@ function hideMarkerTooltip() {
     cancelHideMarkerTooltip();
 
     if (markerTooltip !== null) {
-        markerTooltip.classList.add('hidden');
+        markerTooltip.hidden = true;
     }
 
     markerTooltipLine = null;
 }
 
-function showProcessOutput(mutant) {
-    document.getElementById('mutant-output').textContent = mutant.processOutput;
-}
-
-function copyUrlToClipboard() {
-    let input = document.getElementById('copy-url-input');
-
-    if (!input) {
-        input = document.createElement('input');
-
-        input.id = 'copy-url-input';
-        input.type = 'text';
-        input.style = 'position: absolute; left: -1000px; top: -1000px;';
-
-        document.body.appendChild(input);
-    }
-
-    input.value = window.location.toString();
-
-    input.select();
-    input.setSelectionRange(0, 99999); // For mobile devices
-
-    document.execCommand('copy');
-
-}
-
-function disableButton(button) {
-    button.setAttribute('disabled', 'disabled');
-
-    button.classList.add('opacity-50');
-    button.classList.add('cursor-not-allowed');
-    button.classList.remove('hover:bg-green-500');
-    button.classList.remove('hover:text-white');
-    button.classList.remove('hover:border-transparent');
-}
-
-function copyValuesFromEditorsToTextAreas(codeEditor, testEditor, configEditor) {
-    document.getElementById('create_example_code').textContent = codeEditor.getValue();
-    document.getElementById('create_example_test').textContent = testEditor.getValue();
-    document.getElementById('create_example_config').textContent = configEditor.getValue();
-}
+// ---- Diff ------------------------------------------------------------------
 
 function showDiffEditor(mutator) {
     diffEditor = diffEditor ? diffEditor : createDiffEditor();
@@ -848,9 +1282,9 @@ function showComputedDiff() {
 }
 
 function createDiffEditor() {
-    const editor = monaco.editor.createDiffEditor(document.getElementById('editor-diff'), {
+    const editor = monaco.editor.createDiffEditor(document.getElementById('editor-diff'), Object.assign({}, EDITOR_OPTIONS, {
         enableSplitViewResizing: false,
-        // Side by side only when the box is wide enough, inline otherwise (as in the 1/3 wide column)
+        // Side by side only when the box is wide enough, inline otherwise
         renderSideBySide: true,
         useInlineViewWhenSpaceIsLimited: true,
         // Show the mutated line with a few lines around it instead of the whole class.
@@ -866,157 +1300,30 @@ function createDiffEditor() {
         renderMarginRevertIcon: false,
         renderGutterMenu: false,
         renderOverviewRuler: false,
-        minimap: {
-            enabled: false
-        },
-        scrollBeyondLastLine: false,
-        // follows the width of the box, which decides between side by side and inline
-        automaticLayout: true,
-        theme: isCurrentThemeDark() ? 'vs-dark' : 'vs'
-    });
+        theme: currentTheme(),
+    }));
 
     editor.onDidUpdateDiff(showComputedDiff);
 
     return editor;
 }
 
-function initCodeEditor() {
-    const loadedCodeElement = document.getElementById('loaded-code');
-    const code = loadedCodeElement !== null
-        ? loadedCodeElement.dataset.code
-        : [
-            '<?php',
-            '',
-            'declare(strict_types=1);',
-            '',
-            'namespace Infected;',
-            '',
-            'class SourceClass',
-            '{',
-            '    public function add(int $a, int $b): int',
-            '    {',
-            '        return $a + $b;',
-            '    }',
-            '}'
-        ].join('\n');
+// ---- Helpers ---------------------------------------------------------------
 
-    const editorNode = document.getElementById('editor-code');
+function element(tag, className, text) {
+    const node = document.createElement(tag);
 
-    if (!editorNode) {
-        return;
+    if (className) {
+        node.className = className;
     }
 
-    return monaco.editor.create(editorNode, {
-        minimap: {
-            enabled: false
-        },
-        // shows the mutant markers of a run
-        glyphMargin: document.getElementById('json-log') !== null,
-        value: code,
-        language: 'php',
-        theme: isCurrentThemeDark() ? 'vs-dark' : 'vs'
-    });
+    if (text !== undefined) {
+        node.textContent = text;
+    }
+
+    return node;
 }
 
-
-function initTestEditor() {
-    var loadedCodeElement = document.getElementById('loaded-test');
-    var code = loadedCodeElement !== null
-        ? loadedCodeElement.dataset.code
-        : [
-            '<?php',
-            '',
-            'declare(strict_types=1);',
-            '',
-            'namespace Infected\\Tests;',
-            '',
-            'use Infected\\SourceClass;',
-            'use PHPUnit\\Framework\\TestCase;',
-            '',
-            'class SourceClassTest extends TestCase',
-            '{',
-            '    public function test_it_adds_2_numbers(): void',
-            '    {',
-            '        $source = new SourceClass();',
-            '',
-            '        $result = $source->add(1, 2);',
-            '',
-            '        self::assertSame(3, $result);',
-            '    }',
-            '}'
-        ].join('\n');
-
-    const editorNode = document.getElementById('editor-test');
-
-    if (!editorNode) {
-        return;
-    }
-
-    return monaco.editor.create(editorNode, {
-        minimap: {
-            enabled: false
-        },
-        value: code,
-        language: 'php',
-        theme: isCurrentThemeDark() ? 'vs-dark' : 'vs'
-    });
-}
-
-function initConfigEditor() {
-    var loadedCodeElement = document.getElementById('loaded-config');
-    var code = loadedCodeElement !== null
-        ? loadedCodeElement.dataset.code
-        : [
-            '{',
-            '    "mutators": {',
-            '        "@default": true',
-            '    }',
-            '}'
-        ].join('\n');
-
-    const editorNode = document.getElementById('editor-config');
-
-    if (!editorNode) {
-        return;
-    }
-
-    return monaco.editor.create(editorNode, {
-        minimap: {
-            enabled: false
-        },
-        value: code,
-        language: 'json',
-        theme: isCurrentThemeDark() ? 'vs-dark' : 'vs'
-    });
-}
-
-/**
- * Check if the current theme is dark
- * @returns {boolean}
- */
-function isCurrentThemeDark() {
-    return document.documentElement.classList.contains('dark');
-}
-
-/**
- * Update the theme for all Monaco editors based on the current theme
- */
-function updateEditorsTheme() {
-    const theme = isCurrentThemeDark() ? 'vs-dark' : 'vs';
-
-    monaco.editor.setTheme(theme);
-
-    // Force layout update to ensure proper rendering
-    if (codeEditor) {
-        codeEditor.layout();
-    }
-    if (testEditor) {
-        testEditor.layout();
-    }
-    if (configEditor) {
-        configEditor.layout();
-    }
-    if (diffEditor) {
-        diffEditor.layout();
-    }
+function plural(count, noun) {
+    return count + ' ' + noun + (count === 1 ? '' : 's');
 }
