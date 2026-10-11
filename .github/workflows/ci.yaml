@@ -62,6 +62,19 @@ jobs:
             *.cache-from=type=gha,scope=refs/heads/master
             *.cache-to=type=gha,scope=${{github.ref}},mode=max
 
+      - name: Cache Composer packages
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/composer
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      # Installed in its own step rather than by the php entrypoint on `up`: a failed download then
+      # fails here with Composer's output, instead of killing the container mid-start, which
+      # `docker compose up --wait` only reports as "container playground-php-1 is unhealthy".
+      - name: Install Composer dependencies
+        run: docker compose run --rm --no-deps -v ~/.cache/composer:/root/.cache/composer php composer install --prefer-dist --no-progress --no-interaction
+
       - name: Start services
         run: docker compose up --wait --no-build
 
@@ -76,6 +89,10 @@ jobs:
 
       - name: make analyze
         run: make docker-analyze CI=1
+
+      - name: Show container logs
+        if: ${{ failure() }}
+        run: docker compose logs
 
   build-prod-image:
     name: Production image build
@@ -134,6 +151,19 @@ jobs:
             *.cache-from=type=gha,scope=refs/heads/master
             *.cache-to=type=gha,scope=${{github.ref}},mode=max
 
+      - name: Cache Composer packages
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/composer
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      # Installed in its own step rather than by the php entrypoint on `up`: a failed download then
+      # fails here with Composer's output, instead of killing the container mid-start, which
+      # `docker compose up --wait` only reports as "container playground-php-1 is unhealthy".
+      - name: Install Composer dependencies
+        run: docker compose run --rm --no-deps -v ~/.cache/composer:/root/.cache/composer php composer install --prefer-dist --no-progress --no-interaction
+
       - name: Start services
         run: docker compose up --wait --no-build
 
@@ -145,3 +175,7 @@ jobs:
           # In the merge queue there is no base_ref; diff against the commit the queue builds on.
           BASE_REF: ${{ github.event.merge_group.base_sha || format('origin/{0}', github.base_ref) }}
         run: make docker-infection-diff CI=1 INFECTION_THREADS=2 BASE_REF="$BASE_REF" ARGS="--no-progress --logger-github"
+
+      - name: Show container logs
+        if: ${{ failure() }}
+        run: docker compose logs
