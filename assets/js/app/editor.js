@@ -218,27 +218,48 @@ function copyValuesFromEditorsToTextAreas(codeEditor, testEditor, configEditor) 
 }
 
 function showDiffEditor(mutator) {
-    if (diffEditor) {
-        // Reuse the models instead of creating 2 new ones for every clicked mutant
-        const {original, modified} = diffEditor.getModel();
+    diffEditor = diffEditor ? diffEditor : createDiffEditor();
 
-        original.setValue(mutator.originalSourceCode);
-        modified.setValue(mutator.mutatedSourceCode);
+    const previousModel = diffEditor.getModel();
 
-        return;
-    }
-
-    diffEditor = monaco.editor.createDiffEditor(document.getElementById('editor-diff'), {
-        enableSplitViewResizing: false,
-        // Render the diff inline
-        renderSideBySide: false,
-        readOnly: true,
-        theme: isCurrentThemeDark() ? 'vs-dark' : 'vs'
-    });
-
+    // New models instead of setValue() on the old ones: only a new model collapses the unchanged regions again.
     diffEditor.setModel({
         original: monaco.editor.createModel(mutator.originalSourceCode, 'php'),
         modified: monaco.editor.createModel(mutator.mutatedSourceCode, 'php')
+    });
+
+    if (previousModel !== null) {
+        previousModel.original.dispose();
+        previousModel.modified.dispose();
+    }
+}
+
+function createDiffEditor() {
+    return monaco.editor.createDiffEditor(document.getElementById('editor-diff'), {
+        enableSplitViewResizing: false,
+        // Side by side only when the box is wide enough, inline otherwise (as in the 1/3 wide column)
+        renderSideBySide: true,
+        useInlineViewWhenSpaceIsLimited: true,
+        // Show the mutated line with a few lines around it instead of the whole class.
+        // The unfold icon on a hidden region shows its lines again.
+        hideUnchangedRegions: {
+            enabled: true,
+            contextLineCount: 3,
+            minimumLineCount: 3,
+            revealLineCount: 10
+        },
+        readOnly: true,
+        // the diff is read-only: no "revert change" arrows or gutter menu
+        renderMarginRevertIcon: false,
+        renderGutterMenu: false,
+        renderOverviewRuler: false,
+        minimap: {
+            enabled: false
+        },
+        scrollBeyondLastLine: false,
+        // follows the width of the box, which decides between side by side and inline
+        automaticLayout: true,
+        theme: isCurrentThemeDark() ? 'vs-dark' : 'vs'
     });
 }
 
