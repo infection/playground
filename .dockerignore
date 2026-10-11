@@ -37,6 +37,8 @@ vendor/
 deploy/
 docker/
 secrets/
+# database dumps from deploy/backup.sh and deploy/migrate-from-swarm.sh
+backups/
 # The runs of the playground; only the committed PHARs and the autoloader are part of the image.
 infection-builds/*
 !infection-builds/*.phar

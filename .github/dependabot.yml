@@ -1,0 +1,45 @@
+version: 2
+
+updates:
+  # PHP dependencies: composer.json + composer.lock
+  - package-ecosystem: composer
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    versioning-strategy: increase
+    open-pull-requests-limit: 10
+    groups:
+      symfony:
+        patterns:
+          - "symfony/*"
+          - "symfonycasts/*"
+      doctrine:
+        patterns:
+          - "doctrine/*"
+      dev-tools:
+        dependency-type: development
+      other:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+
+  # Base images in the Dockerfile (dunglas/frankenphp, debian)
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+
+  # Actions used in .github/workflows
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      github-actions:
+        patterns:
+          - "*"
