@@ -49,7 +49,9 @@
                 <nav class="modes" aria-label="Tool">
                     <a href="{{ path('playground_index') }}" {% if route starts with 'playground_' %}aria-current="page"{% endif %}>Mutation run</a>
                     <a href="{{ path('app_ast_index') }}" {% if route starts with 'app_ast_' %}aria-current="page"{% endif %}>AST Explorer</a>
+                    <a href="{{ path('explore_index') }}" {% if route starts with 'explore_' %}aria-current="page"{% endif %}>Explore</a>
                 </nav>
+                {% block topbar_title %}{% endblock %}
                 <div class="top-spacer"></div>
                 {% block topbar_actions %}{% endblock %}
                 <div class="pop-wrap">

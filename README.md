@@ -69,6 +69,26 @@ deploy/backup.sh
 
 dumps the production database to the git-ignored `backups/` directory. Nothing backs it up automatically.
 
+#### Explore
+
+`/explore` lists the runs made since it exists, ranked by the numbers of their JSON logs, which are copied into
+columns when a run finishes. The runs made before were shared as unlisted links: they stay unlisted, but count in
+the all-time totals and the mutator leaderboard once their numbers are copied, once, after the deploy that adds Explore:
+
+```bash
+bin/console app:example:backfill-stats
+```
+
+A visitor can report a run, which hides it from Explore until it is reviewed. The links of reported runs keep working.
+
+```bash
+bin/console app:example:review                  # lists the reported runs
+bin/console app:example:review <hash> --restore # shows the run in Explore again
+bin/console app:example:review <hash> --unlist  # removes it from Explore for good
+```
+
+Run them in the `php` container of the droplet.
+
 #### Server requirements
 
 - Docker Engine 20.10.10 or newer: the images are built on glibc 2.34+, whose threads need the `clone3` syscall,
