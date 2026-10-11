@@ -2,6 +2,8 @@ name: 'Infection: changed lines'
 
 on:
   pull_request:
+  # Required by the merge queue: a required check must also report on the queue commit.
+  merge_group:
 
 permissions:
   contents: read
@@ -47,5 +49,6 @@ jobs:
 
       - name: Run Infection on changed lines
         env:
-          BASE_REF: ${{ github.base_ref }}
+          # In the merge queue there is no base_ref; diff against the commit the queue builds on.
+          BASE_REF: ${{ github.event.merge_group.base_sha || format('origin/{0}', github.base_ref) }}
         run: make docker-infection-diff CI=1 INFECTION_THREADS=2 BASE_REF="$BASE_REF" ARGS="--no-progress --logger-github"
