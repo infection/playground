@@ -38,4 +38,6 @@ deploy/
 docker/
 secrets/
 # The runs of the playground; only the committed PHARs and the autoloader are part of the image.
-infection-builds/*/
+infection-builds/*
+!infection-builds/*.phar
+!infection-builds/Psr4AutoloaderClass.php
