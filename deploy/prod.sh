@@ -7,6 +7,12 @@ set -euo pipefail
 
 source "$(dirname "$0")/common.sh"
 
+current_branch="$(git -C "$ROOT_DIR" rev-parse --abbrev-ref HEAD)"
+if [ "$current_branch" != master ]; then
+    echo "Production is deployed from master only, but the current branch is \"$current_branch\"." >&2
+    exit 1
+fi
+
 if remote_docker stack ls --format '{{.Name}}' 2>/dev/null | grep -qx infection; then
     echo 'The legacy "infection" swarm stack is still running: run deploy/migrate-from-swarm.sh first.' >&2
     exit 1
