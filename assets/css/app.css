@@ -271,54 +271,52 @@
 /* ==========================================
    Metrics (MSI, Covered MSI) next to the versions
    ========================================== */
+.metric-divider {
+    width: 1px;
+    height: 1rem;
+    background: #d1d5db;
+}
+.dark .metric-divider {
+    background: #374151;
+}
 .metric {
     position: relative;
-    border-radius: 9999px;
+    border-radius: 0.25rem;
     outline: none;
+    cursor: help;
 }
 .metric:focus-visible {
     box-shadow: 0 0 0 2px #22c55e;
 }
-.metric-chip {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 0.375rem;
-    padding: 0.125rem 0.625rem;
-    border-radius: 9999px;
-    border: 1px solid #e5e7eb;
-    font-size: 0.875rem;
-    color: #6b7280;
-    cursor: help;
-}
-.dark .metric-chip {
-    border-color: rgba(55, 65, 81, 0.7);
-    color: #9ca3af;
-}
-.metric-chip-value {
+.metric-value {
     font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    color: #111827;
+    text-decoration: underline dotted;
+    text-underline-offset: 4px;
 }
-.dark .metric-chip-value {
-    color: #f3f4f6;
-}
-.metric-chip-pass .metric-chip-value {
-    color: #16a34a;
-}
-.dark .metric-chip-pass .metric-chip-value {
-    color: #4ade80;
-}
-.metric-chip-fail .metric-chip-value {
+/* the thresholds of Infection's console output and HTML report, orange instead of its yellow */
+.metric-value-low {
     color: #dc2626;
 }
-.dark .metric-chip-fail .metric-chip-value {
+.dark .metric-value-low {
     color: #f87171;
+}
+.metric-value-medium {
+    color: #ea580c;
+}
+.dark .metric-value-medium {
+    color: #fb923c;
+}
+.metric-value-high {
+    color: #16a34a;
+}
+.dark .metric-value-high {
+    color: #4ade80;
 }
 .metric-details {
     display: none;
     position: absolute;
-    top: calc(100% + 0.5rem);
-    left: 0;
+    top: calc(100% + 0.625rem);
+    left: -0.875rem;
     z-index: 30;
     width: 24rem;
     max-width: calc(100vw - 2rem);
@@ -327,20 +325,21 @@
     border: 1px solid #e5e7eb;
     background: #ffffff;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    cursor: auto;
 }
 .dark .metric-details {
     border-color: rgba(55, 65, 81, 0.7);
     background: #111827;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
 }
-/* bridges the gap, so the mouse can move from the chip into the details */
+/* bridges the gap, so the mouse can move from the score into the details */
 .metric-details::before {
     content: '';
     position: absolute;
     left: 0;
     right: 0;
-    top: -0.5rem;
-    height: 0.5rem;
+    top: -0.625rem;
+    height: 0.625rem;
 }
 .metric:hover .metric-details,
 .metric:focus-within .metric-details {
@@ -373,13 +372,20 @@
 .dark .metric-formula {
     color: #d1d5db;
 }
-.metric-explanation {
+.metric-explanation,
+.metric-legend {
     margin-top: 0.25rem;
     font-size: 0.75rem;
     color: #6b7280;
 }
-.dark .metric-explanation {
+.dark .metric-explanation,
+.dark .metric-legend {
     color: #9ca3af;
+}
+.metric-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
 }
 
 /* ==========================================
@@ -425,6 +431,14 @@
 .dark .mutant-badge-timeout {
     background: rgba(234, 179, 8, 0.15);
     color: #fde047;
+}
+.mutant-badge-medium {
+    background: #fff7ed;
+    color: #9a3412;
+}
+.dark .mutant-badge-medium {
+    background: rgba(249, 115, 22, 0.15);
+    color: #fdba74;
 }
 .mutant-badge-uncovered {
     background: #fef2f2;
