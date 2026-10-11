@@ -3,6 +3,9 @@
  * dragging it changes the share of the two tracks around it. The shares are remembered in localStorage,
  * a double click restores the default. The handles also move with the arrow keys.
  *
+ * A split with `collapsed` tracks also has [data-collapse] buttons: one gives all the room to the other side,
+ * pressed again it restores the share. Dragging or moving the handle restores it too.
+ *
  * Monaco editors follow the new sizes by themselves (automaticLayout).
  *
  * The module starts the handles itself: entrypoints import it before Monaco, whose loading would delay it.
@@ -13,7 +16,8 @@ const MIN_SHARE = 0.15;
 const MAX_SHARE = 0.85;
 
 /**
- * name => the grid it resizes, the default share of the first track, and the tracks for a share
+ * name => the grid it resizes, the default share of the first track, the tracks for a share,
+ * and the tracks while one side is collapsed
  */
 const SPLITS = {
     columns: {
@@ -28,8 +32,13 @@ const SPLITS = {
     },
     results: {
         container: '.res',
-        initial: 0.43,
-        apply: (grid, share) => grid.style.gridTemplateRows = 'auto auto minmax(80px, ' + share + 'fr) var(--gutter) minmax(160px, ' + (1 - share) + 'fr)',
+        initial: 0.5,
+        apply: (grid, share) => grid.style.gridTemplateRows = 'minmax(0, ' + share + 'fr) var(--gutter) minmax(160px, ' + (1 - share) + 'fr)',
+        // the details keep their header when collapsed: it has the button that brings them back
+        collapsed: {
+            before: (grid) => grid.style.gridTemplateRows = '0 var(--gutter) minmax(0, 1fr)',
+            after: (grid) => grid.style.gridTemplateRows = 'minmax(0, 1fr) var(--gutter) auto',
+        },
     },
     ast: {
         container: '.ast',
@@ -53,13 +62,50 @@ function initSplitters() {
         }
 
         const isVertical = handle.getAttribute('aria-orientation') === 'vertical';
+        const collapseButtons = document.querySelectorAll('[data-collapse="' + name + '"]');
+        const collapsedKey = name + '.collapsed';
 
-        const set = (share) => {
+        // the default is not stored (remember = false): a later change of it applies
+        const set = (share, remember = true) => {
             share = Math.min(MAX_SHARE, Math.max(MIN_SHARE, share));
-            shares[name] = share;
+
+            if (remember) {
+                shares[name] = share;
+            } else {
+                delete shares[name];
+            }
+
+            delete shares[collapsedKey];
             split.apply(grid, share);
+            showCollapsed(null);
             handle.setAttribute('aria-valuenow', String(Math.round(share * 100)));
         };
+
+        // side: 'before' or 'after' the handle, null when both are shown
+        const collapse = (side) => {
+            shares[collapsedKey] = side;
+            split.collapsed[side](grid);
+            showCollapsed(side);
+            handle.setAttribute('aria-valuenow', side === 'before' ? '0' : '100');
+        };
+
+        const showCollapsed = (side) => {
+            if (side === null) {
+                delete grid.dataset.collapsed;
+            } else {
+                grid.dataset.collapsed = side;
+            }
+
+            collapseButtons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.collapseSide === side)));
+        };
+
+        const isCollapsed = () => typeof shares[collapsedKey] === 'string';
+
+        // back to the share the split had before it collapsed
+        const expand = () => typeof shares[name] === 'number' ? set(shares[name]) : set(split.initial, false);
+
+        // set() forgets it
+        const savedSide = shares[collapsedKey];
 
         if (typeof shares[name] === 'number') {
             set(shares[name]);
@@ -67,12 +113,34 @@ function initSplitters() {
             handle.setAttribute('aria-valuenow', String(Math.round(split.initial * 100)));
         }
 
+        if (split.collapsed?.[savedSide]) {
+            collapse(savedSide);
+        }
+
+        collapseButtons.forEach((button) => button.addEventListener('click', () => {
+            const side = button.dataset.collapseSide;
+
+            if (shares[collapsedKey] === side) {
+                expand();
+            } else {
+                collapse(side);
+            }
+
+            saveShares(shares);
+        }));
+
         handle.addEventListener('pointerdown', (event) => {
             if (event.button !== 0) {
                 return;
             }
 
             event.preventDefault();
+
+            // a collapsed side comes back first, so there are two panes to measure
+            if (isCollapsed()) {
+                expand();
+            }
+
             handle.setPointerCapture(event.pointerId);
             document.body.classList.add(isVertical ? 'is-resizing-x' : 'is-resizing-y');
             handle.classList.add('is-dragging');
@@ -104,9 +172,7 @@ function initSplitters() {
         });
 
         handle.addEventListener('dblclick', () => {
-            set(split.initial);
-            // the default is not stored: a later change of it applies
-            delete shares[name];
+            set(split.initial, false);
             saveShares(shares);
         });
 
