@@ -22,4 +22,8 @@ return [
         'path' => './assets/js/ast.js',
         'entrypoint' => true,
     ],
+    'explore' => [
+        'path' => './assets/js/explore.js',
+        'entrypoint' => true,
+    ],
 ];

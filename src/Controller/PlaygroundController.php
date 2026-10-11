@@ -38,6 +38,7 @@ namespace App\Controller;
 use App\Code\ClassesExtractor\ClassesExtractor;
 use App\Code\CodeSanitizer;
 use App\Entity\Example;
+use App\Explore\ExampleStatsUpdater;
 use App\Form\CreateExampleType;
 use App\Html\Ansi\AnsiToHtmlConverter;
 use App\Html\Ansi\InfectionAnsiHtmlTheme;
@@ -73,6 +74,7 @@ class PlaygroundController extends AbstractController
         ConfigBuilder $configBuilder,
         ExampleRepository $exampleRepository,
         private readonly ClassesExtractor $classesExtractor,
+        private readonly ExampleStatsUpdater $exampleStatsUpdater,
     ) {
         $this->hashids = $hashids;
         $this->infectionRunner = $infectionRunner;
@@ -107,16 +109,20 @@ class PlaygroundController extends AbstractController
             $test = $this->codeSanitizer->sanitize($createExampleRequest->test);
 
             $originalConfig = $createExampleRequest->config;
+            $title = $createExampleRequest->getTrimmedTitle();
 
             $existingExample = $this->exampleRepository->findContentByHash(
                 Example::hashInput($code, $test, $originalConfig, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION)
             );
 
             if ($existingExample instanceof Example) {
+                $existingExample->listWithTitle($title);
+                $em->flush();
+
                 return $this->redirectToRoute('playground_display_example', ['exampleIdHash' => $this->hashids->encode($existingExample->getId())]);
             }
 
-            $example = new Example($code, $test, $originalConfig, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION);
+            $example = new Example($code, $test, $originalConfig, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION, $title);
 
             $em->persist($example);
             $em->flush();
@@ -133,6 +139,7 @@ class PlaygroundController extends AbstractController
             $example->setIdHash($idHash);
             $example->updateResultOutput($runResult->getAnsiOutput());
             $example->updateJsonLog($runResult->getJsonLog());
+            $this->exampleStatsUpdater->update($example);
 
             $em->flush();
 
@@ -148,12 +155,7 @@ class PlaygroundController extends AbstractController
     #[Route('/r/{exampleIdHash}', name: 'playground_display_example', methods: ['GET'])]
     public function displayExample(string $exampleIdHash, EntityManagerInterface $em): Response
     {
-        /** @var Example|null $example */
-        $example = $em->find(Example::class, $this->hashids->decode($exampleIdHash)[0]);
-
-        if (!$example instanceof Example) {
-            throw $this->createNotFoundException();
-        }
+        $example = $this->findExample($exampleIdHash, $em);
 
         $createExampleRequest = CreateExampleRequest::fromEntity($example);
 
@@ -168,7 +170,36 @@ class PlaygroundController extends AbstractController
             'example' => $createExampleRequest,
             'jsonLog' => $example->getJsonLog(),
             'lineMap' => json_encode($this->buildLineMap($example)),
+            'isListed' => $example->isListed() && !$example->isDefaultExample() && $example->getMutantsTotal() !== null,
+            'isReported' => $example->getReportedAt() !== null,
         ]);
+    }
+
+    /**
+     * Hides a run from Explore until it is reviewed (app:example:review); its link keeps working.
+     */
+    #[Route('/r/{exampleIdHash}/report', name: 'playground_report_example', methods: ['POST'])]
+    public function reportExample(string $exampleIdHash, EntityManagerInterface $em): Response
+    {
+        $example = $this->findExample($exampleIdHash, $em);
+
+        $example->report();
+        $em->flush();
+
+        return $this->redirectToRoute('playground_display_example', ['exampleIdHash' => $exampleIdHash]);
+    }
+
+    private function findExample(string $exampleIdHash, EntityManagerInterface $em): Example
+    {
+        $ids = $this->hashids->decode($exampleIdHash);
+
+        $example = $ids === [] ? null : $em->find(Example::class, $ids[0]);
+
+        if (!$example instanceof Example) {
+            throw $this->createNotFoundException();
+        }
+
+        return $example;
     }
 
     /**
