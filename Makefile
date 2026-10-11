@@ -1,6 +1,14 @@
 PHP-CS-FIXER=vendor/bin/php-cs-fixer
 PHPSTAN=vendor/bin/phpstan
 PHPSTAN_ARGS=analyse -c phpstan.dist.neon --memory-limit=1G
+INFECTION=php -d memory_limit=1G vendor/bin/infection
+INFECTION_THREADS ?= 4
+
+# Compare changed lines against the PR base branch, or master for local runs.
+BASE_REF ?= master
+
+# Extra arguments for a one-off run: make infection ARGS="--filter=src/Html"
+ARGS ?=
 
 # `docker compose exec` allocates a TTY, which fails where there is none (CI).
 CI ?=
@@ -31,6 +39,15 @@ schema-validate: prerequisites
 tests: prerequisites
 	vendor/bin/phpunit
 
+# Runs mutation tests against src/
+.PHONY: infection infection-diff
+infection: prerequisites
+	$(INFECTION) --no-interaction --threads=$(INFECTION_THREADS) $(ARGS)
+
+# Runs the CI mutation check on lines changed from origin/$(BASE_REF)
+infection-diff: prerequisites
+	$(INFECTION) --no-interaction --threads=$(INFECTION_THREADS) --git-diff-lines --git-diff-base=origin/$(BASE_REF) --ignore-msi-with-no-mutations --max-timeouts=0 --min-msi=100 $(ARGS)
+
 # Recreates the dev and test databases from the migrations
 .PHONY: app-reinstall
 app-reinstall: prerequisites
@@ -49,7 +66,7 @@ tailwind-watch: prerequisites
 # The same targets, run from the host in the php container: `make docker-analyze`
 .PHONY: docker-%
 docker-%:
-	$(DOCKER_PHP) make $*
+	$(DOCKER_PHP) make $* INFECTION_THREADS=$(INFECTION_THREADS) BASE_REF='$(BASE_REF)' ARGS='$(ARGS)'
 
 # We need both vendor/autoload.php and composer.lock being up to date
 .PHONY: prerequisites
