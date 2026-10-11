@@ -269,6 +269,65 @@
 }
 
 /* ==========================================
+   Metrics panel (MSI, MCC, Covered MSI)
+   ========================================== */
+.metric-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.875rem 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+}
+.dark .metric-tile {
+    border-color: rgba(55, 65, 81, 0.5);
+    background: #111827;
+}
+.metric-tile-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+}
+.dark .metric-tile-header {
+    color: #9ca3af;
+}
+.metric-value {
+    font-size: 1.875rem;
+    font-weight: 700;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+    color: #111827;
+}
+.dark .metric-value {
+    color: #f3f4f6;
+}
+.metric-formula {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.75rem;
+    color: #4b5563;
+    overflow-wrap: anywhere;
+}
+.dark .metric-formula {
+    color: #d1d5db;
+}
+.metric-explanation {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+.dark .metric-explanation {
+    color: #9ca3af;
+}
+
+/* ==========================================
    Mutant badges
    ========================================== */
 .mutant-badge {

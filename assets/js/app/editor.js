@@ -108,6 +108,8 @@ function processMutantsDetails() {
     const jsonLog = JSON.parse(logElement.dataset.log);
     mutants = addSourceLines(getAllMutants(jsonLog), readLineMap());
 
+    showMetrics(jsonLog.stats);
+
     if (mutants.length === 0) {
         showNoMutantsAlert();
 
@@ -161,6 +163,132 @@ function addSourceLines(mutants, lineMap) {
             sourceLine: classLines[mutator.originalStartLine] || null,
         });
     });
+}
+
+/**
+ * MSI, MCC and Covered MSI as Infection calculates them (Infection\Metrics\Calculator),
+ * with each formula filled in with the counts of this run.
+ */
+function showMetrics(stats) {
+    const panel = document.getElementById('metrics-panel');
+
+    if (panel === null || !stats) {
+        return;
+    }
+
+    // logs of older Infection versions don't have all the counts
+    const count = (key) => stats[key] || 0;
+
+    const total = count('totalMutantsCount') - count('skippedCount') - count('ignoredCount');
+
+    if (total === 0) {
+        return;
+    }
+
+    const covered = total - count('notCoveredCount');
+    const detectedTerms = [
+        ['killed', count('killedCount'), true],
+        ['killed by SA', count('killedByStaticAnalysisCount'), false],
+        ['timed out', count('timeOutCount'), true],
+        ['errors', count('errorCount'), true],
+        ['syntax errors', count('syntaxErrorCount'), false],
+    ].filter(([, value, alwaysShown]) => alwaysShown || value > 0);
+
+    const detected = detectedTerms.reduce((sum, [, value]) => sum + value, 0);
+    const detectedNames = '(' + detectedTerms.map(([name]) => name).join(' + ') + ')';
+    const detectedValues = '(' + detectedTerms.map(([, value]) => value).join(' + ') + ')';
+    const minimums = readConfiguredMinimums();
+
+    panel.replaceChildren(
+        buildMetricTile({
+            title: 'MSI',
+            name: 'Mutation Score Indicator',
+            value: stats.msi,
+            formula: detectedNames + ' / total',
+            counts: detectedValues + ' / ' + total + ' = ' + detected + ' / ' + total,
+            explanation: 'The share of all mutants that the tests detect. This is the main score.',
+            minimumKey: 'minMsi',
+            minimum: minimums.minMsi,
+        }),
+        buildMetricTile({
+            title: 'MCC',
+            name: 'Mutation Code Coverage',
+            value: stats.mutationCodeCoverage,
+            formula: '(total − uncovered) / total',
+            counts: '(' + total + ' − ' + count('notCoveredCount') + ') / ' + total + ' = ' + covered + ' / ' + total,
+            explanation: 'The share of mutants in code that at least one test executes.',
+        }),
+        buildMetricTile({
+            title: 'Covered Code MSI',
+            name: 'MSI of the covered code',
+            value: stats.coveredCodeMsi,
+            formula: detectedNames + ' / (total − uncovered)',
+            counts: detectedValues + ' / ' + covered + ' = ' + detected + ' / ' + covered,
+            explanation: 'The MSI of the code the tests execute: how strong the existing tests are.',
+            minimumKey: 'minCoveredMsi',
+            minimum: minimums.minCoveredMsi,
+        })
+    );
+
+    panel.classList.remove('hidden');
+}
+
+function buildMetricTile(tile) {
+    const element = document.createElement('div');
+    element.className = 'metric-tile';
+
+    const header = document.createElement('div');
+    header.className = 'metric-tile-header';
+
+    const title = document.createElement('span');
+    title.textContent = tile.title;
+    title.title = tile.name;
+    header.appendChild(title);
+
+    if (typeof tile.minimum === 'number') {
+        // Infection fails the run when the score is below the minimum
+        const passed = tile.value >= tile.minimum;
+
+        const badge = document.createElement('span');
+        badge.className = 'mutant-badge ' + (passed ? 'mutant-badge-killed' : 'mutant-badge-escaped');
+        badge.textContent = (passed ? 'pass' : 'fail') + ' · ' + tile.minimumKey + ' ' + tile.minimum + '%';
+        header.appendChild(badge);
+    }
+
+    const value = document.createElement('p');
+    value.className = 'metric-value';
+    value.textContent = tile.value + '%';
+
+    const formula = document.createElement('p');
+    formula.className = 'metric-formula';
+    formula.textContent = tile.formula;
+
+    const counts = document.createElement('p');
+    counts.className = 'metric-formula';
+    counts.textContent = '= ' + tile.counts;
+
+    const explanation = document.createElement('p');
+    explanation.className = 'metric-explanation';
+    explanation.textContent = tile.explanation;
+
+    element.append(header, value, formula, counts, explanation);
+
+    return element;
+}
+
+function readConfiguredMinimums() {
+    const configElement = document.getElementById('loaded-config');
+
+    try {
+        const config = JSON.parse(configElement !== null ? configElement.dataset.code : '{}');
+
+        return {
+            minMsi: config.minMsi,
+            minCoveredMsi: config.minCoveredMsi,
+        };
+    } catch (e) {
+        return {};
+    }
 }
 
 function showNoMutantsAlert() {
