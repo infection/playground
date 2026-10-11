@@ -48,8 +48,8 @@ use Symfony\Component\Process\Process;
 
 class Runner
 {
-    public const CURRENT_INFECTION_VERSION = '0.32.7';
-    public const CURRENT_PHPUNIT_VERSION = '10.5.66';
+    public const CURRENT_INFECTION_VERSION = '0.35.6';
+    public const CURRENT_PHPUNIT_VERSION = '13.4.1';
     // the PHP binary the playground runs Infection with, i.e. the one of the Docker image
     public const CURRENT_PHP_VERSION = PHP_VERSION;
 
