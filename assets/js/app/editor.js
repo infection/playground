@@ -199,7 +199,17 @@ function showMetrics(stats) {
     const detectedValues = '(' + detectedTerms.map(([, value]) => value).join(' + ') + ')';
     const minimums = readConfiguredMinimums();
 
-    panel.replaceChildren(
+    const divider = document.createElement('span');
+    divider.className = 'metric-divider';
+    divider.setAttribute('aria-hidden', 'true');
+
+    const separator = document.createElement('span');
+    separator.textContent = '·';
+    separator.setAttribute('aria-hidden', 'true');
+
+    const metrics = document.createElement('span');
+    metrics.className = 'flex items-center gap-1.5';
+    metrics.append(
         buildMetric({
             title: 'MSI',
             name: 'Mutation Score Indicator',
@@ -210,6 +220,7 @@ function showMetrics(stats) {
             minimumKey: 'minMsi',
             minimum: minimums.minMsi,
         }),
+        separator,
         buildMetric({
             title: 'Covered MSI',
             name: 'Covered Code Mutation Score Indicator',
@@ -222,66 +233,102 @@ function showMetrics(stats) {
         })
     );
 
+    panel.replaceChildren(divider, metrics);
     panel.classList.remove('hidden');
 }
 
-function buildMetric(metric) {
-    const hasMinimum = typeof metric.minimum === 'number';
-    // Infection fails the run when the score is below the minimum
-    const passed = hasMinimum && metric.value >= metric.minimum;
+/**
+ * The thresholds of Infection's console output and HTML report.
+ */
+function getMetricLevel(value) {
+    if (value < 50) {
+        return 'low';
+    }
 
-    const element = document.createElement('div');
+    return value < 90 ? 'medium' : 'high';
+}
+
+const LEVEL_BADGE_CLASSES = {
+    low: 'mutant-badge-escaped',
+    medium: 'mutant-badge-medium',
+    high: 'mutant-badge-killed',
+};
+
+function buildMetric(metric) {
+    const level = getMetricLevel(metric.value);
+
+    const element = document.createElement('span');
     element.className = 'metric';
     // focusable, so the details also open from the keyboard
     element.tabIndex = 0;
 
-    const chip = document.createElement('span');
-    chip.className = 'metric-chip' + (hasMinimum ? ' metric-chip-' + (passed ? 'pass' : 'fail') : '');
-
-    const title = document.createElement('span');
-    title.className = 'metric-chip-title';
-    title.textContent = metric.title;
-
     const value = document.createElement('span');
-    value.className = 'metric-chip-value';
+    value.className = 'metric-value metric-value-' + level;
     value.textContent = metric.value + '%';
 
-    chip.append(title, value);
+    element.append(metric.title + ' ', value, buildMetricDetails(metric, level));
 
-    const details = document.createElement('div');
+    return element;
+}
+
+function buildMetricDetails(metric, level) {
+    const details = document.createElement('span');
     details.className = 'metric-details';
     details.setAttribute('role', 'tooltip');
 
-    const header = document.createElement('div');
+    const header = document.createElement('span');
     header.className = 'metric-details-header';
 
     const name = document.createElement('span');
     name.textContent = metric.name;
-    header.appendChild(name);
 
-    if (hasMinimum) {
-        const badge = document.createElement('span');
-        badge.className = 'mutant-badge ' + (passed ? 'mutant-badge-killed' : 'mutant-badge-escaped');
-        badge.textContent = (passed ? 'pass' : 'fail') + ' · ' + metric.minimumKey + ' ' + metric.minimum + '%';
-        header.appendChild(badge);
+    const badges = document.createElement('span');
+    badges.className = 'flex gap-1.5';
+
+    const levelBadge = document.createElement('span');
+    levelBadge.className = 'mutant-badge ' + LEVEL_BADGE_CLASSES[level];
+    levelBadge.textContent = level;
+    badges.appendChild(levelBadge);
+
+    if (typeof metric.minimum === 'number') {
+        // Infection fails the run when the score is below the minimum
+        const passed = metric.value >= metric.minimum;
+
+        const minimumBadge = document.createElement('span');
+        minimumBadge.className = 'mutant-badge ' + (passed ? 'mutant-badge-killed' : 'mutant-badge-escaped');
+        minimumBadge.textContent = (passed ? 'pass' : 'fail') + ' · ' + metric.minimumKey + ' ' + metric.minimum + '%';
+        badges.appendChild(minimumBadge);
     }
 
-    const formula = document.createElement('p');
+    header.append(name, badges);
+
+    const formula = document.createElement('span');
     formula.className = 'metric-formula';
     formula.textContent = metric.title + ' = ' + metric.formula;
 
-    const counts = document.createElement('p');
+    const counts = document.createElement('span');
     counts.className = 'metric-formula';
     counts.textContent = '= ' + metric.counts + ' = ' + metric.value + '%';
 
-    const explanation = document.createElement('p');
+    const explanation = document.createElement('span');
     explanation.className = 'metric-explanation';
     explanation.textContent = metric.explanation;
 
-    details.append(header, formula, counts, explanation);
-    element.append(chip, details);
+    const legend = document.createElement('span');
+    legend.className = 'metric-legend';
 
-    return element;
+    [['low', 'below 50%'], ['medium', '50–90%'], ['high', '90% and above']].forEach(([legendLevel, label]) => {
+        const item = document.createElement('span');
+        const dot = document.createElement('span');
+        dot.className = 'metric-value-' + legendLevel;
+        dot.textContent = '● ';
+        item.append(dot, label);
+        legend.appendChild(item);
+    });
+
+    details.append(header, formula, counts, explanation, legend);
+
+    return details;
 }
 
 function readConfiguredMinimums() {
