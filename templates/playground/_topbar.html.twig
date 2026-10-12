@@ -22,7 +22,12 @@
     </div>
 {% endif %}
 
-<button id="js-submit" class="btn btn-run" type="button" title="Run Infection (Ctrl/⌘ + Enter)">
+{# the same code, test, config and versions open the same run: the button waits for a change, see watchForChangesSinceRun() in editor.js #}
+{% set isRunOnCurrentVersions = resultOutput is defined
+    and infectionVersion == constant('App\\Infection\\Runner::CURRENT_INFECTION_VERSION')
+    and phpunitVersion == constant('App\\Infection\\Runner::CURRENT_PHPUNIT_VERSION')
+    and phpVersion == constant('App\\Infection\\Runner::CURRENT_PHP_VERSION') %}
+<button id="js-submit" class="btn btn-run" type="button" title="Run Infection (Ctrl/⌘ + Enter)"{% if isRunOnCurrentVersions %} data-run-on-current-versions{% endif %}>
     <svg class="run-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5Z"/></svg>
     <span class="spin" aria-hidden="true"></span>
     <span class="run-label">Run</span><kbd>⌘↵</kbd>
