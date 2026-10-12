@@ -52,11 +52,8 @@ use function json_encode;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
-use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Throwable;
-use function time;
 
 class PlaygroundController extends AbstractController
 {
@@ -118,13 +115,10 @@ class PlaygroundController extends AbstractController
             );
 
             if ($existingExample instanceof Example) {
-                $existingExample->list();
-                $em->flush();
-
                 return $this->redirectToRoute('playground_display_example', ['exampleIdHash' => $this->hashids->encode($existingExample->getId())]);
             }
 
-            $example = new Example($code, $test, $originalConfig, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION, $createExampleRequest->getTrimmedTitle());
+            $example = new Example($code, $test, $originalConfig, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION);
 
             $em->persist($example);
             $em->flush();
@@ -157,7 +151,12 @@ class PlaygroundController extends AbstractController
     #[Route('/r/{exampleIdHash}', name: 'playground_display_example', methods: ['GET'])]
     public function displayExample(string $exampleIdHash, EntityManagerInterface $em): Response
     {
-        $example = $this->findExample($exampleIdHash, $em);
+        /** @var Example|null $example */
+        $example = $em->find(Example::class, $this->hashids->decode($exampleIdHash)[0]);
+
+        if (!$example instanceof Example) {
+            throw $this->createNotFoundException();
+        }
 
         $createExampleRequest = CreateExampleRequest::fromEntity($example);
 
@@ -172,44 +171,7 @@ class PlaygroundController extends AbstractController
             'example' => $createExampleRequest,
             'jsonLog' => $example->getJsonLog(),
             'lineMap' => json_encode($this->buildLineMap($example)),
-            'isListed' => $example->isListed() && !$example->isDefaultExample() && $example->getMutantsTotal() !== null,
-            'isReported' => $example->getReportedAt() !== null,
-            // the title of a run is set once, a new run gets its own: see watchForChangesSinceRun() in editor.js
-            'isTitleLocked' => true,
         ]);
-    }
-
-    /**
-     * Hides a run from Explore until it is reviewed (app:example:review); its link keeps working.
-     */
-    #[Route('/r/{exampleIdHash}/report', name: 'playground_report_example', methods: ['POST'])]
-    public function reportExample(string $exampleIdHash, Request $request, EntityManagerInterface $em, RateLimiterFactoryInterface $reportLimiter): Response
-    {
-        $example = $this->findExample($exampleIdHash, $em);
-
-        $limit = $reportLimiter->create($request->getClientIp())->consume();
-
-        if (!$limit->isAccepted()) {
-            throw new TooManyRequestsHttpException($limit->getRetryAfter()->getTimestamp() - time(), 'Too many reports, try again later.');
-        }
-
-        $example->report();
-        $em->flush();
-
-        return $this->redirectToRoute('playground_display_example', ['exampleIdHash' => $exampleIdHash]);
-    }
-
-    private function findExample(string $exampleIdHash, EntityManagerInterface $em): Example
-    {
-        $ids = $this->hashids->decode($exampleIdHash);
-
-        $example = $ids === [] ? null : $em->find(Example::class, $ids[0]);
-
-        if (!$example instanceof Example) {
-            throw $this->createNotFoundException();
-        }
-
-        return $example;
     }
 
     /**

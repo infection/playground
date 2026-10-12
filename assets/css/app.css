@@ -179,53 +179,6 @@ kbd {
     flex: 1;
 }
 
-/* the optional title of a run, shown in Explore */
-.run-title {
-    flex: 0 1 260px;
-    min-width: 120px;
-    margin-left: 4px;
-}
-
-.run-title input {
-    width: 100%;
-    height: 32px;
-    padding: 0 9px;
-    border: 1px solid transparent;
-    border-radius: 7px;
-    background: transparent;
-    color: var(--fg);
-    font-size: 13px;
-    font-weight: 500;
-    text-overflow: ellipsis;
-}
-
-.run-title input:hover:not([readonly]) {
-    border-color: var(--line);
-}
-
-.run-title input[readonly] {
-    cursor: default;
-}
-
-.run-title input:focus:not([readonly]) {
-    border-color: var(--line-strong);
-    background: var(--surface-2);
-}
-
-.run-title input::placeholder {
-    color: var(--muted);
-}
-
-.btn.reported {
-    color: var(--muted);
-    cursor: default;
-}
-
-.btn.reported:hover {
-    border-color: var(--line);
-    background: var(--surface);
-}
-
 .env {
     font-family: var(--font-mono);
     font-size: 12px;
@@ -1547,8 +1500,7 @@ kbd {
     color: var(--muted);
 }
 
-.blank-state a,
-.pop p a {
+.blank-state a {
     color: var(--brand);
     text-decoration: underline;
 }
@@ -1677,12 +1629,6 @@ kbd {
     .modes {
         order: 5;
         width: 100%;
-        margin-left: 0;
-    }
-
-    .run-title {
-        order: 6;
-        flex-basis: 100%;
         margin-left: 0;
     }
 

@@ -5,24 +5,9 @@
 {% set phpunitVersion = example.phpunitVersion ?? constant('App\\Infection\\Runner::CURRENT_PHPUNIT_VERSION') %}
 {% set phpVersion = example.phpVersion ?? constant('App\\Infection\\Runner::CURRENT_PHP_VERSION') %}
 
-{% block title %}{{ example.title ?? false ? example.title ~ ' · ' : '' }}Infection Playground{% endblock %}
+{% block title %}Infection Playground{% endblock %}
 
 {% block body_class %}workbench-page{% endblock %}
-
-{# outside the form element, so it joins the form by its id; a run keeps its title, editing the code unlocks one for the new run #}
-{% block topbar_title %}
-    {% set titleLocked = isTitleLocked ?? false %}
-    <label class="run-title">
-        <span class="sr-only">Title of the run, optional, shown in Explore</span>
-        {{ form_widget(form.title, {attr: {
-            form: 'workbench',
-            placeholder: 'Untitled run',
-            readonly: titleLocked,
-            title: titleLocked ? 'The title of this run. Edit the code, the test or the config to title the new run.' : 'An optional title, shown in Explore',
-            'data-title-unlocked': 'An optional title of the new run, shown in Explore',
-        }}) }}
-    </label>
-{% endblock %}
 
 {% block topbar_actions %}{{ include('playground/_topbar.html.twig') }}{% endblock %}
 

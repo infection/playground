@@ -67,12 +67,10 @@ export function initMutationEditors() {
     initTabs();
     initRun();
     initShare();
-    initReport();
     initKeyboard();
 
     processMutantsDetails();
     watchForChangesSinceRun();
-    unlockTitleOnChange();
 }
 
 // ---- Editors ---------------------------------------------------------------
@@ -269,19 +267,6 @@ function resetRunState() {
     document.getElementById('run-state').hidden = true;
 }
 
-/**
- * Reporting hides the run from Explore until it is reviewed: a misclick should not do it.
- */
-function initReport() {
-    const form = document.getElementById('report-form');
-
-    form?.addEventListener('submit', (event) => {
-        if (!window.confirm(form.dataset.confirm)) {
-            event.preventDefault();
-        }
-    });
-}
-
 function initShare() {
     const copyButton = document.getElementById('copy-url');
 
@@ -376,38 +361,6 @@ function watchForChangesSinceRun() {
     };
 
     update();
-    editors.forEach((editor) => editor.onDidChangeModelContent(update));
-}
-
-/**
- * A run keeps its title: the field opens for a new run once the input differs, and gets the run's title back with it.
- */
-function unlockTitleOnChange() {
-    const title = document.getElementById('create_example_title');
-
-    if (title === null || !title.readOnly) {
-        return;
-    }
-
-    const editors = [codeEditor, testEditor, configEditor];
-    const runValues = editors.map((editor) => editor.getValue());
-    const runTitle = {value: title.value, tooltip: title.title};
-
-    const update = () => {
-        const changed = editors.some((editor, index) => editor.getValue() !== runValues[index]);
-
-        if (title.readOnly !== changed) {
-            return;
-        }
-
-        title.readOnly = !changed;
-        title.title = changed ? title.dataset.titleUnlocked : runTitle.tooltip;
-
-        if (!changed) {
-            title.value = runTitle.value;
-        }
-    };
-
     editors.forEach((editor) => editor.onDidChangeModelContent(update));
 }
 
