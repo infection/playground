@@ -233,7 +233,7 @@ function initRun() {
 function submit() {
     const button = document.getElementById('js-submit');
 
-    if (button.disabled) {
+    if (button.disabled || button.getAttribute('aria-disabled') === 'true') {
         return;
     }
 
@@ -332,14 +332,17 @@ function initKeyboard() {
 
 /**
  * The results are of the code as it was run: once it is edited, the markers fade and the results say so.
+ * Until then Run would open this same run again, unless the run used older versions than a new run does.
  */
 function watchForChangesSinceRun() {
-    if (document.getElementById('json-log') === null) {
+    if (document.getElementById('stale-note') === null) {
         return;
     }
 
     const editors = [codeEditor, testEditor, configEditor];
     const runValues = editors.map((editor) => editor.getValue());
+    const button = document.getElementById('js-submit');
+    const runTitle = button.title;
 
     const update = () => {
         const stale = editors.some((editor, index) => editor.getValue() !== runValues[index]);
@@ -350,8 +353,14 @@ function watchForChangesSinceRun() {
         if (stale) {
             hideMarkerTooltip();
         }
+
+        if (button.dataset.runOnCurrentVersions !== undefined) {
+            button.setAttribute('aria-disabled', String(!stale));
+            button.title = stale ? runTitle : 'Nothing changed since this run: edit the code, test or config to run again';
+        }
     };
 
+    update();
     editors.forEach((editor) => editor.onDidChangeModelContent(update));
 }
 

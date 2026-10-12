@@ -35,11 +35,17 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Controller;
 
+use App\Entity\Example;
+use App\Infection\Runner;
 use App\Request\CreateExampleRequest;
+use Doctrine\ORM\EntityManagerInterface;
 use Generator;
+use Hashids\Hashids;
 use function json_decode;
 use const JSON_THROW_ON_ERROR;
+use const PHP_INT_MAX;
 use PHPUnit\Framework\Attributes\DataProvider;
+use function random_int;
 use function sprintf;
 use function str_repeat;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -233,6 +239,52 @@ class PlaygroundControllerTest extends WebTestCase
         /** @var array<string, array<int, int>> $lineMap */
         $lineMap = json_decode($lineMapJson, true, 512, JSON_THROW_ON_ERROR);
         static::assertSame(11, $lineMap['SourceClass'][11] ?? null);
+    }
+
+    public function test_run_waits_for_a_change_on_a_run_with_the_current_versions(): void
+    {
+        $client = static::createClient();
+        $client->catchExceptions(false);
+
+        $client->request('GET', '/');
+        static::assertCount(0, $client->getCrawler()->filterXPath('//*[@id="js-submit"][@data-run-on-current-versions]'));
+
+        $client->followRedirects(true);
+        $client->submitForm('create_example[mutate]', [
+            'create_example[code]' => 'code ' . random_int(1, PHP_INT_MAX),
+            'create_example[test]' => 'test',
+            'create_example[config]' => '{"mutators": {"@default": true}}',
+        ]);
+
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertCount(1, $client->getCrawler()->filterXPath('//*[@id="js-submit"][@data-run-on-current-versions]'));
+    }
+
+    /**
+     * The versions are a part of a run: the same code, test and config make a new run on the current versions.
+     */
+    public function test_run_does_not_wait_for_a_change_on_a_run_with_older_versions(): void
+    {
+        $client = static::createClient();
+        $client->catchExceptions(false);
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        /** @var Hashids $hashids */
+        $hashids = static::getContainer()->get(Hashids::class);
+
+        $example = new Example('code ' . random_int(1, PHP_INT_MAX), 'test', '{}', '0.26.0', Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION);
+        $em->persist($example);
+        $em->flush();
+        $idHash = $hashids->encode($example->getId());
+        $example->setIdHash($idHash);
+        $em->flush();
+
+        $client->request('GET', '/r/' . $idHash);
+
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertCount(1, $client->getCrawler()->filterXPath('//*[@id="js-submit"]'));
+        static::assertCount(0, $client->getCrawler()->filterXPath('//*[@id="js-submit"][@data-run-on-current-versions]'));
     }
 
     public function test_it_fails_when_config_is_not_a_valid_json(): void

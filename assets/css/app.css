@@ -243,6 +243,17 @@ kbd {
     border-color: var(--brand-hover);
 }
 
+/* nothing changed since this run: running it again opens the same run */
+.btn-run[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: .5;
+}
+
+.btn-run[aria-disabled="true"]:hover {
+    background: var(--brand);
+    border-color: var(--brand);
+}
+
 .btn-run kbd {
     background: rgb(255 255 255 / .18);
     border-radius: 4px;
