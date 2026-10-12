@@ -212,11 +212,6 @@ class Example
         return $this->phpVersion;
     }
 
-    public function isDefaultExample(): bool
-    {
-        return $this->isDefaultExample;
-    }
-
     public function hasCustomConfig(): bool
     {
         return $this->hasCustomConfig;

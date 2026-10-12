@@ -68,11 +68,6 @@ class ExampleMutator
     ) {
     }
 
-    public function getId(): int
-    {
-        return $this->id;
-    }
-
     public function getExample(): Example
     {
         return $this->example;
@@ -83,23 +78,8 @@ class ExampleMutator
         return $this->mutator;
     }
 
-    public function getKilled(): int
-    {
-        return $this->killed;
-    }
-
     public function getEscaped(): int
     {
         return $this->escaped;
-    }
-
-    public function getTimedOut(): int
-    {
-        return $this->timedOut;
-    }
-
-    public function getNotCovered(): int
-    {
-        return $this->notCovered;
     }
 }

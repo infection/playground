@@ -10,6 +10,10 @@ parameters:
         - src/Html/Ansi/*
     ignoreErrors:
         - '#^Property App\\Entity\\(.*):\$id is never written, only read.$#'
+        # read by the DQL queries of ExploreRepository only
+        - '#^Property App\\Entity\\Example::\$isDefaultExample is never read, only written\.$#'
+        - '#^Property App\\Entity\\ExampleMutator::\$id is unused\.$#'
+        - '#^Property App\\Entity\\ExampleMutator::\$(killed|timedOut|notCovered) is never read, only written\.$#'
         # Symfony's front controller: the runtime passes the environment as a string
         - identifier: argument.type
           path: public/index.php
