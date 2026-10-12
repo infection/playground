@@ -1,3 +1,5 @@
+SHELL = bash
+
 PHP-CS-FIXER=vendor/bin/php-cs-fixer
 PHPSTAN=vendor/bin/phpstan
 PHPSTAN_ARGS=analyse -c phpstan.dist.neon --memory-limit=1G
@@ -51,10 +53,12 @@ infection-diff: db-test-prepare
 # Infection runs the tests of each thread with TEST_TOKEN=1..N, which config/packages/doctrine.yaml
 # appends to the test database name: every thread needs its own app_test<N> database.
 db-test-prepare: prerequisites
-	@for token in '' $$(seq 1 $(INFECTION_THREADS)); do \
-		TEST_TOKEN=$$token bin/console doctrine:database:create --if-not-exists --env=test && \
-		TEST_TOKEN=$$token bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --env=test || exit $$?; \
-	done
+	@pids=(); for token in '' $$(seq 1 $(INFECTION_THREADS)); do \
+		( TEST_TOKEN=$$token bin/console doctrine:database:create --if-not-exists --env=test && \
+		  TEST_TOKEN=$$token bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --env=test ) & \
+		pids+=($$!); \
+	done; \
+	result=0; for pid in "$${pids[@]}"; do wait "$$pid" || result=1; done; exit "$$result"
 
 # Recreates the dev and test databases from the migrations
 .PHONY: app-reinstall
