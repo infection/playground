@@ -80,12 +80,17 @@ bin/console app:example:backfill-stats
 ```
 
 A visitor can report a run, which hides it from Explore until it is reviewed. The links of reported runs keep working.
+A visitor can report 10 runs an hour.
 
 ```bash
 bin/console app:example:review                  # lists the reported runs
 bin/console app:example:review <hash> --restore # shows the run in Explore again
 bin/console app:example:review <hash> --unlist  # removes it from Explore for good
+bin/console app:example:review --restore-all --since="2026-10-12 14:00" # undoes a flood of reports
 ```
+
+A run keeps the title it was made with: its page shows it read-only until the code, the test or the config is edited,
+which titles the new run.
 
 Run them in the `php` container of the droplet.
 

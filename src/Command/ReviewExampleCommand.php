@@ -37,6 +37,8 @@ namespace App\Command;
 
 use App\Entity\Example;
 use App\Repository\ExploreRepository;
+use function count;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Hashids\Hashids;
 use function sprintf;
@@ -68,7 +70,15 @@ final class ReviewExampleCommand
         bool $restore = false,
         #[Option(description: 'Remove the run from Explore for good')]
         bool $unlist = false,
+        #[Option(description: 'Show every reported run in Explore again, to undo a flood of reports')]
+        bool $restoreAll = false,
+        #[Option(description: 'With --restore-all: only the runs reported since this date, as "2026-10-12 14:00"')]
+        ?string $since = null,
     ): int {
+        if ($restoreAll || $since !== null) {
+            return $this->restoreAll($io, $run, $restore, $unlist, $restoreAll, $since);
+        }
+
         if ($run === null) {
             return $this->listReported($io);
         }
@@ -100,6 +110,42 @@ final class ReviewExampleCommand
         $io->success(sprintf($restore ? 'Run %s is back in Explore.' : 'Run %s is removed from Explore.', $run));
 
         return Command::SUCCESS;
+    }
+
+    private function restoreAll(SymfonyStyle $io, ?string $run, bool $restore, bool $unlist, bool $restoreAll, ?string $since): int
+    {
+        if (!$restoreAll || $run !== null || $restore || $unlist) {
+            $io->error('Pass --restore-all, optionally with --since, and no run, --restore or --unlist.');
+
+            return Command::INVALID;
+        }
+
+        $sinceDate = $since === null ? null : self::parseDate($since);
+
+        if ($sinceDate === false) {
+            $io->error(sprintf('"%s" is not a date as "2026-10-12" or "2026-10-12 14:00".', $since));
+
+            return Command::INVALID;
+        }
+
+        $examples = $this->exploreRepository->findReported($sinceDate);
+
+        foreach ($examples as $example) {
+            $example->clearReport();
+        }
+
+        $this->entityManager->flush();
+
+        $io->success(sprintf('%d reported runs are back in Explore.', count($examples)));
+
+        return Command::SUCCESS;
+    }
+
+    private static function parseDate(string $date): DateTimeImmutable|false
+    {
+        $parsed = DateTimeImmutable::createFromFormat('!Y-m-d H:i', $date);
+
+        return $parsed !== false ? $parsed : DateTimeImmutable::createFromFormat('!Y-m-d', $date);
     }
 
     private function listReported(SymfonyStyle $io): int
