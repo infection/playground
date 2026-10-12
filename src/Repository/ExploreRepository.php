@@ -42,14 +42,13 @@ use App\Infection\Runner;
 use function array_map;
 use function array_sum;
 use function count;
-use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use function intdiv;
 
 /**
- * The queries of the Explore page. Listed runs are the ones made since Explore exists, minus the
- * reported ones and the default example; the totals and the leaderboard count every run ever made.
+ * The queries of the Explore page. It shows every run that Infection got to the end of, but the default
+ * example; the totals and the leaderboard count every run.
  */
 final class ExploreRepository
 {
@@ -60,9 +59,9 @@ final class ExploreRepository
     /**
      * @return list<Example>
      */
-    public function findListed(Ranking $ranking, ?string $escapedMutator, int $offset, int $limit): array
+    public function findRuns(Ranking $ranking, ?string $escapedMutator, int $offset, int $limit): array
     {
-        $queryBuilder = $this->listedQueryBuilder()
+        $queryBuilder = $this->runsQueryBuilder()
             ->setFirstResult($offset)
             ->setMaxResults($limit);
 
@@ -105,14 +104,6 @@ final class ExploreRepository
         $examples = $queryBuilder->getQuery()->getResult();
 
         return $examples;
-    }
-
-    public function countListed(): int
-    {
-        return (int) $this->listedQueryBuilder()
-            ->select('COUNT(e.id)')
-            ->getQuery()
-            ->getSingleScalarResult();
     }
 
     public function countAll(): int
@@ -183,7 +174,7 @@ final class ExploreRepository
     }
 
     /**
-     * The mutators that escaped in the most listed runs: the choices of the mutator filter.
+     * The mutators that escaped in the most runs: the choices of the mutator filter.
      *
      * @return list<string>
      */
@@ -195,7 +186,7 @@ final class ExploreRepository
             ->from(ExampleMutator::class, 'em')
             ->join('em.example', 'e')
             ->where('em.escaped > 0')
-            ->andWhere($this->listedCondition())
+            ->andWhere($this->shownCondition())
             ->groupBy('em.mutator')
             ->orderBy('runs', 'DESC')
             ->addOrderBy('em.mutator', 'ASC')
@@ -206,43 +197,17 @@ final class ExploreRepository
         return $mutators;
     }
 
-    /**
-     * The reported runs waiting for a review: the ones still listed.
-     *
-     * @return list<Example>
-     */
-    public function findReported(?DateTimeImmutable $since = null): array
-    {
-        $queryBuilder = $this->entityManager->createQueryBuilder()
-            ->select('e')
-            ->from(Example::class, 'e')
-            ->where('e.reportedAt IS NOT NULL')
-            ->andWhere('e.isListed = true')
-            ->orderBy('e.reportedAt', 'ASC');
-
-        if ($since !== null) {
-            $queryBuilder
-                ->andWhere('e.reportedAt >= :since')
-                ->setParameter('since', $since);
-        }
-
-        /** @var list<Example> $examples */
-        $examples = $queryBuilder->getQuery()->getResult();
-
-        return $examples;
-    }
-
-    private function listedQueryBuilder(): QueryBuilder
+    private function runsQueryBuilder(): QueryBuilder
     {
         return $this->entityManager->createQueryBuilder()
             ->select('e')
             ->from(Example::class, 'e')
-            ->where($this->listedCondition());
+            ->where($this->shownCondition());
     }
 
-    private function listedCondition(): string
+    private function shownCondition(): string
     {
-        return 'e.isListed = true AND e.reportedAt IS NULL AND e.isDefaultExample = false AND e.mutantsTotal IS NOT NULL AND e.idHash IS NOT NULL';
+        return 'e.isDefaultExample = false AND e.mutantsTotal IS NOT NULL AND e.idHash IS NOT NULL';
     }
 
     private function runsWithMutantsQueryBuilder(): QueryBuilder

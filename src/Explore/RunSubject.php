@@ -44,7 +44,7 @@ use PhpParser\ParserFactory;
 use function sprintf;
 
 /**
- * Names a run that has no title by what it tests: the first class and its first method.
+ * Names a run by what it tests: the first class and its first method.
  */
 final class RunSubject
 {

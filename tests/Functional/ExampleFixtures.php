@@ -66,7 +66,7 @@ trait ExampleFixtures
      * @param array<string, int> $escapedMutators mutator name => escaped mutants
      */
     private static function createExample(
-        ?string $title = null,
+        ?string $class = null,
         int $killed = 4,
         array $escapedMutators = ['Plus' => 1],
         int $timedOut = 0,
@@ -79,13 +79,12 @@ trait ExampleFixtures
         $entityManager = self::entityManager();
 
         $example = new Example(
-            $code ?? '<?php class Run' . uniqid() . ' { public function run(): void {} }',
+            $code ?? '<?php class ' . ($class ?? 'Run' . uniqid()) . ' { public function run(): void {} }',
             $test,
             $config,
             $infectionVersion,
             Runner::CURRENT_PHPUNIT_VERSION,
             Runner::CURRENT_PHP_VERSION,
-            $title,
         );
 
         $entityManager->persist($example);

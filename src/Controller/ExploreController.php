@@ -85,7 +85,7 @@ class ExploreController extends AbstractController
         $escapedMutator = is_string($escaped) && $escaped !== '' && mb_strlen($escaped) <= ExampleMutator::MAX_MUTATOR_LENGTH ? $escaped : null;
 
         // one more than a page tells whether there is a next one
-        $examples = $this->exploreRepository->findListed($ranking, $escapedMutator, ($page - 1) * self::PAGE_SIZE, self::PAGE_SIZE + 1);
+        $examples = $this->exploreRepository->findRuns($ranking, $escapedMutator, ($page - 1) * self::PAGE_SIZE, self::PAGE_SIZE + 1);
 
         return $this->render('explore/index.html.twig', [
             'rankings' => Ranking::cases(),
@@ -97,7 +97,6 @@ class ExploreController extends AbstractController
             'hasNextPage' => count($examples) > self::PAGE_SIZE,
             'totals' => [
                 'runs' => $this->exploreRepository->countAll(),
-                'listed' => $this->exploreRepository->countListed(),
                 'medianMsi' => $this->exploreRepository->median('msi'),
                 'medianMutants' => $this->exploreRepository->median('mutantsTotal'),
             ],
@@ -111,12 +110,9 @@ class ExploreController extends AbstractController
      */
     private function describeRun(Example $example): array
     {
-        $subject = $this->runSubject->describe($example->getCode());
-
         return [
             'idHash' => $example->getIdHash(),
-            'title' => $example->getTitle() ?? $subject ?? 'Untitled run',
-            'subject' => $example->getTitle() !== null ? $subject : null,
+            'title' => $this->runSubject->describe($example->getCode()) ?? 'Untitled run',
             'createdAt' => $example->getCreatedAt(),
             'infectionVersion' => $example->getInfectionVersion(),
             'total' => $example->getMutantsTotal(),

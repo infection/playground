@@ -47,7 +47,6 @@
                 <a class="run-card" href="{{ path('playground_display_example', {exampleIdHash: run.idHash}) }}">
                     <div class="run-name">
                         <h2>{{ run.title }}</h2>
-                        {% if run.subject %}<span class="run-subject">{{ run.subject }}</span>{% endif %}
                     </div>
                     <div class="run-score">
                         <b class="{{ _self.level(run.msi) }}">{{ _self.percent(run.msi) }}</b>
@@ -77,7 +76,7 @@
             {% else %}
                 <div class="run-card run-empty">
                     <h2>No runs here yet</h2>
-                    <p>{% if escapedMutator is not null %}No listed run in this tab has an escaped {{ escapedMutator }}. The leaderboard also counts the unlisted runs made before Explore. Try another tab, or <a href="{{ path('explore_index', {sort: ranking.value}) }}">clear the mutator filter</a>.{% else %}Runs show up here once they are made. <a href="{{ path('playground_index') }}">Make one</a>.{% endif %}</p>
+                    <p>{% if escapedMutator is not null %}No run in this tab has an escaped {{ escapedMutator }}. Try another tab, or <a href="{{ path('explore_index', {sort: ranking.value}) }}">clear the mutator filter</a>.{% else %}Runs show up here once they are made. <a href="{{ path('playground_index') }}">Make one</a>.{% endif %}</p>
                 </div>
             {% endfor %}
 
@@ -95,11 +94,10 @@
                 <h2>All time</h2>
                 <dl class="totals">
                     <div><dt>runs</dt><dd>{{ totals.runs|number_format }}</dd></div>
-                    <div><dt>listed in Explore</dt><dd>{{ totals.listed|number_format }}</dd></div>
                     <div><dt>median MSI</dt><dd {% if totals.medianMsi is not null %}class="{{ _self.level(totals.medianMsi) }}"{% endif %}>{{ totals.medianMsi is not null ? _self.percent(totals.medianMsi) : '–' }}</dd></div>
                     <div><dt>median mutants per run</dt><dd>{{ totals.medianMutants is not null ? totals.medianMutants|round|number_format : '–' }}</dd></div>
                 </dl>
-                <p>Over every run ever made, including the ones from before Explore, which stay unlisted.</p>
+                <p>Over every run ever made.</p>
             </section>
 
             <section class="panel">
@@ -121,8 +119,6 @@
                 {% endif %}
                 <p>The share of each mutator's mutants that escaped, over every run ever made. Only counts, no code.</p>
             </section>
-
-            <p class="explore-note">Every run is public and listed here. A run can be reported from its page, which hides it from Explore until it is reviewed.</p>
         </aside>
     </main>
 {% endblock %}

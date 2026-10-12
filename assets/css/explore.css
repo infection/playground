@@ -138,22 +138,17 @@ a.run-card:hover {
     min-width: 0;
 }
 
+/* a run is named after the class and method it tests */
+.run-name h2 {
+    font-family: var(--font-mono);
+}
+
 .run-name h2,
 .run-empty h2 {
     margin: 0;
     font-size: 15px;
     font-weight: 600;
     overflow-wrap: anywhere;
-}
-
-.run-subject {
-    display: block;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    color: var(--muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .run-score {
@@ -240,8 +235,7 @@ a.run-card:hover {
     color: var(--fg-2);
 }
 
-.run-empty a,
-.explore-note a {
+.run-empty a {
     color: var(--brand);
     text-decoration: underline;
 }
@@ -284,8 +278,7 @@ a.run-card:hover {
     color: var(--muted);
 }
 
-.panel p,
-.explore-note {
+.panel p {
     margin: 0;
     font-size: 12px;
     color: var(--muted);
@@ -301,6 +294,11 @@ a.run-card:hover {
 .totals div {
     display: flex;
     flex-direction: column-reverse;
+}
+
+/* the runs on their own row, the two medians side by side */
+.totals div:first-child {
+    grid-column: 1 / -1;
 }
 
 .totals dt {

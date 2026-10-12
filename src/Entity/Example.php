@@ -43,12 +43,11 @@ use function md5;
 
 #[ORM\Entity]
 #[ORM\HasLifecycleCallbacks]
-#[ORM\Index(name: 'idx_example_listed_created_at', columns: ['is_listed', 'created_at'])]
-#[ORM\Index(name: 'idx_example_listed_msi', columns: ['is_listed', 'msi'])]
-#[ORM\Index(name: 'idx_example_listed_mutants_total', columns: ['is_listed', 'mutants_total'])]
+#[ORM\Index(name: 'idx_example_created_at', columns: ['created_at'])]
+#[ORM\Index(name: 'idx_example_msi', columns: ['msi'])]
+#[ORM\Index(name: 'idx_example_mutants_total', columns: ['mutants_total'])]
 class Example
 {
-    public const MAX_TITLE_LENGTH = 80;
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
@@ -88,13 +87,6 @@ class Example
     #[ORM\Column(type: 'string', length: 12, options: ['default' => '8.1.3'])]
     private string $phpVersion;
 
-    #[ORM\Column(type: 'string', length: self::MAX_TITLE_LENGTH, nullable: true)]
-    private ?string $title = null;
-
-    // runs created before Explore were shared as unlisted links: only the new ones are listed
-    #[ORM\Column(type: 'boolean', options: ['default' => false])]
-    private bool $isListed = false;
-
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
     private bool $isDefaultExample = false;
 
@@ -123,11 +115,7 @@ class Example
     #[ORM\Column(type: 'float', nullable: true)]
     private ?float $coveredMsi = null;
 
-    // hidden from Explore while set, the link keeps working
-    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
-    private ?DateTimeImmutable $reportedAt = null;
-
-    public function __construct(string $code, string $test, string $config, string $infectionVersion, string $phpunitVersion, string $phpVersion, ?string $title = null)
+    public function __construct(string $code, string $test, string $config, string $infectionVersion, string $phpunitVersion, string $phpVersion)
     {
         $this->code = $code;
         $this->test = $test;
@@ -135,8 +123,6 @@ class Example
         $this->infectionVersion = $infectionVersion;
         $this->phpunitVersion = $phpunitVersion;
         $this->phpVersion = $phpVersion;
-        $this->title = $title;
-        $this->isListed = true;
         $this->inputHash = self::hashInput($code, $test, $config, $infectionVersion, $phpunitVersion, $phpVersion);
     }
 
@@ -226,30 +212,6 @@ class Example
         return $this->phpVersion;
     }
 
-    public function getTitle(): ?string
-    {
-        return $this->title;
-    }
-
-    /**
-     * Runs the same input again lists it, even when it was an unlisted link made before Explore:
-     * whoever submits it now was told that runs are public. Its title stays: it is the one of whoever made it.
-     */
-    public function list(): void
-    {
-        $this->isListed = true;
-    }
-
-    public function isListed(): bool
-    {
-        return $this->isListed;
-    }
-
-    public function unlist(): void
-    {
-        $this->isListed = false;
-    }
-
     public function isDefaultExample(): bool
     {
         return $this->isDefaultExample;
@@ -306,20 +268,5 @@ class Example
     public function getCoveredMsi(): ?float
     {
         return $this->coveredMsi;
-    }
-
-    public function getReportedAt(): ?DateTimeImmutable
-    {
-        return $this->reportedAt;
-    }
-
-    public function report(): void
-    {
-        $this->reportedAt ??= new DateTimeImmutable();
-    }
-
-    public function clearReport(): void
-    {
-        $this->reportedAt = null;
     }
 }

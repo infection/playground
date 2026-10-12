@@ -35,13 +35,14 @@ declare(strict_types=1);
 
 namespace App\Tests\Functional\Controller;
 
-use App\Entity\Example;
 use App\Explore\DefaultExample;
 use App\Tests\Functional\ExampleFixtures;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
+use function str_replace;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DomCrawler\Crawler;
 
 final class ExploreControllerTest extends WebTestCase
 {
@@ -59,13 +60,13 @@ final class ExploreControllerTest extends WebTestCase
 
     public function test_it_lists_the_latest_runs_with_their_numbers(): void
     {
-        self::createExample('Older run');
-        self::createExample('Boundaries of a discount', killed: 3, escapedMutators: ['GreaterThan' => 1], config: '{"mutators": {"@default": true, "TrueValue": false}}');
+        self::createExample('OlderRun');
+        self::createExample('BoundariesOfADiscount', killed: 3, escapedMutators: ['GreaterThan' => 1], config: '{"mutators": {"@default": true, "TrueValue": false}}');
 
         $crawler = $this->client->request('GET', '/explore');
 
         self::assertResponseIsSuccessful();
-        self::assertSame(['Boundaries of a discount', 'Older run'], $crawler->filter('.run-card h2')->each(static fn ($node): string => $node->text()));
+        self::assertSame(['BoundariesOfADiscount', 'OlderRun'], self::runNames($crawler));
 
         $card = $crawler->filter('.run-card')->first();
         self::assertStringContainsString('4 mutants', $card->text());
@@ -77,30 +78,26 @@ final class ExploreControllerTest extends WebTestCase
         self::assertSame('Latest', $crawler->filter('.explore-tabs [aria-current="page"]')->text());
     }
 
-    public function test_it_names_a_run_without_a_title_after_its_class_and_method(): void
+    public function test_it_names_a_run_after_its_class_and_method(): void
     {
         self::createExample(code: '<?php class Slugger { public function slugify(): string { return ""; } }');
 
         $crawler = $this->client->request('GET', '/explore');
 
         self::assertSame('Slugger::slugify()', $crawler->filter('.run-card h2')->text());
-        self::assertCount(0, $crawler->filter('.run-subject'));
     }
 
-    public function test_it_leaves_out_the_runs_that_are_not_listed(): void
+    public function test_it_leaves_out_the_default_example_and_the_runs_without_mutants(): void
     {
-        self::createExample('Listed');
-        self::createExample('Reported')->report();
-        self::createExample('Old unlisted link')->unlist();
-        self::createExample('Without mutants', withLog: false);
-        self::createExample('Default example', config: DefaultExample::CONFIG, code: DefaultExample::CODE, test: DefaultExample::TEST);
+        self::createExample('Shown');
+        self::createExample('WithoutMutants', withLog: false);
+        self::createExample('DefaultExample', config: DefaultExample::CONFIG, code: DefaultExample::CODE, test: DefaultExample::TEST);
         self::entityManager()->flush();
 
         $crawler = $this->client->request('GET', '/explore');
 
-        self::assertSame(['Listed'], $crawler->filter('.run-card h2')->each(static fn ($node): string => $node->text()));
-        self::assertSame('5', $crawler->filter('.totals div')->eq(0)->filter('dd')->text());
-        self::assertSame('1', $crawler->filter('.totals div')->eq(1)->filter('dd')->text());
+        self::assertSame(['Shown'], self::runNames($crawler));
+        self::assertSame('3', $crawler->filter('.totals div')->eq(0)->filter('dd')->text());
     }
 
     /**
@@ -109,43 +106,43 @@ final class ExploreControllerTest extends WebTestCase
     #[DataProvider('provideRankings')]
     public function test_it_ranks_the_runs(string $sort, array $expected): void
     {
-        self::createExample('Few mutants, all killed', killed: 4, escapedMutators: []);
-        self::createExample('All killed', killed: 6, escapedMutators: []);
-        self::createExample('Many survivors', killed: 2, escapedMutators: ['Plus' => 5]);
-        self::createExample('Some survivors', killed: 10, escapedMutators: ['Plus' => 2]);
-        self::createExample('Custom config', killed: 1, escapedMutators: [], config: '{"mutators": {"@default": true, "Plus": false}}');
-        self::createExample('Old version', killed: 30, escapedMutators: [], infectionVersion: '0.20.0');
+        self::createExample('FewMutantsAllKilled', killed: 4, escapedMutators: []);
+        self::createExample('AllKilled', killed: 6, escapedMutators: []);
+        self::createExample('ManySurvivors', killed: 2, escapedMutators: ['Plus' => 5]);
+        self::createExample('SomeSurvivors', killed: 10, escapedMutators: ['Plus' => 2]);
+        self::createExample('CustomConfig', killed: 1, escapedMutators: [], config: '{"mutators": {"@default": true, "Plus": false}}');
+        self::createExample('OldVersion', killed: 30, escapedMutators: [], infectionVersion: '0.20.0');
 
         $crawler = $this->client->request('GET', '/explore?sort=' . $sort);
 
         self::assertResponseIsSuccessful();
-        self::assertSame($expected, $crawler->filter('.run-card h2')->each(static fn ($node): string => $node->text()));
+        self::assertSame($expected, self::runNames($crawler));
     }
 
     public static function provideRankings(): Generator
     {
-        yield 'perfect score: at least 5 mutants' => ['perfect', ['Old version', 'All killed']];
+        yield 'perfect score: at least 5 mutants' => ['perfect', ['OldVersion', 'AllKilled']];
 
-        yield 'most mutants' => ['mutants', ['Old version', 'Some survivors', 'Many survivors', 'All killed', 'Few mutants, all killed', 'Custom config']];
+        yield 'most mutants' => ['mutants', ['OldVersion', 'SomeSurvivors', 'ManySurvivors', 'AllKilled', 'FewMutantsAllKilled', 'CustomConfig']];
 
-        yield 'most survivors' => ['survivors', ['Many survivors', 'Some survivors']];
+        yield 'most survivors' => ['survivors', ['ManySurvivors', 'SomeSurvivors']];
 
-        yield 'custom config' => ['config', ['Custom config']];
+        yield 'custom config' => ['config', ['CustomConfig']];
 
-        yield 'latest version' => ['version', ['Custom config', 'Some survivors', 'Many survivors', 'All killed', 'Few mutants, all killed']];
+        yield 'latest version' => ['version', ['CustomConfig', 'SomeSurvivors', 'ManySurvivors', 'AllKilled', 'FewMutantsAllKilled']];
 
-        yield 'unknown falls back to latest' => ['unknown', ['Old version', 'Custom config', 'Some survivors', 'Many survivors', 'All killed', 'Few mutants, all killed']];
+        yield 'unknown falls back to latest' => ['unknown', ['OldVersion', 'CustomConfig', 'SomeSurvivors', 'ManySurvivors', 'AllKilled', 'FewMutantsAllKilled']];
     }
 
     public function test_it_filters_by_escaped_mutator(): void
     {
-        self::createExample('LogicalAnd escaped', escapedMutators: ['LogicalAnd' => 1, 'Plus' => 1]);
-        self::createExample('Plus escaped', escapedMutators: ['Plus' => 2]);
-        self::createExample('Nothing escaped', escapedMutators: []);
+        self::createExample('LogicalAndEscaped', escapedMutators: ['LogicalAnd' => 1, 'Plus' => 1]);
+        self::createExample('PlusEscaped', escapedMutators: ['Plus' => 2]);
+        self::createExample('NothingEscaped', escapedMutators: []);
 
         $crawler = $this->client->request('GET', '/explore?sort=mutants&escaped=LogicalAnd');
 
-        self::assertSame(['LogicalAnd escaped'], $crawler->filter('.run-card h2')->each(static fn ($node): string => $node->text()));
+        self::assertSame(['LogicalAndEscaped'], self::runNames($crawler));
         self::assertSame('LogicalAnd', $crawler->filter('.explore-head .chip[aria-pressed="true"]')->text());
         // the chips follow the number of runs a mutator escaped in
         self::assertSame(['Plus', 'LogicalAnd'], $crawler->filter('.explore-head .chip')->each(static fn ($node): string => $node->text()));
@@ -168,7 +165,7 @@ final class ExploreControllerTest extends WebTestCase
     public function test_it_pages_the_runs(): void
     {
         for ($i = 1; $i <= 21; ++$i) {
-            self::createExample('Run ' . $i);
+            self::createExample('Run' . $i);
         }
 
         $crawler = $this->client->request('GET', '/explore');
@@ -178,30 +175,30 @@ final class ExploreControllerTest extends WebTestCase
 
         $crawler = $this->client->request('GET', '/explore?page=2');
 
-        self::assertSame(['Run 1'], $crawler->filter('.run-card h2')->each(static fn ($node): string => $node->text()));
+        self::assertSame(['Run1'], self::runNames($crawler));
         self::assertSame('Previous page', $crawler->filter('.pager a')->text());
     }
 
     public function test_a_perfect_score_has_no_timeout(): void
     {
-        self::createExample('Killed or timed out', killed: 5, escapedMutators: [], timedOut: 1);
-        self::createExample('All killed', killed: 6, escapedMutators: []);
+        self::createExample('KilledOrTimedOut', killed: 5, escapedMutators: [], timedOut: 1);
+        self::createExample('AllKilled', killed: 6, escapedMutators: []);
 
         $crawler = $this->client->request('GET', '/explore?sort=perfect');
 
-        self::assertSame(['All killed'], $crawler->filter('.run-card h2')->each(static fn ($node): string => $node->text()));
+        self::assertSame(['AllKilled'], self::runNames($crawler));
     }
 
     public function test_it_rounds_the_scores_down(): void
     {
-        self::createExample('Almost perfect', killed: 2499, escapedMutators: ['Plus' => 1]);
-        self::createExample('Two thirds', killed: 2, escapedMutators: ['Plus' => 1]);
+        self::createExample('AlmostPerfect', killed: 2499, escapedMutators: ['Plus' => 1]);
+        self::createExample('TwoThirds', killed: 2, escapedMutators: ['Plus' => 1]);
         self::createExample('Half', killed: 1, escapedMutators: ['Plus' => 1]);
 
         $crawler = $this->client->request('GET', '/explore');
 
         self::assertSame(['50%', '66.6%', '99.9%'], $crawler->filter('.run-score b')->each(static fn ($node): string => $node->text()));
-        self::assertSame('66.6%', $crawler->filter('.totals dd')->eq(2)->text());
+        self::assertSame('66.6%', $crawler->filter('.totals dd')->eq(1)->text());
     }
 
     public function test_it_says_when_no_run_matches(): void
@@ -210,101 +207,15 @@ final class ExploreControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('No runs here yet', $crawler->filter('.run-empty')->text());
-        self::assertStringContainsString('No listed run in this tab has an escaped LogicalAnd. The leaderboard also counts the unlisted runs made before Explore.', $crawler->filter('.run-empty')->text());
+        self::assertStringContainsString('No run in this tab has an escaped LogicalAnd. Try another tab', $crawler->filter('.run-empty')->text());
         self::assertSame('Not enough runs yet.', $crawler->filter('.panel p')->eq(1)->text());
     }
 
-    public function test_a_report_hides_a_run_from_explore(): void
+    /**
+     * @return list<string> the names of the runs, without the method of their fixture class
+     */
+    private static function runNames(Crawler $crawler): array
     {
-        $example = self::createExample('To report');
-
-        $crawler = $this->client->request('GET', '/r/' . $example->getIdHash());
-        self::assertCount(1, $crawler->filter('form[action$="/report"]'));
-        self::assertSame('Report this run? It is hidden from Explore until it is reviewed.', $crawler->filter('#report-form')->attr('data-confirm'));
-
-        $this->client->submit($crawler->filter('form[action$="/report"]')->form());
-        self::assertResponseRedirects('/r/' . $example->getIdHash());
-
-        $crawler = $this->client->followRedirect();
-        self::assertSame('Reported', $crawler->filter('.reported')->text());
-        self::assertCount(0, $crawler->filter('form[action$="/report"]'));
-
-        $crawler = $this->client->request('GET', '/explore');
-        self::assertCount(0, $crawler->filter('a.run-card'));
-    }
-
-    public function test_a_visitor_can_report_10_runs_an_hour(): void
-    {
-        $example = self::createExample();
-        // one kernel, so the reports are counted in the same cache
-        $this->client->disableReboot();
-
-        for ($i = 1; $i <= 10; ++$i) {
-            $this->client->request('POST', '/r/' . $example->getIdHash() . '/report');
-            self::assertResponseRedirects();
-        }
-
-        $this->client->catchExceptions(true);
-        $this->client->request('POST', '/r/' . $example->getIdHash() . '/report');
-
-        self::assertResponseStatusCodeSame(429);
-        self::assertTrue($this->client->getResponse()->headers->has('Retry-After'));
-    }
-
-    public function test_an_unlisted_run_has_no_report_button(): void
-    {
-        $example = self::createExample();
-        $example->unlist();
-        self::entityManager()->flush();
-
-        $crawler = $this->client->request('GET', '/r/' . $example->getIdHash());
-
-        self::assertCount(0, $crawler->filter('form[action$="/report"]'));
-        self::assertCount(0, $crawler->filter('.reported'));
-    }
-
-    public function test_it_cannot_report_a_run_that_does_not_exist(): void
-    {
-        $this->client->catchExceptions(true);
-
-        $this->client->request('POST', '/r/zzzzzzzz/report');
-
-        self::assertResponseStatusCodeSame(404);
-    }
-
-    public function test_a_run_shows_its_title_read_only(): void
-    {
-        $example = self::createExample('Boundaries of a discount');
-
-        $input = $this->client->request('GET', '/r/' . $example->getIdHash())->filter('#create_example_title');
-
-        self::assertSame('Boundaries of a discount', $input->attr('value'));
-        self::assertSame('readonly', $input->attr('readonly'));
-        self::assertNull($this->client->request('GET', '/')->filter('#create_example_title')->attr('readonly'));
-    }
-
-    public function test_a_new_run_of_an_unlisted_input_lists_it_and_keeps_its_title(): void
-    {
-        $example = self::createExample();
-        $example->unlist();
-        self::entityManager()->flush();
-
-        $this->client->request('GET', '/');
-        $this->client->submitForm('create_example[mutate]', [
-            'create_example[code]' => $example->getCode(),
-            'create_example[test]' => $example->getTest(),
-            'create_example[config]' => $example->getConfig(),
-            'create_example[title]' => '  Listed again  ',
-        ]);
-
-        self::assertResponseRedirects('/r/' . $example->getIdHash());
-
-        self::entityManager()->clear();
-        $reloaded = self::entityManager()->find(Example::class, $example->getId());
-
-        self::assertInstanceOf(Example::class, $reloaded);
-        self::assertTrue($reloaded->isListed());
-        // even without one: whoever runs the same input cannot title someone else's run
-        self::assertNull($reloaded->getTitle());
+        return $crawler->filter('.run-card h2')->each(static fn (Crawler $node): string => str_replace('::run()', '', $node->text()));
     }
 }
