@@ -75,10 +75,10 @@ dumps the production database to the git-ignored `backups/` directory. Nothing b
 finishes. The runs made before Explore get their numbers once, after the deploy that adds it:
 
 ```bash
-bin/console app:example:backfill-stats
+deploy/console.sh app:example:backfill-stats
 ```
 
-Run it in the `php` container of the droplet.
+`deploy/console.sh` runs any console command in the `php` container of the droplet.
 
 #### Server requirements
 
