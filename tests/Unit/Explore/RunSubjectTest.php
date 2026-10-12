@@ -60,17 +60,17 @@ final class RunSubjectTest extends TestCase
             'Price::total()',
         ];
 
-        // yield 'first class without methods' => [
-        //     '<?php class Empty_ {} class Other { public function run(): void {} }',
-        //     'Empty_',
-        // ];
+        yield 'first class without methods' => [
+            '<?php class Empty_ {} class Other { public function run(): void {} }',
+            'Empty_',
+        ];
 
-        // yield 'enum' => ['<?php enum Suit { case Hearts; }', 'Suit'];
+        yield 'enum' => ['<?php enum Suit { case Hearts; }', 'Suit'];
 
-        // yield 'anonymous class only' => ['<?php $a = new class { public function run(): void {} };', null];
+        yield 'anonymous class only' => ['<?php $a = new class { public function run(): void {} };', null];
 
-        // yield 'no class' => ['<?php function add(): int { return 1; }', null];
+        yield 'no class' => ['<?php function add(): int { return 1; }', null];
 
-        // yield 'invalid code' => ['<?php class {', null];
+        yield 'invalid code' => ['<?php class {', null];
     }
 }
