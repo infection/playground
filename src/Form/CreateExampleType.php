@@ -35,12 +35,10 @@ declare(strict_types=1);
 
 namespace App\Form;
 
-use App\Entity\Example;
 use App\Request\CreateExampleRequest;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -63,10 +61,6 @@ class CreateExampleType extends AbstractType
             ->add('code', TextareaType::class)
             ->add('test', TextareaType::class)
             ->add('config', TextareaType::class)
-            ->add('title', TextType::class, [
-                'required' => false,
-                'attr' => ['maxlength' => Example::MAX_TITLE_LENGTH],
-            ])
             ->add('mutate', SubmitType::class, ['label' => 'Mutate']);
     }
 
