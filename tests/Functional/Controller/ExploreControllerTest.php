@@ -143,11 +143,51 @@ final class ExploreControllerTest extends WebTestCase
         $crawler = $this->client->request('GET', '/explore?sort=mutants&escaped=LogicalAnd');
 
         self::assertSame(['LogicalAndEscaped'], self::runNames($crawler));
-        self::assertSame('LogicalAnd', $crawler->filter('.explore-head .chip[aria-pressed="true"]')->text());
-        // the chips follow the number of runs a mutator escaped in
-        self::assertSame(['Plus', 'LogicalAnd'], $crawler->filter('.explore-head .chip')->each(static fn ($node): string => $node->text()));
-        self::assertSame('/explore?sort=mutants', $crawler->filter('.explore-head .chip[aria-pressed="true"]')->attr('href'));
+        self::assertSame('LogicalAnd (1 run)', $crawler->filter('#escaped-mutator option[selected]')->text());
         self::assertSame('/explore?sort=mutants&escaped=LogicalAnd', $crawler->filter('.explore-tab')->eq(2)->attr('href'));
+    }
+
+    public function test_it_lists_every_escaped_mutator_by_name(): void
+    {
+        foreach (['Plus', 'Minus', 'Zeta', 'Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Eta', 'Theta', 'Iota'] as $mutator) {
+            self::createExample(escapedMutators: [$mutator => 1]);
+        }
+
+        self::createExample(escapedMutators: ['Zeta' => 1, 'Plus' => 2]);
+        self::createExample(escapedMutators: ['Zeta' => 1]);
+
+        $crawler = $this->client->request('GET', '/explore?sort=mutants');
+
+        $form = $crawler->filter('form.mutator-filter');
+        self::assertSame('/explore', $form->attr('action'));
+        self::assertSame('mutants', $form->filter('input[name="sort"]')->attr('value'));
+        self::assertSame(
+            ['All mutators', 'Alpha (1 run)', 'Beta (1 run)', 'Delta (1 run)', 'Epsilon (1 run)', 'Eta (1 run)', 'Gamma (1 run)', 'Iota (1 run)', 'Minus (1 run)', 'Plus (2 runs)', 'Theta (1 run)', 'Zeta (3 runs)'],
+            $form->filter('select[name="escaped"] option')->each(static fn (Crawler $node): string => $node->text()),
+        );
+        self::assertSame('', $form->filter('option')->first()->attr('value'));
+        self::assertSame('Zeta', $form->filter('option')->last()->attr('value'));
+        self::assertCount(0, $form->filter('option[selected]'));
+    }
+
+    public function test_it_keeps_a_filter_by_a_mutator_that_never_escaped(): void
+    {
+        self::createExample(escapedMutators: ['Plus' => 1]);
+
+        $crawler = $this->client->request('GET', '/explore?escaped=Unknown');
+
+        self::assertSame(['All mutators', 'Unknown (0 runs)', 'Plus (1 run)'], $crawler->filter('#escaped-mutator option')->each(static fn (Crawler $node): string => $node->text()));
+        self::assertSame('Unknown', $crawler->filter('#escaped-mutator option[selected]')->attr('value'));
+    }
+
+    public function test_it_has_no_mutator_to_filter_by_before_one_escapes(): void
+    {
+        self::createExample(escapedMutators: []);
+
+        $crawler = $this->client->request('GET', '/explore');
+
+        self::assertCount(0, $crawler->filter('#escaped-mutator'));
+        self::assertSame('none yet', $crawler->filter('.mutator-filter .filters-empty')->text());
     }
 
     public function test_it_ranks_the_mutators_that_escape_most(): void

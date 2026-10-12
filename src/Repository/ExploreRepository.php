@@ -174,25 +174,28 @@ final class ExploreRepository
     }
 
     /**
-     * The mutators that escaped in the most runs: the choices of the mutator filter.
+     * The mutators that escaped in the runs of Explore: the choices of the mutator filter.
      *
-     * @return list<string>
+     * @return array<string, int> mutator => the runs it escaped in
      */
-    public function findFilterMutators(int $limit): array
+    public function findEscapedMutators(): array
     {
-        /** @var list<string> $mutators */
-        $mutators = $this->entityManager->createQueryBuilder()
-            ->select('em.mutator', 'COUNT(em.id) AS HIDDEN runs')
+        /** @var list<array{mutator: string, runs: int|string}> $rows */
+        $rows = $this->entityManager->createQueryBuilder()
+            ->select('em.mutator AS mutator', 'COUNT(em.id) AS runs')
             ->from(ExampleMutator::class, 'em')
             ->join('em.example', 'e')
             ->where('em.escaped > 0')
             ->andWhere($this->shownCondition())
             ->groupBy('em.mutator')
-            ->orderBy('runs', 'DESC')
-            ->addOrderBy('em.mutator', 'ASC')
-            ->setMaxResults($limit)
             ->getQuery()
-            ->getSingleColumnResult();
+            ->getArrayResult();
+
+        $mutators = [];
+
+        foreach ($rows as $row) {
+            $mutators[$row['mutator']] = (int) $row['runs'];
+        }
 
         return $mutators;
     }
