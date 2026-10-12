@@ -37,30 +37,35 @@
     color: var(--fg-2);
 }
 
-.explore-head .filters {
-    max-width: 560px;
-}
-
-.filters-label,
+.mutator-filter label,
 .filters-empty {
     font-size: 12.5px;
     color: var(--muted);
 }
 
-.explore-head .chip {
+.mutator-filter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.mutator-filter select {
+    height: 30px;
+    min-width: 0;
+    max-width: 280px;
+    padding: 0 8px;
+    border: 1px solid var(--line);
+    border-radius: 99px;
+    background: var(--surface);
+    color: var(--fg-2);
     font-family: var(--font-mono);
     font-size: 12px;
-    color: var(--fg-2);
+    cursor: pointer;
 }
 
-.explore-head .chip[aria-pressed="true"] {
-    border-color: var(--brand);
-    background: color-mix(in oklab, var(--brand) 12%, transparent);
-    color: var(--fg);
-}
-
-.explore-head .chip[aria-pressed="false"] {
-    border-style: solid;
+.mutator-filter select:hover {
+    border-color: var(--line-strong);
 }
 
 .explore-tabs {

@@ -17,15 +17,24 @@
                 <h1>Explore runs</h1>
                 <p>Runs made on the playground. Open one to see its code, its test and every mutant.</p>
             </div>
-            <div class="filters" role="group" aria-label="Filter by escaped mutator">
-                <span class="filters-label">Escaped mutator:</span>
-                {% for mutator in filterMutators|merge(escapedMutator is not null and escapedMutator not in filterMutators ? [escapedMutator] : []) %}
-                    {% set active = mutator == escapedMutator %}
-                    <a class="chip" href="{{ path('explore_index', {sort: ranking.value}|merge(active ? {} : {escaped: mutator})) }}" aria-pressed="{{ active ? 'true' : 'false' }}">{{ mutator }}</a>
-                {% else %}
+            {# explore.js applies the choice right away #}
+            <form class="mutator-filter" method="get" action="{{ path('explore_index') }}">
+                <input type="hidden" name="sort" value="{{ ranking.value }}">
+                <label for="escaped-mutator">Escaped mutator</label>
+                {% if escapedMutators is empty and escapedMutator is null %}
                     <span class="filters-empty">none yet</span>
-                {% endfor %}
-            </div>
+                {% else %}
+                    <select id="escaped-mutator" name="escaped" data-autosubmit>
+                        <option value="">All mutators</option>
+                        {% if escapedMutator is not null and escapedMutators[escapedMutator] is not defined %}
+                            <option value="{{ escapedMutator }}" selected>{{ escapedMutator }} (0 runs)</option>
+                        {% endif %}
+                        {% for mutator, runs in escapedMutators %}
+                            <option value="{{ mutator }}" {% if mutator == escapedMutator %}selected{% endif %}>{{ mutator }} ({{ runs }} {{ runs == 1 ? 'run' : 'runs' }})</option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
+            </form>
         </div>
 
         <nav class="explore-tabs" aria-label="Ranking">
