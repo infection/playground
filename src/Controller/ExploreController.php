@@ -46,6 +46,7 @@ use function array_map;
 use function array_slice;
 use function count;
 use function is_string;
+use function ksort;
 use function max;
 use function mb_strlen;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -59,8 +60,6 @@ use Symfony\Component\Routing\Attribute\Route;
 class ExploreController extends AbstractController
 {
     private const PAGE_SIZE = 20;
-
-    private const FILTER_MUTATORS = 8;
 
     private const LEADERBOARD_SIZE = 6;
 
@@ -84,6 +83,10 @@ class ExploreController extends AbstractController
         $escaped = $request->query->get('escaped');
         $escapedMutator = is_string($escaped) && $escaped !== '' && mb_strlen($escaped) <= ExampleMutator::MAX_MUTATOR_LENGTH ? $escaped : null;
 
+        // by name: there can be a hundred of them
+        $escapedMutators = $this->exploreRepository->findEscapedMutators();
+        ksort($escapedMutators);
+
         // one more than a page tells whether there is a next one
         $examples = $this->exploreRepository->findRuns($ranking, $escapedMutator, ($page - 1) * self::PAGE_SIZE, self::PAGE_SIZE + 1);
 
@@ -91,7 +94,7 @@ class ExploreController extends AbstractController
             'rankings' => Ranking::cases(),
             'ranking' => $ranking,
             'escapedMutator' => $escapedMutator,
-            'filterMutators' => $this->exploreRepository->findFilterMutators(self::FILTER_MUTATORS),
+            'escapedMutators' => $escapedMutators,
             'runs' => array_map($this->describeRun(...), array_slice($examples, 0, self::PAGE_SIZE)),
             'page' => $page,
             'hasNextPage' => count($examples) > self::PAGE_SIZE,
