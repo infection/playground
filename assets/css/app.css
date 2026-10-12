@@ -199,11 +199,15 @@ kbd {
     text-overflow: ellipsis;
 }
 
-.run-title input:hover {
+.run-title input:hover:not([readonly]) {
     border-color: var(--line);
 }
 
-.run-title input:focus {
+.run-title input[readonly] {
+    cursor: default;
+}
+
+.run-title input:focus:not([readonly]) {
     border-color: var(--line-strong);
     background: var(--surface-2);
 }

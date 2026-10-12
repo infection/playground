@@ -179,7 +179,29 @@ final class ExploreControllerTest extends WebTestCase
         $crawler = $this->client->request('GET', '/explore?page=2');
 
         self::assertSame(['Run 1'], $crawler->filter('.run-card h2')->each(static fn ($node): string => $node->text()));
-        self::assertSame('Newer page', $crawler->filter('.pager a')->text());
+        self::assertSame('Previous page', $crawler->filter('.pager a')->text());
+    }
+
+    public function test_a_perfect_score_has_no_timeout(): void
+    {
+        self::createExample('Killed or timed out', killed: 5, escapedMutators: [], timedOut: 1);
+        self::createExample('All killed', killed: 6, escapedMutators: []);
+
+        $crawler = $this->client->request('GET', '/explore?sort=perfect');
+
+        self::assertSame(['All killed'], $crawler->filter('.run-card h2')->each(static fn ($node): string => $node->text()));
+    }
+
+    public function test_it_rounds_the_scores_down(): void
+    {
+        self::createExample('Almost perfect', killed: 2499, escapedMutators: ['Plus' => 1]);
+        self::createExample('Two thirds', killed: 2, escapedMutators: ['Plus' => 1]);
+        self::createExample('Half', killed: 1, escapedMutators: ['Plus' => 1]);
+
+        $crawler = $this->client->request('GET', '/explore');
+
+        self::assertSame(['50%', '66.6%', '99.9%'], $crawler->filter('.run-score b')->each(static fn ($node): string => $node->text()));
+        self::assertSame('66.6%', $crawler->filter('.totals dd')->eq(2)->text());
     }
 
     public function test_it_says_when_no_run_matches(): void
@@ -188,6 +210,7 @@ final class ExploreControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertStringContainsString('No runs here yet', $crawler->filter('.run-empty')->text());
+        self::assertStringContainsString('No listed run in this tab has an escaped LogicalAnd. The leaderboard also counts the unlisted runs made before Explore.', $crawler->filter('.run-empty')->text());
         self::assertSame('Not enough runs yet.', $crawler->filter('.panel p')->eq(1)->text());
     }
 
@@ -197,6 +220,7 @@ final class ExploreControllerTest extends WebTestCase
 
         $crawler = $this->client->request('GET', '/r/' . $example->getIdHash());
         self::assertCount(1, $crawler->filter('form[action$="/report"]'));
+        self::assertSame('Report this run? It is hidden from Explore until it is reviewed.', $crawler->filter('#report-form')->attr('data-confirm'));
 
         $this->client->submit($crawler->filter('form[action$="/report"]')->form());
         self::assertResponseRedirects('/r/' . $example->getIdHash());
@@ -207,6 +231,24 @@ final class ExploreControllerTest extends WebTestCase
 
         $crawler = $this->client->request('GET', '/explore');
         self::assertCount(0, $crawler->filter('a.run-card'));
+    }
+
+    public function test_a_visitor_can_report_10_runs_an_hour(): void
+    {
+        $example = self::createExample();
+        // one kernel, so the reports are counted in the same cache
+        $this->client->disableReboot();
+
+        for ($i = 1; $i <= 10; ++$i) {
+            $this->client->request('POST', '/r/' . $example->getIdHash() . '/report');
+            self::assertResponseRedirects();
+        }
+
+        $this->client->catchExceptions(true);
+        $this->client->request('POST', '/r/' . $example->getIdHash() . '/report');
+
+        self::assertResponseStatusCodeSame(429);
+        self::assertTrue($this->client->getResponse()->headers->has('Retry-After'));
     }
 
     public function test_an_unlisted_run_has_no_report_button(): void
@@ -230,7 +272,18 @@ final class ExploreControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(404);
     }
 
-    public function test_a_new_run_of_an_unlisted_input_lists_it(): void
+    public function test_a_run_shows_its_title_read_only(): void
+    {
+        $example = self::createExample('Boundaries of a discount');
+
+        $input = $this->client->request('GET', '/r/' . $example->getIdHash())->filter('#create_example_title');
+
+        self::assertSame('Boundaries of a discount', $input->attr('value'));
+        self::assertSame('readonly', $input->attr('readonly'));
+        self::assertNull($this->client->request('GET', '/')->filter('#create_example_title')->attr('readonly'));
+    }
+
+    public function test_a_new_run_of_an_unlisted_input_lists_it_and_keeps_its_title(): void
     {
         $example = self::createExample();
         $example->unlist();
@@ -251,6 +304,7 @@ final class ExploreControllerTest extends WebTestCase
 
         self::assertInstanceOf(Example::class, $reloaded);
         self::assertTrue($reloaded->isListed());
-        self::assertSame('Listed again', $reloaded->getTitle());
+        // even without one: whoever runs the same input cannot title someone else's run
+        self::assertNull($reloaded->getTitle());
     }
 }

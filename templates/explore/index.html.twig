@@ -6,7 +6,8 @@
 
 {% macro level(score) %}{{ score < 50 ? 'level-low' : (score < 90 ? 'level-medium' : 'level-high') }}{% endmacro %}
 
-{% macro percent(score) %}{{ score == score|round(0, 'floor') ? score|number_format(0) : score|number_format(1) }}%{% endmacro %}
+{# rounded down to a tenth: 99.96 is not a perfect score #}
+{% macro percent(score) %}{% set tenths = (score * 10 + 0.000001)|round(0, 'floor') %}{{ tenths % 10 == 0 ? (tenths / 10)|number_format(0) : (tenths / 10)|number_format(1) }}%{% endmacro %}
 
 {% block body %}
     {% set escapedQuery = escapedMutator is not null ? {escaped: escapedMutator} : {} %}
@@ -76,13 +77,13 @@
             {% else %}
                 <div class="run-card run-empty">
                     <h2>No runs here yet</h2>
-                    <p>{% if escapedMutator is not null %}Try another tab, or <a href="{{ path('explore_index', {sort: ranking.value}) }}">clear the mutator filter</a>.{% else %}Runs show up here once they are made. <a href="{{ path('playground_index') }}">Make one</a>.{% endif %}</p>
+                    <p>{% if escapedMutator is not null %}No listed run in this tab has an escaped {{ escapedMutator }}. The leaderboard also counts the unlisted runs made before Explore. Try another tab, or <a href="{{ path('explore_index', {sort: ranking.value}) }}">clear the mutator filter</a>.{% else %}Runs show up here once they are made. <a href="{{ path('playground_index') }}">Make one</a>.{% endif %}</p>
                 </div>
             {% endfor %}
 
             {% if page > 1 or hasNextPage %}
                 <nav class="pager" aria-label="Pages">
-                    {% if page > 1 %}<a class="btn btn-sm" href="{{ path('explore_index', {sort: ranking.value, page: page - 1}|merge(escapedQuery)) }}">Newer page</a>{% endif %}
+                    {% if page > 1 %}<a class="btn btn-sm" href="{{ path('explore_index', {sort: ranking.value, page: page - 1}|merge(escapedQuery)) }}">Previous page</a>{% endif %}
                     <span>Page {{ page }}</span>
                     {% if hasNextPage %}<a class="btn btn-sm" href="{{ path('explore_index', {sort: ranking.value, page: page + 1}|merge(escapedQuery)) }}">Next page</a>{% endif %}
                 </nav>
@@ -95,7 +96,7 @@
                 <dl class="totals">
                     <div><dt>runs</dt><dd>{{ totals.runs|number_format }}</dd></div>
                     <div><dt>listed in Explore</dt><dd>{{ totals.listed|number_format }}</dd></div>
-                    <div><dt>median MSI</dt><dd {% if totals.medianMsi is not null %}class="{{ _self.level(totals.medianMsi) }}"{% endif %}>{{ totals.medianMsi is not null ? _self.percent(totals.medianMsi|round) : '–' }}</dd></div>
+                    <div><dt>median MSI</dt><dd {% if totals.medianMsi is not null %}class="{{ _self.level(totals.medianMsi) }}"{% endif %}>{{ totals.medianMsi is not null ? _self.percent(totals.medianMsi) : '–' }}</dd></div>
                     <div><dt>median mutants per run</dt><dd>{{ totals.medianMutants is not null ? totals.medianMutants|round|number_format : '–' }}</dd></div>
                 </dl>
                 <p>Over every run ever made, including the ones from before Explore, which stay unlisted.</p>

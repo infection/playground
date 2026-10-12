@@ -37,6 +37,9 @@ namespace App\Tests\Functional\Command;
 
 use App\Entity\Example;
 use App\Tests\Functional\ExampleFixtures;
+use DateTimeImmutable;
+use Generator;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Console\Command\Command;
@@ -115,6 +118,83 @@ final class ReviewExampleCommandTest extends KernelTestCase
     {
         self::assertSame(Command::FAILURE, $this->tester->execute(['run' => 'zzzzzzzz', '--restore' => true]));
         self::assertStringContainsString('There is no run "zzzzzzzz".', $this->tester->getDisplay());
+    }
+
+    public function test_it_restores_every_reported_run(): void
+    {
+        $first = self::createExample();
+        $first->report();
+        $second = self::createExample();
+        $second->report();
+        $unlisted = self::createExample();
+        $unlisted->report();
+        $unlisted->unlist();
+        self::entityManager()->flush();
+
+        self::assertSame(Command::SUCCESS, $this->tester->execute(['--restore-all' => true]));
+        self::assertStringContainsString('2 reported runs are back in Explore.', $this->tester->getDisplay());
+
+        self::assertNull($this->reload($first)->getReportedAt());
+        self::assertNull($this->reload($second)->getReportedAt());
+        self::assertNotNull($this->reload($unlisted)->getReportedAt());
+    }
+
+    public function test_it_restores_the_runs_reported_since_a_date(): void
+    {
+        $before = self::createExample();
+        $since = self::createExample();
+        $this->reportAt($before, '2026-10-11 23:59');
+        $this->reportAt($since, '2026-10-12 14:00');
+
+        self::assertSame(Command::SUCCESS, $this->tester->execute(['--restore-all' => true, '--since' => '2026-10-12 14:00']));
+
+        self::assertNotNull($this->reload($before)->getReportedAt());
+        self::assertNull($this->reload($since)->getReportedAt());
+
+        self::assertSame(Command::SUCCESS, $this->tester->execute(['--restore-all' => true, '--since' => '2026-10-11']));
+        self::assertNull($this->reload($before)->getReportedAt());
+    }
+
+    /**
+     * @param array<string, bool|string> $input
+     */
+    #[DataProvider('provideInvalidRestoreAll')]
+    public function test_it_restores_all_alone(array $input, string $error): void
+    {
+        $example = self::createExample();
+        $example->report();
+        self::entityManager()->flush();
+
+        self::assertSame(Command::INVALID, $this->tester->execute(['run' => $example->getIdHash()] + $input));
+        self::assertStringContainsString($error, $this->tester->getDisplay());
+        self::assertNotNull($this->reload($example)->getReportedAt());
+    }
+
+    public static function provideInvalidRestoreAll(): Generator
+    {
+        yield 'with a run' => [['--restore-all' => true], 'Pass --restore-all'];
+
+        yield 'since without restore all' => [['--since' => '2026-10-12', '--restore' => true], 'Pass --restore-all'];
+
+        yield 'with restore' => [['--restore-all' => true, '--restore' => true], 'Pass --restore-all'];
+
+        yield 'with unlist' => [['--restore-all' => true, '--unlist' => true], 'Pass --restore-all'];
+    }
+
+    public function test_it_needs_a_date_to_restore_since(): void
+    {
+        self::assertSame(Command::INVALID, $this->tester->execute(['--restore-all' => true, '--since' => 'yesterday']));
+        self::assertStringContainsString('"yesterday" is not a date', $this->tester->getDisplay());
+    }
+
+    private function reportAt(Example $example, string $date): void
+    {
+        self::entityManager()->createQuery('UPDATE ' . Example::class . ' e SET e.reportedAt = :date WHERE e.id = :id')
+            ->setParameter('date', new DateTimeImmutable($date), 'datetime_immutable')
+            ->setParameter('id', $example->getId())
+            ->execute();
+
+        self::entityManager()->clear();
     }
 
     private function reload(Example $example): Example

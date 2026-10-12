@@ -233,12 +233,11 @@ class Example
 
     /**
      * Runs the same input again lists it, even when it was an unlisted link made before Explore:
-     * whoever submits it now was told that runs are public.
+     * whoever submits it now was told that runs are public. Its title stays: it is the one of whoever made it.
      */
-    public function listWithTitle(?string $title): void
+    public function list(): void
     {
         $this->isListed = true;
-        $this->title ??= $title;
     }
 
     public function isListed(): bool

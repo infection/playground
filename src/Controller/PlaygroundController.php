@@ -52,8 +52,11 @@ use function json_encode;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Symfony\Component\RateLimiter\RateLimiterFactoryInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Throwable;
+use function time;
 
 class PlaygroundController extends AbstractController
 {
@@ -109,20 +112,19 @@ class PlaygroundController extends AbstractController
             $test = $this->codeSanitizer->sanitize($createExampleRequest->test);
 
             $originalConfig = $createExampleRequest->config;
-            $title = $createExampleRequest->getTrimmedTitle();
 
             $existingExample = $this->exampleRepository->findContentByHash(
                 Example::hashInput($code, $test, $originalConfig, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION)
             );
 
             if ($existingExample instanceof Example) {
-                $existingExample->listWithTitle($title);
+                $existingExample->list();
                 $em->flush();
 
                 return $this->redirectToRoute('playground_display_example', ['exampleIdHash' => $this->hashids->encode($existingExample->getId())]);
             }
 
-            $example = new Example($code, $test, $originalConfig, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION, $title);
+            $example = new Example($code, $test, $originalConfig, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION, $createExampleRequest->getTrimmedTitle());
 
             $em->persist($example);
             $em->flush();
@@ -172,6 +174,8 @@ class PlaygroundController extends AbstractController
             'lineMap' => json_encode($this->buildLineMap($example)),
             'isListed' => $example->isListed() && !$example->isDefaultExample() && $example->getMutantsTotal() !== null,
             'isReported' => $example->getReportedAt() !== null,
+            // the title of a run is set once, a new run gets its own: see watchForChangesSinceRun() in editor.js
+            'isTitleLocked' => true,
         ]);
     }
 
@@ -179,9 +183,15 @@ class PlaygroundController extends AbstractController
      * Hides a run from Explore until it is reviewed (app:example:review); its link keeps working.
      */
     #[Route('/r/{exampleIdHash}/report', name: 'playground_report_example', methods: ['POST'])]
-    public function reportExample(string $exampleIdHash, EntityManagerInterface $em): Response
+    public function reportExample(string $exampleIdHash, Request $request, EntityManagerInterface $em, RateLimiterFactoryInterface $reportLimiter): Response
     {
         $example = $this->findExample($exampleIdHash, $em);
+
+        $limit = $reportLimiter->create($request->getClientIp())->consume();
+
+        if (!$limit->isAccepted()) {
+            throw new TooManyRequestsHttpException($limit->getRetryAfter()->getTimestamp() - time(), 'Too many reports, try again later.');
+        }
 
         $example->report();
         $em->flush();
