@@ -42,6 +42,7 @@ use App\Infection\Runner;
 use function array_map;
 use function array_sum;
 use function count;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\QueryBuilder;
 use function intdiv;
@@ -68,7 +69,9 @@ final class ExploreRepository
         match ($ranking) {
             Ranking::Latest => null,
             Ranking::PerfectScore => $queryBuilder
+                // Infection counts timeouts as detected, a perfect score kills every mutant
                 ->andWhere('e.msi >= 100')
+                ->andWhere('e.timedOut = 0')
                 ->andWhere('e.mutantsTotal >= :minMutants')
                 ->setParameter('minMutants', Ranking::MIN_MUTANTS)
                 ->orderBy('e.mutantsTotal', 'DESC'),
@@ -204,19 +207,27 @@ final class ExploreRepository
     }
 
     /**
+     * The reported runs waiting for a review: the ones still listed.
+     *
      * @return list<Example>
      */
-    public function findReported(): array
+    public function findReported(?DateTimeImmutable $since = null): array
     {
-        /** @var list<Example> $examples */
-        $examples = $this->entityManager->createQueryBuilder()
+        $queryBuilder = $this->entityManager->createQueryBuilder()
             ->select('e')
             ->from(Example::class, 'e')
             ->where('e.reportedAt IS NOT NULL')
             ->andWhere('e.isListed = true')
-            ->orderBy('e.reportedAt', 'ASC')
-            ->getQuery()
-            ->getResult();
+            ->orderBy('e.reportedAt', 'ASC');
+
+        if ($since !== null) {
+            $queryBuilder
+                ->andWhere('e.reportedAt >= :since')
+                ->setParameter('since', $since);
+        }
+
+        /** @var list<Example> $examples */
+        $examples = $queryBuilder->getQuery()->getResult();
 
         return $examples;
     }

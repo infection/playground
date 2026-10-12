@@ -24,7 +24,7 @@
     {% if isReported %}
         <span class="btn reported" title="Hidden from Explore until it is reviewed">Reported</span>
     {% elseif isListed %}
-        <form method="post" action="{{ path('playground_report_example', {exampleIdHash: app.request.attributes.get('exampleIdHash')}) }}">
+        <form method="post" action="{{ path('playground_report_example', {exampleIdHash: app.request.attributes.get('exampleIdHash')}) }}" id="report-form" data-confirm="Report this run? It is hidden from Explore until it is reviewed.">
             <button class="btn" type="submit" title="Hide this run from Explore until it is reviewed: spam, or code that should not be public">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>
                 <span class="btn-label">Report</span>

@@ -9,8 +9,23 @@ framework:
     #esi: true
     #fragments: true
 
+    # reports hide a run from Explore until it is reviewed: a few per visitor, so a script cannot empty it
+    rate_limiter:
+        report:
+            policy: sliding_window
+            limit: 10
+            interval: '1 hour'
+
 when@test:
     framework:
         test: true
         session:
             storage_factory_id: session.storage.factory.mock_file
+        # the reports of a test only: kept in its kernel, which the requests of a test share with disableReboot()
+        rate_limiter:
+            report:
+                storage_service: app.test.report_limiter_storage
+
+    services:
+        app.test.report_limiter_storage:
+            class: Symfony\Component\RateLimiter\Storage\InMemoryStorage

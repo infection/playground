@@ -69,6 +69,7 @@ trait ExampleFixtures
         ?string $title = null,
         int $killed = 4,
         array $escapedMutators = ['Plus' => 1],
+        int $timedOut = 0,
         string $config = '{"mutators": {"@default": true}}',
         ?string $code = null,
         string $test = '<?php // test',
@@ -98,8 +99,8 @@ trait ExampleFixtures
             }
         }
 
-        $total = $killed + count($escaped);
-        $msi = $total === 0 ? 0 : $killed / $total * 100;
+        $total = $killed + $timedOut + count($escaped);
+        $msi = $total === 0 ? 0 : ($killed + $timedOut) / $total * 100;
 
         $hashids = self::getContainer()->get(Hashids::class);
         assert($hashids instanceof Hashids);
@@ -112,6 +113,7 @@ trait ExampleFixtures
                     'totalMutantsCount' => $total,
                     'killedCount' => $killed,
                     'escapedCount' => count($escaped),
+                    'timeOutCount' => $timedOut,
                     'msi' => $msi,
                     'coveredCodeMsi' => $msi,
                 ],
