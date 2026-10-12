@@ -40,6 +40,7 @@ use App\Explore\ExampleStatsUpdater;
 use Doctrine\ORM\EntityManagerInterface;
 use function sprintf;
 use Symfony\Component\Console\Attribute\AsCommand;
+use Symfony\Component\Console\Attribute\Option;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
@@ -57,8 +58,11 @@ final class BackfillExampleStatsCommand
     ) {
     }
 
-    public function __invoke(SymfonyStyle $io): int
-    {
+    public function __invoke(
+        SymfonyStyle $io,
+        #[Option(description: 'How many runs to load in memory at once')]
+        int $batchSize = self::BATCH_SIZE,
+    ): int {
         $lastId = 0;
         $updated = 0;
 
@@ -70,7 +74,7 @@ final class BackfillExampleStatsCommand
                 ->where('e.id > :lastId')
                 ->setParameter('lastId', $lastId)
                 ->orderBy('e.id', 'ASC')
-                ->setMaxResults(self::BATCH_SIZE)
+                ->setMaxResults($batchSize)
                 ->getQuery()
                 ->getResult();
 

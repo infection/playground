@@ -90,4 +90,27 @@ final class BackfillExampleStatsCommandTest extends KernelTestCase
         self::assertSame(0, $tester->execute([]));
         self::assertCount(1, self::entityManager()->getRepository(ExampleMutator::class)->findAll());
     }
+
+    public function test_it_updates_the_runs_in_several_batches(): void
+    {
+        $first = self::createExample(killed: 1);
+        $second = self::createExample(killed: 2);
+        $third = self::createExample(killed: 3);
+
+        self::entityManager()->getConnection()->executeStatement('UPDATE example SET mutants_total = NULL, killed_count = NULL');
+        self::entityManager()->clear();
+
+        $tester = new CommandTester((new Application(self::bootKernel()))->find('app:example:backfill-stats'));
+
+        self::assertSame(0, $tester->execute(['--batch-size' => 2]));
+        self::assertStringContainsString('Updated the stats of 3 runs.', $tester->getDisplay());
+
+        self::entityManager()->clear();
+
+        foreach ([1 => $first, 2 => $second, 3 => $third] as $killed => $example) {
+            $reloaded = self::entityManager()->find(Example::class, $example->getId());
+            self::assertInstanceOf(Example::class, $reloaded);
+            self::assertSame($killed, $reloaded->getKilled());
+        }
+    }
 }
