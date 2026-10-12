@@ -40,13 +40,21 @@ tests: prerequisites
 	vendor/bin/phpunit
 
 # Runs mutation tests against src/
-.PHONY: infection infection-diff
-infection: prerequisites
-	$(INFECTION) --no-interaction --threads=$(INFECTION_THREADS) $(ARGS)
+.PHONY: infection infection-diff db-test-prepare
+infection: db-test-prepare
+	$(INFECTION) --no-interaction --threads=$(INFECTION_THREADS) --with-uncovered $(ARGS)
 
 # Runs the CI mutation check on lines changed from $(BASE_REF) (a ref or a commit SHA)
-infection-diff: prerequisites
-	$(INFECTION) --no-interaction --threads=$(INFECTION_THREADS) --git-diff-lines --git-diff-base=$(BASE_REF) --ignore-msi-with-no-mutations --max-timeouts=0 --min-msi=100 $(ARGS)
+infection-diff: db-test-prepare
+	$(INFECTION) --no-interaction --threads=$(INFECTION_THREADS) --with-uncovered --git-diff-lines --git-diff-base=$(BASE_REF) --ignore-msi-with-no-mutations --max-timeouts=0 --min-msi=100 $(ARGS)
+
+# Infection runs the tests of each thread with TEST_TOKEN=1..N, which config/packages/doctrine.yaml
+# appends to the test database name: every thread needs its own app_test<N> database.
+db-test-prepare: prerequisites
+	@for token in '' $$(seq 1 $(INFECTION_THREADS)); do \
+		TEST_TOKEN=$$token bin/console doctrine:database:create --if-not-exists --env=test && \
+		TEST_TOKEN=$$token bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --env=test || exit $$?; \
+	done
 
 # Recreates the dev and test databases from the migrations
 .PHONY: app-reinstall
