@@ -757,7 +757,8 @@ kbd {
     flex-direction: column;
 }
 
-.res:has(> .detail-pane:not([hidden])) {
+/* not when hidden: this selector outweighs .res[hidden], the console output would show under the mutants */
+.res:not([hidden]):has(> .detail-pane:not([hidden])) {
     display: grid;
     grid-template-rows: minmax(0, 0.5fr) var(--gutter) minmax(160px, 0.5fr);
 }
@@ -1664,7 +1665,7 @@ kbd {
     }
 
     .res,
-    .res:has(> .detail-pane:not([hidden])) {
+    .res:not([hidden]):has(> .detail-pane:not([hidden])) {
         display: flex;
         flex-direction: column;
     }
