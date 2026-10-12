@@ -4,6 +4,13 @@
     "source": {
         "directories": ["src"]
     },
+    "mutators": {
+        "@default": true,
+        "global-ignoreSourceCodeByRegex": [
+            // clearing the entity manager only frees memory: no test can see it
+            "\\$this->entityManager->clear\\(\\);",
+        ],
+    },
     "logs": {
         "text": "var/infection.log"
     }
