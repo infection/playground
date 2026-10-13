@@ -52,6 +52,9 @@ final class BackfillExampleStatsCommand
 {
     private const BATCH_SIZE = 50;
 
+    // ids start at 1: the first batch starts after it
+    private const FIRST_ID_BEFORE_ALL = 0;
+
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         private readonly ExampleStatsUpdater $exampleStatsUpdater,
@@ -63,7 +66,7 @@ final class BackfillExampleStatsCommand
         #[Option(description: 'How many runs to load in memory at once')]
         int $batchSize = self::BATCH_SIZE,
     ): int {
-        $lastId = 0;
+        $lastId = self::FIRST_ID_BEFORE_ALL;
         $updated = 0;
 
         do {
@@ -78,6 +81,8 @@ final class BackfillExampleStatsCommand
                 ->getQuery()
                 ->getResult();
 
+            // without its body the loop never ends: the mutant can only time out
+            /* @infection-ignore-all */
             foreach ($examples as $example) {
                 $this->exampleStatsUpdater->update($example);
                 $lastId = $example->getId();
