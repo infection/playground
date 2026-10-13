@@ -17,8 +17,6 @@
                 "App\\Entity\\*::set*",
                 "App\\Entity\\*::is*",
                 "App\\Entity\\*::has*",
-                // Symfony calls the controller actions, so the coverage never sees the line of their signature
-                "App\\Controller\\*",
             ],
         },
     },
