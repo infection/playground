@@ -110,6 +110,7 @@ class Runner
                 '--ansi',
                 '--no-progress',
                 '--show-mutations=0',
+                '--with-uncovered',
             ], $rootDir, self::buildEnvironment());
             $process->setTimeout(self::PROCESS_TIMEOUT_SEC);
 
