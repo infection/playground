@@ -41,6 +41,7 @@ use function is_array;
 use function is_int;
 use function is_string;
 use function json_decode;
+use PhpParser\PrettyPrinter\Standard;
 use function preg_replace;
 use function str_starts_with;
 use function substr;
@@ -48,15 +49,16 @@ use Throwable;
 use function trim;
 
 /**
- * Infection reports the lines of the pretty-printed class files, the editor shows the submitted code.
+ * Infection reports the lines of the class files, the editor shows the submitted code.
  *
- * The class files of a run are not stored: they are printed again, and the printer changed with php-parser 5.
- * The files are printed the ways the runs could have been made, and the one Infection's log matches is used.
+ * The class files of a run are not stored: they are built again. The classes are copied as they were submitted,
+ * but the runs made before were pretty-printed, and the printer changed with php-parser 5.
+ * The files are built the ways the runs could have been made, and the one Infection's log matches is used.
  */
 final class LineMapBuilder
 {
     /**
-     * @var list<ClassesExtractor> the current printing first: it is kept when the log matches several
+     * @var list<ClassesExtractor> the current way first: it is kept when the log matches several
      */
     private array $extractors;
 
@@ -64,6 +66,7 @@ final class LineMapBuilder
     {
         $this->extractors = [
             ClassesExtractorFactory::create(),
+            ClassesExtractorFactory::create(new Standard()),
             ClassesExtractorFactory::create(new PhpParser4Printer()),
         ];
     }
@@ -122,7 +125,7 @@ final class LineMapBuilder
     }
 
     /**
-     * Infection prints the diff with php-parser 5, so an `if` in an `else` is shown as `} else if`.
+     * Infection printed the diffs of the earlier runs with php-parser 5, so an `if` in an `else` is shown as `} else if`.
      */
     private static function normalize(string $line): string
     {

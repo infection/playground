@@ -42,6 +42,9 @@ use PhpParser\PrettyPrinter\Standard;
 
 final class ClassesExtractorFactory
 {
+    /**
+     * @param Standard|null $prettyPrinter prints the classes instead of copying their source, see ClassesExtractor
+     */
     public static function create(?Standard $prettyPrinter = null): ClassesExtractor
     {
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
@@ -51,8 +54,6 @@ final class ClassesExtractorFactory
         $extractClassesVisitor = new ExtractClassesVisitor();
 
         $traverser->addVisitor($extractClassesVisitor);
-
-        $prettyPrinter ??= new Standard();
 
         return new ClassesExtractor($parser, $traverser, $prettyPrinter, $extractClassesVisitor);
     }

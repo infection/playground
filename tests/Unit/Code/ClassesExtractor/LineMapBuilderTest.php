@@ -65,6 +65,18 @@ final class LineMapBuilderTest extends TestCase
         }
         PHP;
 
+    public function test_it_maps_the_lines_of_a_run_made_with_the_submitted_class(): void
+    {
+        // the class is copied below a header two lines longer than the submitted one
+        $lineMap = (new LineMapBuilder())->build(self::CODE, self::buildJsonLog([
+            [14, '            if ($a < 5) {'],
+            [19, '        return $a + 3;'],
+        ]));
+
+        self::assertSame(12, $lineMap['SourceClass'][14]);
+        self::assertSame(17, $lineMap['SourceClass'][19]);
+    }
+
     public function test_it_maps_the_lines_of_a_run_made_with_php_parser_5(): void
     {
         // php-parser 5 prints `} else if ($a < 5) {` on line 13 and `return $a + 3;` on line 16
@@ -91,11 +103,11 @@ final class LineMapBuilderTest extends TestCase
         self::assertSame(17, $lineMap['SourceClass'][18]);
     }
 
-    public function test_it_maps_the_lines_with_the_current_printer_without_a_log(): void
+    public function test_it_maps_the_lines_of_the_submitted_class_without_a_log(): void
     {
         $lineMap = (new LineMapBuilder())->build(self::CODE, null);
 
-        self::assertSame(17, $lineMap['SourceClass'][16]);
+        self::assertSame(17, $lineMap['SourceClass'][19]);
     }
 
     public function test_it_returns_no_lines_for_code_that_does_not_parse(): void
