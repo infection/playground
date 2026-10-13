@@ -35,10 +35,13 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Code\ClassesExtractor;
 
+use App\Code\ClassesExtractor\ClassesExtractorFactory;
 use App\Code\ClassesExtractor\LineMapBuilder;
 use function count;
 use function json_encode;
 use const JSON_THROW_ON_ERROR;
+use LogicException;
+use PhpParser\PrettyPrinter\Standard;
 use PHPUnit\Framework\TestCase;
 
 final class LineMapBuilderTest extends TestCase
@@ -110,9 +113,46 @@ final class LineMapBuilderTest extends TestCase
         self::assertSame(17, $lineMap['SourceClass'][19]);
     }
 
+    public function test_it_does_not_build_the_other_ways_when_every_mutant_is_on_its_line(): void
+    {
+        $lineMapBuilder = self::createLineMapBuilderFailingAfterTheSubmittedClass();
+
+        $lineMap = $lineMapBuilder->build(self::CODE, self::buildJsonLog([
+            [14, '            if ($a < 5) {'],
+            [19, '        return $a + 3;'],
+        ]));
+
+        self::assertSame(17, $lineMap['SourceClass'][19]);
+        self::assertSame(17, $lineMapBuilder->build(self::CODE, null)['SourceClass'][19]);
+    }
+
+    public function test_it_builds_the_other_ways_when_a_mutant_is_not_on_its_line(): void
+    {
+        $lineMap = self::createLineMapBuilderFailingAfterTheSubmittedClass()->build(self::CODE, self::buildJsonLog([
+            [14, '            if ($a < 5) {'],
+            [18, '        return $a + 3;'],
+        ]));
+
+        // the failing way is built: no lines, as for code that does not parse
+        self::assertSame([], $lineMap);
+    }
+
     public function test_it_returns_no_lines_for_code_that_does_not_parse(): void
     {
         self::assertSame([], (new LineMapBuilder())->build('<?php class {', null));
+    }
+
+    private static function createLineMapBuilderFailingAfterTheSubmittedClass(): LineMapBuilder
+    {
+        return new LineMapBuilder([
+            ClassesExtractorFactory::create(),
+            ClassesExtractorFactory::create(new class extends Standard {
+                public function prettyPrint(array $stmts): string
+                {
+                    throw new LogicException('The classes must not be printed.');
+                }
+            }),
+        ]);
     }
 
     /**

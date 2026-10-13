@@ -35,7 +35,10 @@ declare(strict_types=1);
 
 namespace App\Code\ClassesExtractor;
 
+use function array_map;
+use function array_sum;
 use function basename;
+use function count;
 use function explode;
 use function is_array;
 use function is_int;
@@ -62,9 +65,12 @@ final class LineMapBuilder
      */
     private array $extractors;
 
-    public function __construct()
+    /**
+     * @param list<ClassesExtractor>|null $extractors
+     */
+    public function __construct(?array $extractors = null)
     {
-        $this->extractors = [
+        $this->extractors = $extractors ?? [
             ClassesExtractorFactory::create(),
             ClassesExtractorFactory::create(new Standard()),
             ClassesExtractorFactory::create(new PhpParser4Printer()),
@@ -77,6 +83,7 @@ final class LineMapBuilder
     public function build(string $code, ?string $jsonLog): array
     {
         $mutants = self::collectMutants($jsonLog);
+        $mutantCount = array_sum(array_map(count(...), $mutants));
 
         $bestLineMap = [];
         $bestMatchCount = -1;
@@ -94,6 +101,11 @@ final class LineMapBuilder
             foreach ($extractedClasses as $extractedClass) {
                 $lineMap[$extractedClass->getClassName()] = $extractedClass->getLineMap();
                 $matchCount += self::countMatchingMutants($extractedClass, $mutants[$extractedClass->getClassName()] ?? []);
+            }
+
+            // every mutant is on its line: the run was made this way, the other ways are not built
+            if ($matchCount === $mutantCount) {
+                return $lineMap;
             }
 
             if ($matchCount > $bestMatchCount) {
