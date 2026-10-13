@@ -35,7 +35,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Code\ClassesExtractor\ClassesExtractor;
+use App\Code\ClassesExtractor\LineMapBuilder;
 use App\Code\CodeSanitizer;
 use App\Entity\Example;
 use App\Explore\ExampleStatsUpdater;
@@ -53,7 +53,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Throwable;
 
 class PlaygroundController extends AbstractController
 {
@@ -73,7 +72,7 @@ class PlaygroundController extends AbstractController
         CodeSanitizer $codeSanitizer,
         ConfigBuilder $configBuilder,
         ExampleRepository $exampleRepository,
-        private readonly ClassesExtractor $classesExtractor,
+        private readonly LineMapBuilder $lineMapBuilder,
         private readonly ExampleStatsUpdater $exampleStatsUpdater,
     ) {
         $this->hashids = $hashids;
@@ -170,29 +169,7 @@ class PlaygroundController extends AbstractController
             'resultOutput' => $converter->convert($example->getResultOutput()),
             'example' => $createExampleRequest,
             'jsonLog' => $example->getJsonLog(),
-            'lineMap' => json_encode($this->buildLineMap($example)),
+            'lineMap' => json_encode($this->lineMapBuilder->build($example->getCode(), $example->getJsonLog())),
         ]);
-    }
-
-    /**
-     * Infection reports the lines of the pretty-printed class files, the editor shows the submitted code.
-     *
-     * @return array<string, array<int, int>> class name => [line in the class file => line in the submitted code]
-     */
-    private function buildLineMap(Example $example): array
-    {
-        try {
-            $extractedClasses = $this->classesExtractor->extract($example->getCode());
-        } catch (Throwable) {
-            return [];
-        }
-
-        $lineMap = [];
-
-        foreach ($extractedClasses as $extractedClass) {
-            $lineMap[$extractedClass->getClassName()] = $extractedClass->getLineMap();
-        }
-
-        return $lineMap;
     }
 }

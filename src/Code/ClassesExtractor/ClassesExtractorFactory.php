@@ -42,7 +42,7 @@ use PhpParser\PrettyPrinter\Standard;
 
 final class ClassesExtractorFactory
 {
-    public static function create(): ClassesExtractor
+    public static function create(?Standard $prettyPrinter = null): ClassesExtractor
     {
         $parser = (new ParserFactory())->createForNewestSupportedVersion();
 
@@ -52,7 +52,7 @@ final class ClassesExtractorFactory
 
         $traverser->addVisitor($extractClassesVisitor);
 
-        $prettyPrinter = new Standard();
+        $prettyPrinter ??= new Standard();
 
         return new ClassesExtractor($parser, $traverser, $prettyPrinter, $extractClassesVisitor);
     }
