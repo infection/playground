@@ -137,6 +137,11 @@ PHP;
         $lineMap = [];
 
         foreach ($extractedNodes as $index => $extractedNode) {
+            // `else { if }` is printed as `else if`: the line is the one of the `if`, there is nothing to mutate in the `else`
+            if ($extractedNode instanceof Node\Stmt\Else_) {
+                continue;
+            }
+
             $lineMap[$extractedNode->getStartLine()] ??= $originalNodes[$index]->getStartLine();
         }
 
