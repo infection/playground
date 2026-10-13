@@ -10,6 +10,15 @@
             // clearing the entity manager only frees memory: no test can see it
             "\\$this->entityManager->clear\\(\\);",
         ],
+        "PublicVisibility": {
+            // the getters and setters of the Doctrine entities: making them protected is not worth a test
+            "ignore": [
+                "App\\Entity\\*::get*",
+                "App\\Entity\\*::set*",
+                "App\\Entity\\*::is*",
+                "App\\Entity\\*::has*",
+            ],
+        },
     },
     "logs": {
         "text": "var/infection.log"
