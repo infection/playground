@@ -36,6 +36,8 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Controller;
 
 use App\Explore\DefaultExample;
+use App\Infection\Runner;
+use App\Infection\StaticAnalysisTool;
 use App\Tests\Functional\ExampleFixtures;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -76,6 +78,17 @@ final class ExploreControllerTest extends WebTestCase
         self::assertSame('level-medium', $card->filter('.run-score b')->attr('class'));
         self::assertSame('-TrueValue', $card->filter('.tag-config')->text());
         self::assertSame('Latest', $crawler->filter('.explore-tabs [aria-current="page"]')->text());
+    }
+
+    public function test_it_shows_the_static_analysis_of_a_run(): void
+    {
+        self::createExample('WithoutStaticAnalysis');
+        self::createExample('WithMago', staticAnalysisTool: StaticAnalysisTool::Mago);
+
+        $crawler = $this->client->request('GET', '/explore');
+
+        self::assertSame('Mago ' . Runner::CURRENT_MAGO_VERSION, $crawler->filter('.run-card')->eq(0)->filter('.tag-analysis')->text());
+        self::assertCount(0, $crawler->filter('.run-card')->eq(1)->filter('.tag-analysis'));
     }
 
     public function test_it_names_a_run_after_its_class_and_method(): void
