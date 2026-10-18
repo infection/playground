@@ -30,6 +30,12 @@ FROM scratch AS mago_arm64
 ADD --checksum=sha256:2e16e324599564647f29bcafef5324a3e372f86a3f20d28c5f2848ebadf0455e \
 	https://github.com/carthage-software/mago/releases/download/1.57.0/mago-1.57.0-aarch64-unknown-linux-musl.tar.gz /mago.tar.gz
 
+# PHPStan, the other static analyser a run can turn on. The PHAR runs on any architecture.
+# The version is Runner::CURRENT_PHPSTAN_VERSION. PHPStan publishes no checksums: it is of the downloaded PHAR.
+FROM scratch AS phpstan
+ADD --checksum=sha256:85157dba3d95d77ca603d2b7303aa78a538f9e3b56ccad07dd794c53aa96d1ae \
+	https://github.com/phpstan/phpstan/releases/download/2.3.1/phpstan.phar /phpstan.phar
+
 ARG TARGETARCH
 # hadolint ignore=DL3006
 FROM tailwind_${TARGETARCH} AS tailwind
@@ -73,6 +79,8 @@ COPY --link --chmod=755 --from=tailwind /tailwindcss /usr/local/bin/tailwindcss
 # the musl build is a static binary: the prod image copies it without collecting shared libraries
 RUN --mount=type=bind,from=mago,source=/mago.tar.gz,target=/mnt/mago.tar.gz \
 	tar -xzf /mnt/mago.tar.gz -C /usr/local/bin --strip-components=1 --no-same-owner --wildcards '*/mago'
+
+COPY --link --from=phpstan /phpstan.phar /usr/local/bin/phpstan.phar
 
 # Monaco Editor, served by Caddy under /monaco/ (see frankenphp/Caddyfile).
 # Its AMD build loads its own CSS, languages and web workers, which AssetMapper cannot bundle,
@@ -181,6 +189,7 @@ COPY --from=frankenphp_prod_builder /usr/local/bin/frankenphp /usr/local/bin/fra
 COPY --from=frankenphp_prod_builder /usr/local/bin/php /usr/local/bin/php
 COPY --from=frankenphp_prod_builder /usr/local/bin/docker-php-entrypoint /usr/local/bin/docker-php-entrypoint
 COPY --from=frankenphp_prod_builder /usr/local/bin/mago /usr/local/bin/mago
+COPY --from=frankenphp_prod_builder /usr/local/bin/phpstan.phar /usr/local/bin/phpstan.phar
 COPY --from=frankenphp_prod_builder /usr/local/lib/php/extensions /usr/local/lib/php/extensions
 COPY --from=frankenphp_prod_builder /tmp/libs /usr/lib
 
