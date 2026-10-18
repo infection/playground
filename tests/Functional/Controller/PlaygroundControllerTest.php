@@ -251,6 +251,74 @@ class PlaygroundControllerTest extends WebTestCase
         static::assertStringContainsString('SourceClass::add()', $client->getCrawler()->filterXPath('//a[contains(@class, "run-card")]')->text());
     }
 
+    public function test_it_runs_again_an_input_whose_run_never_finished(): void
+    {
+        $client = static::createClient();
+        $client->catchExceptions(false);
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        /** @var Hashids $hashids */
+        $hashids = static::getContainer()->get(Hashids::class);
+
+        $code = <<<'PHP'
+            <?php
+
+            declare(strict_types=1);
+
+            namespace Infected;
+
+            class SourceClass
+            {
+                public function add(int $a, int $b): int
+                {
+                    return $a + $b;
+                }
+            }
+            PHP . "\n// " . random_int(1, PHP_INT_MAX);
+        $test = <<<'PHP'
+            <?php
+
+            declare(strict_types=1);
+
+            namespace Infected;
+
+            use PHPUnit\Framework\TestCase;
+
+            class SourceClassTest extends TestCase
+            {
+                public function test_it_adds_2_numbers(): void
+                {
+                    self::assertSame(3, (new SourceClass())->add(1, 2));
+                }
+            }
+            PHP;
+        $config = '{"mutators": {"@default": true}}';
+
+        // the request died before the result was saved, e.g. on a fatal error
+        $unfinishedExample = new Example($code, $test, $config, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION);
+        $em->persist($unfinishedExample);
+        $em->flush();
+
+        $client->request('GET', '/');
+        $client->submitForm('create_example[mutate]', [
+            'create_example[code]' => $code,
+            'create_example[test]' => $test,
+            'create_example[config]' => $config,
+        ]);
+
+        $idHash = $hashids->encode($unfinishedExample->getId());
+        static::assertTrue($client->getResponse()->isRedirect('/r/' . $idHash));
+
+        $client->followRedirect();
+        static::assertStringContainsString('mutants were killed by Test Framework', (string) $client->getResponse()->getContent());
+
+        $em->clear();
+        $example = $em->find(Example::class, $unfinishedExample->getId());
+        static::assertInstanceOf(Example::class, $example);
+        static::assertSame($idHash, $example->getIdHash());
+    }
+
     public function test_run_waits_for_a_change_on_a_run_with_the_current_versions(): void
     {
         $client = static::createClient();
