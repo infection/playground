@@ -221,6 +221,7 @@ JSON,
             array_merge(
                 ConfigBuilder::getNotOverridableBaseConfig(),
                 [
+                    'timeout' => 10,
                     'staticAnalysisTool' => 'phpstan',
                     'phpStan' => ['customPath' => '/usr/local/bin/phpstan.phar'],
                     'mutators' => ['@default' => true],

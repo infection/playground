@@ -52,6 +52,9 @@ use function substr;
 final class ConfigBuilder
 {
     private const TIMEOUT = 3;
+    // Infection gives each PHPStan run on a mutant the same timeout as a test run, and PHPStan
+    // starts slower than PHPUnit: on a busy machine it does not finish one file in 3 seconds
+    private const PHPSTAN_TIMEOUT = 10;
 
     private const NAMESPACE = 'Infected';
 
@@ -71,6 +74,7 @@ final class ConfigBuilder
         if ($staticAnalysisTool === StaticAnalysisTool::PHPStan) {
             $basicConfig['staticAnalysisTool'] = $staticAnalysisTool->value;
             $basicConfig['phpStan'] = ['customPath' => self::PHPSTAN_PATH];
+            $basicConfig['timeout'] = self::PHPSTAN_TIMEOUT;
         }
 
         /** @var array{mutators?: array<string, bool>} $decodedOriginalConfig */
