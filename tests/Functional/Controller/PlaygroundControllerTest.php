@@ -45,6 +45,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use function file_get_contents;
 use Generator;
 use Hashids\Hashids;
+use function ini_get;
+use function ini_set;
 use function json_decode;
 use const JSON_THROW_ON_ERROR;
 use const PHP_INT_MAX;
@@ -52,6 +54,7 @@ use const PHP_MAJOR_VERSION;
 use const PHP_MINOR_VERSION;
 use PHPUnit\Framework\Attributes\DataProvider;
 use function random_int;
+use function set_time_limit;
 use function sprintf;
 use function str_repeat;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -74,6 +77,33 @@ class PlaygroundControllerTest extends WebTestCase
 
         static::assertSame(302, $client->getResponse()->getStatusCode());
         static::assertStringNotContainsString('This value should not be blank', (string) $client->getResponse()->getContent());
+    }
+
+    public function test_the_request_outlives_the_infection_process(): void
+    {
+        $client = static::createClient();
+        $client->catchExceptions(false);
+
+        $client->request('GET', '/');
+
+        // the web server has a time limit, the CLI does not
+        ini_set('max_execution_time', '30');
+
+        try {
+            $client->submitForm('create_example[mutate]', [
+                'create_example[code]' => 'code ' . random_int(1, PHP_INT_MAX),
+                'create_example[test]' => 'test',
+                'create_example[config]' => '{"mutators": {"@default": true}}',
+                'create_example[staticAnalysisTool]' => 'phpstan',
+            ]);
+
+            $timeLimit = (int) ini_get('max_execution_time');
+        } finally {
+            set_time_limit(0);
+        }
+
+        static::assertSame(302, $client->getResponse()->getStatusCode());
+        static::assertGreaterThan(Runner::getProcessTimeoutSec(StaticAnalysisTool::PHPStan), $timeLimit);
     }
 
     public function test_it_fails_with_when_code_is_blank(): void
