@@ -40,9 +40,11 @@ use function array_keys;
 use function file_exists;
 use function file_get_contents;
 use function getenv;
+use function ini_get;
 use const PHP_MAJOR_VERSION;
 use const PHP_MINOR_VERSION;
 use const PHP_VERSION;
+use function set_time_limit;
 use function sprintf;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
@@ -60,6 +62,11 @@ class Runner
     public const CURRENT_PHPSTAN_VERSION = '2.3.1';
 
     private const PROCESS_TIMEOUT_SEC = 30;
+    // Infection starts PHPStan once per escaped mutant, one after the other: on the droplet
+    // a handful of escaped mutants take longer than 30 seconds
+    private const PHPSTAN_PROCESS_TIMEOUT_SEC = 90;
+    // what the request does after the Infection process: saving the result and redirecting
+    private const REQUEST_TIME_MARGIN_SEC = 30;
 
     /**
      * PHP_INI_SCAN_DIR loads the ini file with disable_functions for the playground.
@@ -116,6 +123,9 @@ class Runner
             $this->filesystem->dumpFile(sprintf('%s/%s.php', $srcDir, $extractedClass->getClassName()), $extractedClass->getCode());
         }
 
+        $processTimeout = self::getProcessTimeoutSec($staticAnalysisTool);
+        self::extendRequestTimeLimit($processTimeout);
+
         try {
             $process = new Process([
                 'php',
@@ -128,7 +138,7 @@ class Runner
                 '--show-mutations=0',
                 '--with-uncovered',
             ], $rootDir, self::buildEnvironment());
-            $process->setTimeout(self::PROCESS_TIMEOUT_SEC);
+            $process->setTimeout($processTimeout);
 
             $process->run();
             // todo download if not present infection/phpunit (cache warmer) ?
@@ -144,10 +154,33 @@ class Runner
             return RunResult::fromError(
                 sprintf(
                     'Infection process exceeded the timeout of %d seconds. Please check your code or report an issue',
-                    self::PROCESS_TIMEOUT_SEC
+                    $processTimeout
                 )
             );
         }
+    }
+
+    public static function getProcessTimeoutSec(?StaticAnalysisTool $staticAnalysisTool): int
+    {
+        return $staticAnalysisTool === StaticAnalysisTool::PHPStan
+            ? self::PHPSTAN_PROCESS_TIMEOUT_SEC
+            : self::PROCESS_TIMEOUT_SEC;
+    }
+
+    /**
+     * FrankenPHP counts max_execution_time in wall-clock time, waiting for the Infection process included.
+     * With a limit not longer than the process timeout, the request dies with a fatal error, a 500,
+     * before the ProcessTimedOutException is caught.
+     */
+    private static function extendRequestTimeLimit(int $processTimeout): void
+    {
+        // 0 is no limit, e.g. in the CLI: setting one would end the process later
+        if ((int) ini_get('max_execution_time') === 0) {
+            return;
+        }
+
+        // restarts the count from now
+        set_time_limit($processTimeout + self::REQUEST_TIME_MARGIN_SEC);
     }
 
     /**
