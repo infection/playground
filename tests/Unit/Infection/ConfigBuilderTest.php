@@ -37,6 +37,7 @@ namespace App\Tests\Unit\Infection;
 
 use App\Code\Validator\CodeValidator;
 use App\Infection\ConfigBuilder;
+use App\Infection\StaticAnalysisTool;
 use function array_merge;
 use Generator;
 use function implode;
@@ -193,5 +194,30 @@ JSON,
                 ],
             ],
         ];
+    }
+
+    public function test_it_runs_mago_from_the_docker_image(): void
+    {
+        $resultConfig = $this->configBuilder->build('{"mutators": {"@default": true}}', StaticAnalysisTool::Mago);
+
+        self::assertSame(
+            array_merge(
+                ConfigBuilder::getNotOverridableBaseConfig(),
+                [
+                    'staticAnalysisTool' => 'mago',
+                    'mago' => ['customPath' => '/usr/local/bin/mago'],
+                    'mutators' => ['@default' => true],
+                ]
+            ),
+            json_decode($resultConfig, true)
+        );
+    }
+
+    public function test_it_does_not_run_static_analysis_by_default(): void
+    {
+        $resultConfig = (array) json_decode($this->configBuilder->build('{}', null), true);
+
+        self::assertArrayNotHasKey('staticAnalysisTool', $resultConfig);
+        self::assertArrayNotHasKey('mago', $resultConfig);
     }
 }

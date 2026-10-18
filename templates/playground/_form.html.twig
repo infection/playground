@@ -11,7 +11,7 @@
 {% for error in form.vars.errors %}
     {% set fieldErrors = fieldErrors|merge([{field: null, message: error.message}]) %}
 {% endfor %}
-{% for field in ['code', 'test', 'config'] %}
+{% for field in ['code', 'test', 'config', 'staticAnalysisTool'] %}
     {% for error in attribute(form, field).vars.errors %}
         {% set fieldErrors = fieldErrors|merge([{field: field, message: error.message}]) %}
     {% endfor %}

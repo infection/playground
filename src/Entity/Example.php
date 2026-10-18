@@ -36,10 +36,12 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Explore\RunStats;
+use App\Infection\StaticAnalysisTool;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
 use function md5;
+use Webmozart\Assert\Assert;
 
 #[ORM\Entity]
 #[ORM\HasLifecycleCallbacks]
@@ -87,6 +89,13 @@ class Example
     #[ORM\Column(type: 'string', length: 12, options: ['default' => '8.1.3'])]
     private string $phpVersion;
 
+    // NULL when the run used no static analysis
+    #[ORM\Column(type: 'string', length: 16, nullable: true, enumType: StaticAnalysisTool::class)]
+    private ?StaticAnalysisTool $staticAnalysisTool;
+
+    #[ORM\Column(type: 'string', length: 11, nullable: true)]
+    private ?string $staticAnalysisToolVersion;
+
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
     private bool $isDefaultExample = false;
 
@@ -115,15 +124,27 @@ class Example
     #[ORM\Column(type: 'float', nullable: true)]
     private ?float $coveredMsi = null;
 
-    public function __construct(string $code, string $test, string $config, string $infectionVersion, string $phpunitVersion, string $phpVersion)
-    {
+    public function __construct(
+        string $code,
+        string $test,
+        string $config,
+        string $infectionVersion,
+        string $phpunitVersion,
+        string $phpVersion,
+        ?StaticAnalysisTool $staticAnalysisTool = null,
+        ?string $staticAnalysisToolVersion = null,
+    ) {
+        Assert::same($staticAnalysisTool === null, $staticAnalysisToolVersion === null, 'A static analysis tool and its version go together.');
+
         $this->code = $code;
         $this->test = $test;
         $this->config = $config;
         $this->infectionVersion = $infectionVersion;
         $this->phpunitVersion = $phpunitVersion;
         $this->phpVersion = $phpVersion;
-        $this->inputHash = self::hashInput($code, $test, $config, $infectionVersion, $phpunitVersion, $phpVersion);
+        $this->staticAnalysisTool = $staticAnalysisTool;
+        $this->staticAnalysisToolVersion = $staticAnalysisToolVersion;
+        $this->inputHash = self::hashInput($code, $test, $config, $infectionVersion, $phpunitVersion, $phpVersion, $staticAnalysisTool, $staticAnalysisToolVersion);
     }
 
     public function getId(): int
@@ -182,9 +203,22 @@ class Example
         return $this->inputHash;
     }
 
-    public static function hashInput(string $code, string $test, string $config, string $infectionVersion, string $phpunitVersion, string $phpVersion): string
-    {
-        return md5($code . $test . $config . $infectionVersion . $phpunitVersion . $phpVersion);
+    /**
+     * A run without static analysis keeps the hash it had before static analysis was added.
+     */
+    public static function hashInput(
+        string $code,
+        string $test,
+        string $config,
+        string $infectionVersion,
+        string $phpunitVersion,
+        string $phpVersion,
+        ?StaticAnalysisTool $staticAnalysisTool = null,
+        ?string $staticAnalysisToolVersion = null,
+    ): string {
+        $staticAnalysis = $staticAnalysisTool === null ? '' : $staticAnalysisTool->value . $staticAnalysisToolVersion;
+
+        return md5($code . $test . $config . $infectionVersion . $phpunitVersion . $phpVersion . $staticAnalysis);
     }
 
     public function getIdHash(): ?string
@@ -210,6 +244,16 @@ class Example
     public function getPhpVersion(): string
     {
         return $this->phpVersion;
+    }
+
+    public function getStaticAnalysisTool(): ?StaticAnalysisTool
+    {
+        return $this->staticAnalysisTool;
+    }
+
+    public function getStaticAnalysisToolVersion(): ?string
+    {
+        return $this->staticAnalysisToolVersion;
     }
 
     public function isDefaultExample(): bool

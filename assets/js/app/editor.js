@@ -25,6 +25,7 @@ const STATUSES = {
     timeouted: {label: 'Timed out', symbol: 'T', rank: 2, color: 'var(--timeout)', marker: 'warn'},
     errored: {label: 'Errored', symbol: 'E', rank: 3, color: 'var(--errored)', marker: 'good'},
     killed: {label: 'Killed', symbol: '.', rank: 4, color: 'var(--killed)', marker: 'good'},
+    killedByStaticAnalysis: {label: 'Killed by static analysis', symbol: 'A', rank: 5, color: 'var(--analysis)', marker: 'good'},
 };
 
 const STATUS_EXPLANATIONS = {
@@ -33,7 +34,11 @@ const STATUS_EXPLANATIONS = {
     timeouted: 'The tests ran longer than the timeout with this change. Infection counts it as detected.',
     errored: 'The tests ended with a fatal error with this change. Infection counts it as detected.',
     killed: 'A test failed with this change in place, so the tests detect it.',
+    killedByStaticAnalysis: 'The tests passed with this change in place, but static analysis reported an error in the mutated code. Infection counts it as detected.',
 };
+
+// with static analysis, an escaped mutant and one it killed have the output of the analyser instead of the tests
+const ANALYSED_STATUSES = ['escaped', 'killedByStaticAnalysis'];
 
 const MARKER_ORDER = ['bad', 'warn', 'good'];
 
@@ -65,6 +70,7 @@ export function initMutationEditors() {
     }
 
     initTabs();
+    initToolchain();
     initRun();
     initShare();
     initKeyboard();
@@ -211,6 +217,35 @@ function selectTab(selector, selected) {
     });
 }
 
+// ---- Toolchain -------------------------------------------------------------
+
+/**
+ * The radios of the toolchain popover: the top bar shows the static analyser a run will use.
+ */
+function initToolchain() {
+    getStaticAnalysisRadios().forEach((radio) => radio.addEventListener('change', () => {
+        const tool = getStaticAnalysisTool();
+
+        document.querySelectorAll('[data-static-analysis-chip]').forEach((chip) => {
+            chip.hidden = chip.dataset.staticAnalysisChip !== tool;
+        });
+    }));
+}
+
+function getStaticAnalysisRadios() {
+    return document.querySelectorAll('input[name="create_example[staticAnalysisTool]"]');
+}
+
+function getStaticAnalysisTool() {
+    return Array.from(getStaticAnalysisRadios()).find((radio) => radio.checked)?.value ?? '';
+}
+
+function getOutputName(mutant) {
+    const analyser = document.getElementById('json-log').dataset.staticAnalysisTool;
+
+    return analyser && ANALYSED_STATUSES.includes(mutant.status) ? analyser + ' output' : 'Test output';
+}
+
 // ---- Run, share, keyboard --------------------------------------------------
 
 function initRun() {
@@ -341,11 +376,13 @@ function watchForChangesSinceRun() {
 
     const editors = [codeEditor, testEditor, configEditor];
     const runValues = editors.map((editor) => editor.getValue());
+    const runStaticAnalysisTool = getStaticAnalysisTool();
     const button = document.getElementById('js-submit');
     const runTitle = button.title;
 
     const update = () => {
-        const stale = editors.some((editor, index) => editor.getValue() !== runValues[index]);
+        const stale = editors.some((editor, index) => editor.getValue() !== runValues[index])
+            || getStaticAnalysisTool() !== runStaticAnalysisTool;
 
         document.getElementById('editor-code').classList.toggle('is-stale', stale);
         document.getElementById('stale-note').hidden = !stale;
@@ -356,12 +393,13 @@ function watchForChangesSinceRun() {
 
         if (button.dataset.runOnCurrentVersions !== undefined) {
             button.setAttribute('aria-disabled', String(!stale));
-            button.title = stale ? runTitle : 'Nothing changed since this run: edit the code, test or config to run again';
+            button.title = stale ? runTitle : 'Nothing changed since this run: edit the code, test, config or toolchain to run again';
         }
     };
 
     update();
     editors.forEach((editor) => editor.onDidChangeModelContent(update));
+    getStaticAnalysisRadios().forEach((radio) => radio.addEventListener('change', update));
 }
 
 // ---- Mutants ---------------------------------------------------------------
@@ -915,6 +953,7 @@ function selectMutant(mutant, options = {}) {
 
     showDiffEditor(mutant.mutator);
     document.getElementById('mutant-output').textContent = mutant.processOutput || STATUS_EXPLANATIONS[mutant.status];
+    document.getElementById('mutant-output-tab').textContent = getOutputName(mutant);
 
     document.querySelectorAll('#mutants-list [data-mutant-id]').forEach((row) => {
         row.setAttribute('aria-selected', String(row.dataset.mutantId === String(mutant.id)));
@@ -966,7 +1005,7 @@ function showMutantDetail() {
     );
 
     const sub = document.getElementById('detail-sub');
-    const level = {escaped: 'level-low', uncovered: '', timeouted: 'level-medium', errored: '', killed: 'level-high'}[mutant.status];
+    const level = {escaped: 'level-low', uncovered: '', timeouted: 'level-medium', errored: '', killed: 'level-high', killedByStaticAnalysis: ''}[mutant.status];
     const label = element('b', level, status.label + '.');
 
     if (level === '') {

@@ -29,6 +29,8 @@
     --uncovered: #a65800;
     --timeout: #876a00;
     --errored: #3a63c9;
+    --analysis: #6d45c4;
+    --analysis-soft: #efe9fb;
 
     --shadow: 0 1px 2px rgb(20 28 24 / .06), 0 8px 24px rgb(20 28 24 / .10);
 
@@ -59,6 +61,8 @@
     --uncovered: #f0a040;
     --timeout: #e2c04b;
     --errored: #82a0ff;
+    --analysis: #b195ff;
+    --analysis-soft: #251c3d;
 
     --shadow: 0 1px 2px rgb(0 0 0 / .4), 0 12px 32px rgb(0 0 0 / .45);
 
@@ -191,6 +195,95 @@ kbd {
 .env b {
     color: var(--fg-2);
     font-weight: 500;
+}
+
+.btn.env {
+    position: relative;
+    font-weight: 400;
+}
+
+.env-versions {
+    display: flex;
+    gap: 10px;
+}
+
+/* the static analyser of the run, next to the versions */
+.env-sa {
+    border-radius: 999px;
+    padding: 1px 8px;
+    background: var(--analysis-soft);
+    color: var(--analysis);
+}
+
+.env-sa b {
+    color: var(--analysis);
+}
+
+/* ---- Toolchain popover ---- */
+.toolchain:not([hidden]) {
+    display: grid;
+    gap: 12px;
+}
+
+.toolchain > p {
+    margin: 0;
+}
+
+.tc-group {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+}
+
+.tc-legend {
+    padding: 0 0 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.tc-row {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 8px;
+    border-radius: 7px;
+    font-size: 13px;
+}
+
+label.tc-row {
+    cursor: pointer;
+}
+
+label.tc-row:hover {
+    background: var(--sunken);
+}
+
+.tc-row input {
+    margin: 0;
+    accent-color: var(--brand);
+}
+
+.tc-ver {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--muted);
+}
+
+.toolchain .tc-hint {
+    margin: 4px 0 0;
+    font-size: 12px;
+}
+
+.tc-hint a {
+    color: var(--brand);
+    white-space: nowrap;
 }
 
 .btn {
@@ -1605,7 +1698,8 @@ kbd {
 }
 
 @media (max-width: 1020px) {
-    .env {
+    /* the menu shows the versions: the button keeps its icon and the static analyser */
+    .env-versions {
         display: none;
     }
 
@@ -1807,6 +1901,21 @@ kbd {
     }
 }
 
+@media (max-width: 600px) {
+    /* a dot on the icon, so Run stays on the first row */
+    .env-sa {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        width: 8px;
+        height: 8px;
+        padding: 0;
+        border-radius: 50%;
+        background: var(--analysis);
+        font-size: 0;
+    }
+}
+
 @media (max-width: 520px) {
     .brand-name span {
         display: none;
@@ -1848,6 +1957,13 @@ kbd {
     }
 
     .d-nav .btn-label {
+        display: none;
+    }
+}
+
+/* the logo stays: the toolchain button keeps Run on the first row of a phone */
+@media (max-width: 460px) {
+    .brand-name {
         display: none;
     }
 }

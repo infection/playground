@@ -35,8 +35,10 @@ declare(strict_types=1);
 
 namespace App\Form;
 
+use App\Infection\StaticAnalysisTool;
 use App\Request\CreateExampleRequest;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\EnumType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -61,6 +63,14 @@ class CreateExampleType extends AbstractType
             ->add('code', TextareaType::class)
             ->add('test', TextareaType::class)
             ->add('config', TextareaType::class)
+            // the radios are in the toolchain popover of the top bar, outside of the form
+            ->add('staticAnalysisTool', EnumType::class, [
+                'class' => StaticAnalysisTool::class,
+                'choice_label' => static fn (StaticAnalysisTool $tool): string => $tool->getLabel(),
+                'expanded' => true,
+                'required' => false,
+                'placeholder' => 'None',
+            ])
             ->add('mutate', SubmitType::class, ['label' => 'Mutate']);
     }
 
