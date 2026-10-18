@@ -80,7 +80,8 @@ COPY --link --chmod=755 --from=tailwind /tailwindcss /usr/local/bin/tailwindcss
 RUN --mount=type=bind,from=mago,source=/mago.tar.gz,target=/mnt/mago.tar.gz \
 	tar -xzf /mnt/mago.tar.gz -C /usr/local/bin --strip-components=1 --no-same-owner --wildcards '*/mago'
 
-COPY --link --from=phpstan /phpstan.phar /usr/local/bin/phpstan.phar
+# ADD of a URL makes the file 0600 root: the prod image runs PHPStan as www-data
+COPY --link --chmod=644 --from=phpstan /phpstan.phar /usr/local/bin/phpstan.phar
 
 # Monaco Editor, served by Caddy under /monaco/ (see frankenphp/Caddyfile).
 # Its AMD build loads its own CSS, languages and web workers, which AssetMapper cannot bundle,
