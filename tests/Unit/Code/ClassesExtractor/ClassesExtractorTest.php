@@ -78,7 +78,7 @@ final class ClassesExtractorTest extends TestCase
 
             namespace Infected;
 
-            // a comment the pretty printer moves
+            // a comment above the class
 
             class SourceClass
             {
@@ -106,8 +106,7 @@ final class ClassesExtractorTest extends TestCase
 
         self::assertSame(17, $first->getLineMap()[$returnLine]);
         self::assertSame(15, $first->getLineMap()[$ifLine]);
-        // the pretty printer splits the one-line if, both lines map to the submitted line
-        self::assertSame(15, $first->getLineMap()[$minusLine]);
+        self::assertSame($ifLine, $minusLine);
 
         $second = $extractedClasses[1];
         $secondReturnLine = $this->findLine(explode("\n", $second->getCode()), 'return 1;');
@@ -117,6 +116,76 @@ final class ClassesExtractorTest extends TestCase
 
     public static function provideCodeWithClasses(): Generator
     {
+        yield 'One class, the formatting and the comments are kept' => [
+            <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace Infected;
+
+// a comment above the class
+/**
+ * A doc comment.
+ */
+#[Attribute]
+final class SourceClass
+{
+    public function sum(
+        array $values,
+    ): int {
+        $total = 0; // running total
+
+        foreach ($values as $value) { if ($value > 10) { $total += $value; } }
+
+        return max(
+            $total,
+            [
+                'min' => 0,
+            ]['min'],
+        );
+    }
+}
+
+function notExtracted(): void {}
+PHP,
+            [
+                [
+                    'className' => 'SourceClass',
+                    'code' => <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace Infected;
+
+// a comment above the class
+/**
+ * A doc comment.
+ */
+#[Attribute]
+final class SourceClass
+{
+    public function sum(
+        array $values,
+    ): int {
+        $total = 0; // running total
+
+        foreach ($values as $value) { if ($value > 10) { $total += $value; } }
+
+        return max(
+            $total,
+            [
+                'min' => 0,
+            ]['min'],
+        );
+    }
+}
+PHP,
+                ],
+            ],
+        ];
+
         yield 'One class, simple class name' => [
             <<<'PHP'
 <?php
@@ -142,6 +211,7 @@ namespace Infected;
 
 class ClassName
 {
+
 }
 PHP,
                 ],
@@ -185,6 +255,7 @@ class SourceClass
     {
         return self::class;
     }
+
     public function newObject(): static
     {
         return new ($this->getClassName())();
@@ -220,6 +291,7 @@ namespace Infected;
 
 class Class_Name_123
 {
+
 }
 PHP,
                 ],
@@ -256,6 +328,7 @@ namespace Infected;
 
 class Class1
 {
+
 }
 PHP,
                 ],
@@ -270,6 +343,7 @@ namespace Infected;
 
 class Class2
 {
+
 }
 PHP,
                 ],
@@ -306,6 +380,7 @@ namespace Infected;
 
 class Class1
 {
+
 }
 PHP,
                 ],
@@ -320,6 +395,7 @@ namespace Infected;
 
 class Class2 extends Class1
 {
+
 }
 PHP,
                 ],

@@ -37,11 +37,13 @@ namespace App\Code\ClassesExtractor;
 
 use App\Code\Visitor\ExtractClassesVisitor;
 use function count;
+use function min;
 use PhpParser\Node;
 use PhpParser\NodeFinder;
 use PhpParser\NodeTraverser;
 use PhpParser\Parser;
 use PhpParser\PrettyPrinter\Standard;
+use function substr;
 use Webmozart\Assert\Assert;
 
 final class ClassesExtractor
@@ -50,11 +52,15 @@ final class ClassesExtractor
 
     private NodeTraverser $traverser;
 
-    private Standard $prettyPrinter;
+    /**
+     * Prints the classes instead of copying their source: the class files of the runs made before
+     * the source was copied were printed, their lines are mapped by printing the classes again
+     */
+    private ?Standard $prettyPrinter;
 
     private ExtractClassesVisitor $extractClassesVisitor;
 
-    public function __construct(Parser $parser, NodeTraverser $traverser, Standard $prettyPrinter, ExtractClassesVisitor $extractClassesVisitor)
+    public function __construct(Parser $parser, NodeTraverser $traverser, ?Standard $prettyPrinter, ExtractClassesVisitor $extractClassesVisitor)
     {
         $this->parser = $parser;
         $this->traverser = $traverser;
@@ -80,7 +86,7 @@ final class ClassesExtractor
             foreach ($this->extractClassesVisitor->getClassNodes() as $classNode) {
                 Assert::notNull($classNode->name);
 
-                $classCode = $this->buildClassCode($classNode);
+                $classCode = $this->buildClassCode($code, $classNode);
 
                 $extractedClasses[] = new ExtractedClass(
                     $classNode->name->toString(),
@@ -95,8 +101,12 @@ final class ClassesExtractor
         }
     }
 
-    private function buildClassCode(Node\Stmt\ClassLike $classNode): string
+    private function buildClassCode(string $code, Node\Stmt\ClassLike $classNode): string
     {
+        $classSource = $this->prettyPrinter === null
+            ? self::copyClassSource($code, $classNode)
+            : $this->prettyPrinter->prettyPrint([$classNode]);
+
         return <<<"PHP"
 <?php
 
@@ -104,13 +114,28 @@ declare(strict_types=1);
 
 namespace Infected;
 
-{$this->prettyPrinter->prettyPrint([$classNode])}
+{$classSource}
 PHP;
     }
 
     /**
-     * The extracted class is pretty-printed, so Infection reports lines of a file the user never sees.
-     * The printer keeps the AST, so the nodes of both trees are paired in traversal order.
+     * The class is copied as it was submitted, with its doc comment: Infection shows the mutants on the code the user wrote.
+     */
+    private static function copyClassSource(string $code, Node\Stmt\ClassLike $classNode): string
+    {
+        $startPosition = $classNode->getStartFilePos();
+
+        foreach ($classNode->getComments() as $comment) {
+            $startPosition = min($startPosition, $comment->getStartFilePos());
+        }
+
+        return substr($code, $startPosition, $classNode->getEndFilePos() - $startPosition + 1);
+    }
+
+    /**
+     * The class file has a header of its own, and the class is pretty-printed for the runs made before it was copied,
+     * so Infection reports lines of a file the user never sees.
+     * Both trees have the same nodes, so they are paired in traversal order.
      *
      * @return array<int, int> line in the extracted file => line in the submitted code
      */
