@@ -221,15 +221,19 @@ function selectTab(selector, selected) {
 
 /**
  * The radios of the toolchain popover: the top bar shows the static analyser a run will use.
+ * The browser can restore another radio than the server checked on a reload, so the chip follows it from the start.
  */
 function initToolchain() {
-    getStaticAnalysisRadios().forEach((radio) => radio.addEventListener('change', () => {
-        const tool = getStaticAnalysisTool();
+    showStaticAnalysisChip();
+    getStaticAnalysisRadios().forEach((radio) => radio.addEventListener('change', showStaticAnalysisChip));
+}
 
-        document.querySelectorAll('[data-static-analysis-chip]').forEach((chip) => {
-            chip.hidden = chip.dataset.staticAnalysisChip !== tool;
-        });
-    }));
+function showStaticAnalysisChip() {
+    const tool = getStaticAnalysisTool();
+
+    document.querySelectorAll('[data-static-analysis-chip]').forEach((chip) => {
+        chip.hidden = chip.dataset.staticAnalysisChip !== tool;
+    });
 }
 
 function getStaticAnalysisRadios() {
@@ -238,6 +242,11 @@ function getStaticAnalysisRadios() {
 
 function getStaticAnalysisTool() {
     return Array.from(getStaticAnalysisRadios()).find((radio) => radio.checked)?.value ?? '';
+}
+
+// the one the page was rendered with, i.e. the one of the shown run: a reload can restore another one as checked
+function getRunStaticAnalysisTool() {
+    return Array.from(getStaticAnalysisRadios()).find((radio) => radio.defaultChecked)?.value ?? '';
 }
 
 function getOutputName(mutant) {
@@ -376,7 +385,7 @@ function watchForChangesSinceRun() {
 
     const editors = [codeEditor, testEditor, configEditor];
     const runValues = editors.map((editor) => editor.getValue());
-    const runStaticAnalysisTool = getStaticAnalysisTool();
+    const runStaticAnalysisTool = getRunStaticAnalysisTool();
     const button = document.getElementById('js-submit');
     const runTitle = button.title;
 

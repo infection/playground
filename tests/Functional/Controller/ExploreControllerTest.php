@@ -113,6 +113,18 @@ final class ExploreControllerTest extends WebTestCase
         self::assertSame('3', $crawler->filter('.totals div')->eq(0)->filter('dd')->text());
     }
 
+    public function test_it_lists_the_default_example_with_static_analysis(): void
+    {
+        self::createExample('DefaultExample', config: DefaultExample::CONFIG, code: DefaultExample::CODE, test: DefaultExample::TEST);
+        self::createExample('DefaultExampleWithMago', config: DefaultExample::CONFIG, code: DefaultExample::CODE, test: DefaultExample::TEST, staticAnalysisTool: StaticAnalysisTool::Mago);
+        self::entityManager()->flush();
+
+        $crawler = $this->client->request('GET', '/explore');
+
+        self::assertCount(1, $crawler->filter('.run-card'));
+        self::assertSame('Mago ' . Runner::CURRENT_MAGO_VERSION, $crawler->filter('.run-card .tag-analysis')->text());
+    }
+
     /**
      * @param list<string> $expected
      */
