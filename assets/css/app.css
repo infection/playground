@@ -1914,6 +1914,20 @@ label.tc-row:hover {
         background: var(--analysis);
         font-size: 0;
     }
+
+    /* the toolchain button sits on the left, so a popover under it spans the top bar instead of leaving the screen */
+    .pop-wrap {
+        position: static;
+    }
+
+    .pop {
+        top: auto;
+        left: 16px;
+        right: 16px;
+        width: auto;
+        max-width: none;
+        margin-top: 8px;
+    }
 }
 
 @media (max-width: 520px) {
