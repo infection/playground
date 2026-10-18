@@ -74,6 +74,7 @@ final class ExampleTest extends TestCase
     public function test_a_static_analysis_tool_needs_its_version(): void
     {
         $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('A static analysis tool and its version go together.');
 
         new Example('code', 'test', '{}', '0.35.6', '13.4.1', '8.5.0', StaticAnalysisTool::Mago);
     }
@@ -81,6 +82,7 @@ final class ExampleTest extends TestCase
     public function test_a_version_needs_its_static_analysis_tool(): void
     {
         $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('A static analysis tool and its version go together.');
 
         new Example('code', 'test', '{}', '0.35.6', '13.4.1', '8.5.0', null, '1.56.3');
     }
