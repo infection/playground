@@ -48,6 +48,8 @@ use Hashids\Hashids;
 use function json_decode;
 use const JSON_THROW_ON_ERROR;
 use const PHP_INT_MAX;
+use const PHP_MAJOR_VERSION;
+use const PHP_MINOR_VERSION;
 use PHPUnit\Framework\Attributes\DataProvider;
 use function random_int;
 use function sprintf;
@@ -377,9 +379,11 @@ class PlaygroundControllerTest extends WebTestCase
         static::assertSame(StaticAnalysisTool::Mago, $example->getStaticAnalysisTool());
         static::assertSame(Runner::CURRENT_MAGO_VERSION, $example->getStaticAnalysisToolVersion());
 
+        $phpVersion = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
+
         static::assertSame(
             <<<TOML
-                php-version = "8.5"
+                php-version = "{$phpVersion}"
 
                 [source]
                 paths = ["src"]

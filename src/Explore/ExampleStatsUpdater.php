@@ -55,7 +55,8 @@ final class ExampleStatsUpdater
 
         $example->updateStats(
             $stats,
-            DefaultExample::matches($example->getCode(), $example->getTest(), $example->getConfig()),
+            // the default example with static analysis shows what the analyser adds: Explore lists it
+            DefaultExample::matches($example->getCode(), $example->getTest(), $example->getConfig()) && $example->getStaticAnalysisTool() === null,
             ConfigChanges::fromConfig($example->getConfig()) !== [],
         );
 

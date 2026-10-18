@@ -72,7 +72,7 @@ COPY --link --chmod=755 --from=tailwind /tailwindcss /usr/local/bin/tailwindcss
 
 # the musl build is a static binary: the prod image copies it without collecting shared libraries
 RUN --mount=type=bind,from=mago,source=/mago.tar.gz,target=/mnt/mago.tar.gz \
-	tar -xzf /mnt/mago.tar.gz -C /usr/local/bin --strip-components=1 --wildcards '*/mago'
+	tar -xzf /mnt/mago.tar.gz -C /usr/local/bin --strip-components=1 --no-same-owner --wildcards '*/mago'
 
 # Monaco Editor, served by Caddy under /monaco/ (see frankenphp/Caddyfile).
 # Its AMD build loads its own CSS, languages and web workers, which AssetMapper cannot bundle,
