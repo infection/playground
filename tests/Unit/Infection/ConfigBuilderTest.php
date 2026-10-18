@@ -213,11 +213,29 @@ JSON,
         );
     }
 
+    public function test_it_runs_phpstan_from_the_docker_image(): void
+    {
+        $resultConfig = $this->configBuilder->build('{"mutators": {"@default": true}}', StaticAnalysisTool::PHPStan);
+
+        self::assertSame(
+            array_merge(
+                ConfigBuilder::getNotOverridableBaseConfig(),
+                [
+                    'staticAnalysisTool' => 'phpstan',
+                    'phpStan' => ['customPath' => '/usr/local/bin/phpstan.phar'],
+                    'mutators' => ['@default' => true],
+                ]
+            ),
+            json_decode($resultConfig, true)
+        );
+    }
+
     public function test_it_does_not_run_static_analysis_by_default(): void
     {
         $resultConfig = (array) json_decode($this->configBuilder->build('{}', null), true);
 
         self::assertArrayNotHasKey('staticAnalysisTool', $resultConfig);
         self::assertArrayNotHasKey('mago', $resultConfig);
+        self::assertArrayNotHasKey('phpStan', $resultConfig);
     }
 }

@@ -56,6 +56,8 @@ class Runner
     public const CURRENT_PHP_VERSION = PHP_VERSION;
     // the Mago binary of the Docker image, see the mago stage of the Dockerfile
     public const CURRENT_MAGO_VERSION = '1.57.0';
+    // the PHPStan PHAR of the Docker image, see the phpstan stage of the Dockerfile
+    public const CURRENT_PHPSTAN_VERSION = '2.3.1';
 
     private const PROCESS_TIMEOUT_SEC = 30;
 
@@ -101,6 +103,11 @@ class Runner
         if ($staticAnalysisTool === StaticAnalysisTool::Mago) {
             // Infection does not start Mago without a configuration file
             $this->filesystem->dumpFile(sprintf('%s/mago.toml', $rootDir), $this->getMagoConfig());
+        }
+
+        if ($staticAnalysisTool === StaticAnalysisTool::PHPStan) {
+            // Infection does not start PHPStan without a configuration file
+            $this->filesystem->dumpFile(sprintf('%s/phpstan.neon', $rootDir), $this->getPhpStanConfig());
         }
 
         $extractedClasses = $this->classesExtractor->extract($code);
@@ -213,6 +220,22 @@ php-version = "{$phpVersion}"
 [source]
 paths = ["src"]
 TOML;
+    }
+
+    /**
+     * PHPStan analyses the classes only, like Mago. Its cache stays in the directory of the run.
+     */
+    private function getPhpStanConfig(): string
+    {
+        return <<<'NEON'
+parameters:
+    level: max
+    paths:
+        - src
+    tmpDir: var/phpstan
+    parallel:
+        maximumNumberOfProcesses: 1
+NEON;
     }
 
     private function getAutoload(): string

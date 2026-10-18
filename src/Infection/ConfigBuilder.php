@@ -57,6 +57,7 @@ final class ConfigBuilder
 
     // installed by the Dockerfile
     private const MAGO_PATH = '/usr/local/bin/mago';
+    private const PHPSTAN_PATH = '/usr/local/bin/phpstan.phar';
 
     public function build(string $userProvidedConfig, ?StaticAnalysisTool $staticAnalysisTool = null): string
     {
@@ -65,6 +66,11 @@ final class ConfigBuilder
         if ($staticAnalysisTool === StaticAnalysisTool::Mago) {
             $basicConfig['staticAnalysisTool'] = $staticAnalysisTool->value;
             $basicConfig['mago'] = ['customPath' => self::MAGO_PATH];
+        }
+
+        if ($staticAnalysisTool === StaticAnalysisTool::PHPStan) {
+            $basicConfig['staticAnalysisTool'] = $staticAnalysisTool->value;
+            $basicConfig['phpStan'] = ['customPath' => self::PHPSTAN_PATH];
         }
 
         /** @var array{mutators?: array<string, bool>} $decodedOriginalConfig */

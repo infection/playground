@@ -392,6 +392,102 @@ class PlaygroundControllerTest extends WebTestCase
         );
     }
 
+    public function test_it_runs_phpstan_on_the_escaped_mutants(): void
+    {
+        $client = static::createClient();
+        $client->catchExceptions(false);
+
+        $client->followRedirects(true);
+        $client->request('GET', '/');
+
+        $client->submitForm('create_example[mutate]', [
+            'create_example[code]' => <<<'PHP'
+                <?php
+
+                declare(strict_types=1);
+
+                namespace Infected;
+
+                class SourceClass
+                {
+                    /**
+                     * @param array<int, int> $values
+                     *
+                     * @return list<int>
+                     */
+                    public function positive(array $values): array
+                    {
+                        return array_values(array_filter($values, fn (int $value): bool => $value > 0));
+                    }
+                }
+                PHP,
+            'create_example[test]' => <<<'PHP'
+                <?php
+
+                declare(strict_types=1);
+
+                namespace Infected;
+
+                use PHPUnit\Framework\TestCase;
+
+                class SourceClassTest extends TestCase
+                {
+                    public function test_it_keeps_the_positive_values(): void
+                    {
+                        self::assertCount(1, (new SourceClass())->positive([-1, 2]));
+                    }
+                }
+                PHP,
+            'create_example[config]' => '{"mutators": {"@default": true}}',
+            'create_example[staticAnalysisTool]' => 'phpstan',
+        ]);
+
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertStringContainsString('mutants were caught by Static Analysis', (string) $client->getResponse()->getContent());
+
+        $crawler = $client->getCrawler();
+
+        /** @var array{killedByStaticAnalysis: list<array{mutator: array{mutatorName: string}}>} $jsonLog */
+        $jsonLog = json_decode((string) $crawler->filterXPath('//*[@id="json-log"]')->attr('data-log'), true, 512, JSON_THROW_ON_ERROR);
+        // the test does not check the keys, PHPStan sees that the result is not a list<int> anymore
+        static::assertSame(['UnwrapArrayValues'], array_map(
+            static fn (array $mutant): string => $mutant['mutator']['mutatorName'],
+            $jsonLog['killedByStaticAnalysis'],
+        ));
+
+        static::assertSame('PHPStan', $crawler->filterXPath('//*[@id="json-log"]')->attr('data-static-analysis-tool'));
+        static::assertSame('phpstan', $crawler->filterXPath('//input[@name="create_example[staticAnalysisTool]"][@checked]')->attr('value'));
+        static::assertSame(
+            'PHPStan ' . Runner::CURRENT_PHPSTAN_VERSION,
+            $crawler->filterXPath('//*[@data-static-analysis-chip="phpstan"][not(@hidden)]')->text(),
+        );
+
+        $idHash = basename($client->getRequest()->getUri());
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        /** @var Hashids $hashids */
+        $hashids = static::getContainer()->get(Hashids::class);
+
+        $example = $em->find(Example::class, $hashids->decode($idHash)[0]);
+        static::assertInstanceOf(Example::class, $example);
+        static::assertSame(StaticAnalysisTool::PHPStan, $example->getStaticAnalysisTool());
+        static::assertSame(Runner::CURRENT_PHPSTAN_VERSION, $example->getStaticAnalysisToolVersion());
+
+        static::assertSame(
+            <<<'NEON'
+                parameters:
+                    level: max
+                    paths:
+                        - src
+                    tmpDir: var/phpstan
+                    parallel:
+                        maximumNumberOfProcesses: 1
+                NEON,
+            file_get_contents(sprintf('%s/../../../infection-builds/%s/phpstan.neon', __DIR__, $idHash)),
+        );
+    }
+
     public function test_a_new_run_does_not_use_static_analysis_by_default(): void
     {
         $client = static::createClient();

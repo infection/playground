@@ -41,11 +41,13 @@ namespace App\Infection;
 enum StaticAnalysisTool: string
 {
     case Mago = 'mago';
+    case PHPStan = 'phpstan';
 
     public function getLabel(): string
     {
         return match ($this) {
             self::Mago => 'Mago',
+            self::PHPStan => 'PHPStan',
         };
     }
 
@@ -56,6 +58,7 @@ enum StaticAnalysisTool: string
     {
         return match ($this) {
             self::Mago => Runner::CURRENT_MAGO_VERSION,
+            self::PHPStan => Runner::CURRENT_PHPSTAN_VERSION,
         };
     }
 }
