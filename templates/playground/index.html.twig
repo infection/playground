@@ -4,6 +4,8 @@
 {% set infectionVersion = example.infectionVersion ?? constant('App\\Infection\\Runner::CURRENT_INFECTION_VERSION') %}
 {% set phpunitVersion = example.phpunitVersion ?? constant('App\\Infection\\Runner::CURRENT_PHPUNIT_VERSION') %}
 {% set phpVersion = example.phpVersion ?? constant('App\\Infection\\Runner::CURRENT_PHP_VERSION') %}
+{# NULL when the run used no static analysis, or for a new run: the toolchain shows the current versions #}
+{% set staticAnalysisToolVersion = example.staticAnalysisToolVersion ?? null %}
 
 {% block title %}Infection Playground{% endblock %}
 

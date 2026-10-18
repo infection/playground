@@ -37,6 +37,7 @@ namespace App\Request;
 
 use App\Entity\Example;
 use App\Infection\Runner;
+use App\Infection\StaticAnalysisTool;
 use App\Validator as AppAssert;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -74,6 +75,11 @@ class CreateExampleRequest
     #[Assert\NotBlank]
     public ?string $phpVersion = Runner::CURRENT_PHP_VERSION;
 
+    public ?StaticAnalysisTool $staticAnalysisTool = null;
+
+    // the version a shown run used, NULL for a new run
+    public ?string $staticAnalysisToolVersion = null;
+
     public static function fromEntity(Example $example): self
     {
         $self = new self();
@@ -84,6 +90,8 @@ class CreateExampleRequest
         $self->infectionVersion = $example->getInfectionVersion();
         $self->phpunitVersion = $example->getPhpunitVersion();
         $self->phpVersion = $example->getPhpVersion();
+        $self->staticAnalysisTool = $example->getStaticAnalysisTool();
+        $self->staticAnalysisToolVersion = $example->getStaticAnalysisToolVersion();
 
         return $self;
     }

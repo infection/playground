@@ -1,5 +1,5 @@
 {# The right column: the results of a run, the errors of a rejected run, or what a run will show #}
-{% set fieldLabels = {code: 'Source code', test: 'Test', config: 'infection.json5'} %}
+{% set fieldLabels = {code: 'Source code', test: 'Test', config: 'infection.json5', staticAnalysisTool: 'Static analysis'} %}
 
 {% if resultOutput is defined %}
     {# without a JSON log Infection stopped before it generated mutants: the console output says why #}
@@ -9,12 +9,12 @@
             Mutants <span class="tab-count" id="mutants-count"></span>
         </button>
         <button class="tab" type="button" role="tab" data-result-tab="console" aria-selected="{{ hasLog ? 'false' : 'true' }}" aria-controls="results-console">Console output</button>
-        <span class="stale-note" id="stale-note" hidden>Code changed since this run · <button type="button" id="rerun">Run again</button></span>
+        <span class="stale-note" id="stale-note" hidden>Changed since this run · <button type="button" id="rerun">Run again</button></span>
     </div>
 
     <div class="res" id="results-mutants" role="tabpanel" {% if not hasLog %}hidden{% endif %}>
         {% if hasLog %}
-            <div class="hidden" id="json-log" data-log="{{ jsonLog|e('html_attr') }}"></div>
+            <div class="hidden" id="json-log" data-log="{{ jsonLog|e('html_attr') }}" data-static-analysis-tool="{{ example.staticAnalysisTool.label ?? '' }}"></div>
             <div class="hidden" id="line-map" data-map="{{ lineMap|e('html_attr') }}"></div>
         {% endif %}
 
@@ -56,7 +56,7 @@
             <div class="d-tabs">
                 <div class="d-tablist" role="tablist">
                     <button class="tab" type="button" role="tab" data-detail-tab="diff" aria-selected="true" aria-controls="editor-diff">Diff</button>
-                    <button class="tab" type="button" role="tab" data-detail-tab="output" aria-selected="false" aria-controls="mutant-output">Test output</button>
+                    <button class="tab" type="button" role="tab" data-detail-tab="output" aria-selected="false" aria-controls="mutant-output" id="mutant-output-tab">Test output</button>
                 </div>
                 <div class="pane-toggles">
                     <button class="icon-btn" type="button" data-collapse="results" data-collapse-side="before" aria-pressed="false" title="Expand the details over the overview">

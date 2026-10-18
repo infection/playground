@@ -1,8 +1,43 @@
-{# Versions, Share and Run in the top bar of the playground pages #}
-<div class="env" title="{{ resultOutput is defined ? 'Versions this run used' : 'Versions a new run uses' }}">
-    <span>Infection <b>{{ infectionVersion }}</b></span>
-    <span>PHPUnit <b>{{ phpunitVersion }}</b></span>
-    <span class="env-php">PHP <b>{{ phpVersion }}</b></span>
+{# Toolchain, Share and Run in the top bar of the playground pages #}
+{# The versions open the toolchain of a new run. Its radios are fields of the form below the top bar: form="workbench" #}
+{% set staticAnalysisTool = form.staticAnalysisTool %}
+<div class="pop-wrap">
+    <button class="btn env" id="toolchain-btn" type="button" title="{{ resultOutput is defined ? 'Tools this run used' : 'Tools a new run uses' }}" aria-controls="toolchain-pop" aria-expanded="false" data-popover>
+        <svg class="env-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>
+        <span class="sr-only">Toolchain:</span>
+        <span class="env-versions">
+            <span>Infection <b>{{ infectionVersion }}</b></span>
+            <span>PHPUnit <b>{{ phpunitVersion }}</b></span>
+            <span class="env-php">PHP <b>{{ phpVersion }}</b></span>
+        </span>
+        {% for choice in staticAnalysisTool.vars.choices %}
+            <span class="env-sa" data-static-analysis-chip="{{ choice.value }}"{% if staticAnalysisTool.vars.value != choice.value %} hidden{% endif %}>
+                {{ choice.label }} <b>{{ staticAnalysisToolVersion ?? choice.data.currentVersion }}</b>
+            </span>
+        {% endfor %}
+    </button>
+    <div class="pop toolchain" id="toolchain-pop" role="group" aria-label="Toolchain of a new run" hidden>
+        <h4>Toolchain</h4>
+        <p>The tools of the next run.</p>
+
+        <div class="tc-group">
+            <div class="tc-legend">Test framework</div>
+            <div class="tc-row">PHPUnit <span class="tc-ver">{{ constant('App\\Infection\\Runner::CURRENT_PHPUNIT_VERSION') }}</span></div>
+        </div>
+
+        <fieldset class="tc-group">
+            <legend class="tc-legend">Static analysis</legend>
+            {% for radio in staticAnalysisTool %}
+                {% set choice = staticAnalysisTool.vars.choices[radio.vars.name] ?? null %}
+                <label class="tc-row">
+                    {{ form_widget(radio, {attr: {form: 'workbench'}}) }}
+                    {{ radio.vars.label }}
+                    {% if choice is not null %}<span class="tc-ver">{{ choice.data.currentVersion }}</span>{% endif %}
+                </label>
+            {% endfor %}
+            <p class="tc-hint">Infection runs it on the mutants the tests let escape. A mutant it reports an error for counts as killed. <a href="https://infection.github.io/guide/static-analysis-integration.html" target="_blank" rel="noopener">How it works ↗</a></p>
+        </fieldset>
+    </div>
 </div>
 
 {% if resultOutput is defined %}
@@ -22,11 +57,12 @@
     </div>
 {% endif %}
 
-{# the same code, test, config and versions open the same run: the button waits for a change, see watchForChangesSinceRun() in editor.js #}
+{# the same code, test, config, static analysis and versions open the same run: the button waits for a change, see watchForChangesSinceRun() in editor.js #}
 {% set isRunOnCurrentVersions = resultOutput is defined
     and infectionVersion == constant('App\\Infection\\Runner::CURRENT_INFECTION_VERSION')
     and phpunitVersion == constant('App\\Infection\\Runner::CURRENT_PHPUNIT_VERSION')
-    and phpVersion == constant('App\\Infection\\Runner::CURRENT_PHP_VERSION') %}
+    and phpVersion == constant('App\\Infection\\Runner::CURRENT_PHP_VERSION')
+    and (example.staticAnalysisTool is null or staticAnalysisToolVersion == example.staticAnalysisTool.currentVersion) %}
 <button id="js-submit" class="btn btn-run" type="button" title="Run Infection (Ctrl/⌘ + Enter)"{% if isRunOnCurrentVersions %} data-run-on-current-versions{% endif %}>
     <svg class="run-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5Z"/></svg>
     <span class="spin" aria-hidden="true"></span>

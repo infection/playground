@@ -108,16 +108,18 @@ class PlaygroundController extends AbstractController
             $test = $this->codeSanitizer->sanitize($createExampleRequest->test);
 
             $originalConfig = $createExampleRequest->config;
+            $staticAnalysisTool = $createExampleRequest->staticAnalysisTool;
+            $staticAnalysisToolVersion = $staticAnalysisTool?->getCurrentVersion();
 
             $existingExample = $this->exampleRepository->findContentByHash(
-                Example::hashInput($code, $test, $originalConfig, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION)
+                Example::hashInput($code, $test, $originalConfig, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION, $staticAnalysisTool, $staticAnalysisToolVersion)
             );
 
             if ($existingExample instanceof Example) {
                 return $this->redirectToRoute('playground_display_example', ['exampleIdHash' => $this->hashids->encode($existingExample->getId())]);
             }
 
-            $example = new Example($code, $test, $originalConfig, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION);
+            $example = new Example($code, $test, $originalConfig, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION, $staticAnalysisTool, $staticAnalysisToolVersion);
 
             $em->persist($example);
             $em->flush();
@@ -128,7 +130,8 @@ class PlaygroundController extends AbstractController
                 $idHash,
                 $code,
                 $test,
-                $this->configBuilder->build($originalConfig)
+                $this->configBuilder->build($originalConfig, $staticAnalysisTool),
+                $staticAnalysisTool,
             );
 
             $example->setIdHash($idHash);
