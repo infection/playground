@@ -55,9 +55,17 @@ final class ConfigBuilder
 
     private const NAMESPACE = 'Infected';
 
-    public function build(string $userProvidedConfig): string
+    // installed by the Dockerfile
+    private const MAGO_PATH = '/usr/local/bin/mago';
+
+    public function build(string $userProvidedConfig, ?StaticAnalysisTool $staticAnalysisTool = null): string
     {
         $basicConfig = self::getNotOverridableBaseConfig();
+
+        if ($staticAnalysisTool === StaticAnalysisTool::Mago) {
+            $basicConfig['staticAnalysisTool'] = $staticAnalysisTool->value;
+            $basicConfig['mago'] = ['customPath' => self::MAGO_PATH];
+        }
 
         /** @var array{mutators?: array<string, bool>} $decodedOriginalConfig */
         $decodedOriginalConfig = json_decode($userProvidedConfig, true, 512, JSON_THROW_ON_ERROR);

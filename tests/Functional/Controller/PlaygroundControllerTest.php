@@ -37,13 +37,19 @@ namespace App\Tests\Functional\Controller;
 
 use App\Entity\Example;
 use App\Infection\Runner;
+use App\Infection\StaticAnalysisTool;
 use App\Request\CreateExampleRequest;
+use function array_map;
+use function basename;
 use Doctrine\ORM\EntityManagerInterface;
+use function file_get_contents;
 use Generator;
 use Hashids\Hashids;
 use function json_decode;
 use const JSON_THROW_ON_ERROR;
 use const PHP_INT_MAX;
+use const PHP_MAJOR_VERSION;
+use const PHP_MINOR_VERSION;
 use PHPUnit\Framework\Attributes\DataProvider;
 use function random_int;
 use function sprintf;
@@ -208,7 +214,7 @@ class PlaygroundControllerTest extends WebTestCase
                         return $a + $b;
                     }
                 }
-                PHP,
+                PHP . "\n// a new run, the newest in Explore: " . random_int(1, PHP_INT_MAX),
             'create_example[test]' => <<<'PHP'
                 <?php
 
@@ -289,6 +295,170 @@ class PlaygroundControllerTest extends WebTestCase
         static::assertSame(200, $client->getResponse()->getStatusCode());
         static::assertCount(1, $client->getCrawler()->filterXPath('//*[@id="js-submit"]'));
         static::assertCount(0, $client->getCrawler()->filterXPath('//*[@id="js-submit"][@data-run-on-current-versions]'));
+    }
+
+    public function test_it_runs_mago_on_the_escaped_mutants(): void
+    {
+        $client = static::createClient();
+        $client->catchExceptions(false);
+
+        $client->followRedirects(true);
+        $client->request('GET', '/');
+
+        $client->submitForm('create_example[mutate]', [
+            'create_example[code]' => <<<'PHP'
+                <?php
+
+                declare(strict_types=1);
+
+                namespace Infected;
+
+                class SourceClass
+                {
+                    /**
+                     * @param array<int, int> $values
+                     *
+                     * @return list<int>
+                     */
+                    public function positive(array $values): array
+                    {
+                        return array_values(array_filter($values, fn (int $value): bool => $value > 0));
+                    }
+                }
+                PHP,
+            'create_example[test]' => <<<'PHP'
+                <?php
+
+                declare(strict_types=1);
+
+                namespace Infected;
+
+                use PHPUnit\Framework\TestCase;
+
+                class SourceClassTest extends TestCase
+                {
+                    public function test_it_keeps_the_positive_values(): void
+                    {
+                        self::assertCount(1, (new SourceClass())->positive([-1, 2]));
+                    }
+                }
+                PHP,
+            'create_example[config]' => '{"mutators": {"@default": true}}',
+            'create_example[staticAnalysisTool]' => 'mago',
+        ]);
+
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertStringContainsString('mutants were caught by Static Analysis', (string) $client->getResponse()->getContent());
+
+        $crawler = $client->getCrawler();
+
+        /** @var array{killedByStaticAnalysis: list<array{mutator: array{mutatorName: string}}>} $jsonLog */
+        $jsonLog = json_decode((string) $crawler->filterXPath('//*[@id="json-log"]')->attr('data-log'), true, 512, JSON_THROW_ON_ERROR);
+        // the test does not check the keys, Mago sees that the result is not a list<int> anymore
+        static::assertSame(['UnwrapArrayValues'], array_map(
+            static fn (array $mutant): string => $mutant['mutator']['mutatorName'],
+            $jsonLog['killedByStaticAnalysis'],
+        ));
+
+        static::assertSame('Mago', $crawler->filterXPath('//*[@id="json-log"]')->attr('data-static-analysis-tool'));
+        static::assertSame('mago', $crawler->filterXPath('//input[@name="create_example[staticAnalysisTool]"][@checked]')->attr('value'));
+        static::assertSame(
+            'Mago ' . Runner::CURRENT_MAGO_VERSION,
+            $crawler->filterXPath('//*[@data-static-analysis-chip="mago"][not(@hidden)]')->text(),
+        );
+
+        $idHash = basename($client->getRequest()->getUri());
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        /** @var Hashids $hashids */
+        $hashids = static::getContainer()->get(Hashids::class);
+
+        $example = $em->find(Example::class, $hashids->decode($idHash)[0]);
+        static::assertInstanceOf(Example::class, $example);
+        static::assertSame(StaticAnalysisTool::Mago, $example->getStaticAnalysisTool());
+        static::assertSame(Runner::CURRENT_MAGO_VERSION, $example->getStaticAnalysisToolVersion());
+
+        $phpVersion = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
+
+        static::assertSame(
+            <<<TOML
+                php-version = "{$phpVersion}"
+
+                [source]
+                paths = ["src"]
+                TOML,
+            file_get_contents(sprintf('%s/../../../infection-builds/%s/mago.toml', __DIR__, $idHash)),
+        );
+    }
+
+    public function test_a_new_run_does_not_use_static_analysis_by_default(): void
+    {
+        $client = static::createClient();
+        $client->catchExceptions(false);
+
+        $crawler = $client->request('GET', '/');
+
+        static::assertSame('', $crawler->filterXPath('//input[@name="create_example[staticAnalysisTool]"][@checked]')->attr('value'));
+        static::assertCount(0, $crawler->filterXPath('//*[@data-static-analysis-chip][not(@hidden)]'));
+    }
+
+    /**
+     * Mago is a part of a run like the versions: an older Mago makes a new run with the same code, test and config.
+     */
+    #[DataProvider('provideMagoVersions')]
+    public function test_run_waits_for_a_change_on_a_run_with_the_current_mago(string $magoVersion, bool $waitsForAChange): void
+    {
+        $client = static::createClient();
+        $client->catchExceptions(false);
+
+        /** @var EntityManagerInterface $em */
+        $em = static::getContainer()->get(EntityManagerInterface::class);
+        /** @var Hashids $hashids */
+        $hashids = static::getContainer()->get(Hashids::class);
+
+        $example = new Example('code ' . random_int(1, PHP_INT_MAX), 'test', '{}', Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION, StaticAnalysisTool::Mago, $magoVersion);
+        $em->persist($example);
+        $em->flush();
+        $idHash = $hashids->encode($example->getId());
+        $example->setIdHash($idHash);
+        $em->flush();
+
+        $crawler = $client->request('GET', '/r/' . $idHash);
+
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertCount($waitsForAChange ? 1 : 0, $crawler->filterXPath('//*[@id="js-submit"][@data-run-on-current-versions]'));
+        // the top bar shows the Mago of the run
+        static::assertSame('Mago ' . $magoVersion, $crawler->filterXPath('//*[@data-static-analysis-chip="mago"][not(@hidden)]')->text());
+    }
+
+    public static function provideMagoVersions(): Generator
+    {
+        yield 'current Mago' => [Runner::CURRENT_MAGO_VERSION, true];
+
+        yield 'older Mago' => ['1.23.0', false];
+    }
+
+    public function test_it_fails_when_the_static_analysis_tool_is_unknown(): void
+    {
+        $client = static::createClient();
+        $client->followRedirects();
+        $client->catchExceptions(false);
+
+        $crawler = $client->request('GET', '/');
+
+        $form = $crawler->selectButton('create_example[mutate]')->form();
+        $form->disableValidation();
+        $form->setValues([
+            'create_example[code]' => '<?php $a = $b;',
+            'create_example[test]' => '<?php $a = $b;',
+            'create_example[config]' => '{"mutators": {"@default": true}}',
+            'create_example[staticAnalysisTool]' => 'psalm',
+        ]);
+        $crawler = $client->submit($form);
+
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertStringContainsString('Static analysis', $crawler->filterXPath('//ul[@class="errors"]')->text());
     }
 
     public function test_it_fails_when_config_is_not_a_valid_json(): void

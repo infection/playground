@@ -227,6 +227,11 @@ a.run-card:hover {
     color: var(--brand);
 }
 
+.tag-analysis {
+    background: var(--analysis-soft);
+    color: var(--analysis);
+}
+
 .run-date {
     margin-left: auto;
     color: var(--muted);

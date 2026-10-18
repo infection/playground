@@ -36,6 +36,8 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Controller;
 
 use App\Explore\DefaultExample;
+use App\Infection\Runner;
+use App\Infection\StaticAnalysisTool;
 use App\Tests\Functional\ExampleFixtures;
 use Generator;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -78,6 +80,17 @@ final class ExploreControllerTest extends WebTestCase
         self::assertSame('Latest', $crawler->filter('.explore-tabs [aria-current="page"]')->text());
     }
 
+    public function test_it_shows_the_static_analysis_of_a_run(): void
+    {
+        self::createExample('WithoutStaticAnalysis');
+        self::createExample('WithMago', staticAnalysisTool: StaticAnalysisTool::Mago);
+
+        $crawler = $this->client->request('GET', '/explore');
+
+        self::assertSame('Mago ' . Runner::CURRENT_MAGO_VERSION, $crawler->filter('.run-card')->eq(0)->filter('.tag-analysis')->text());
+        self::assertCount(0, $crawler->filter('.run-card')->eq(1)->filter('.tag-analysis'));
+    }
+
     public function test_it_names_a_run_after_its_class_and_method(): void
     {
         self::createExample(code: '<?php class Slugger { public function slugify(): string { return ""; } }');
@@ -98,6 +111,18 @@ final class ExploreControllerTest extends WebTestCase
 
         self::assertSame(['Shown'], self::runNames($crawler));
         self::assertSame('3', $crawler->filter('.totals div')->eq(0)->filter('dd')->text());
+    }
+
+    public function test_it_lists_the_default_example_with_static_analysis(): void
+    {
+        self::createExample('DefaultExample', config: DefaultExample::CONFIG, code: DefaultExample::CODE, test: DefaultExample::TEST);
+        self::createExample('DefaultExampleWithMago', config: DefaultExample::CONFIG, code: DefaultExample::CODE, test: DefaultExample::TEST, staticAnalysisTool: StaticAnalysisTool::Mago);
+        self::entityManager()->flush();
+
+        $crawler = $this->client->request('GET', '/explore');
+
+        self::assertCount(1, $crawler->filter('.run-card'));
+        self::assertSame('Mago ' . Runner::CURRENT_MAGO_VERSION, $crawler->filter('.run-card .tag-analysis')->text());
     }
 
     /**

@@ -20,9 +20,22 @@ ARG MONACO_VERSION=0.57.0
 ADD --checksum=sha256:3ea1712fbacd3290cf4751007e3a5b57cc279767607812d4c3e57925fb0b05c2 \
 	https://registry.npmjs.org/monaco-editor/-/monaco-editor-${MONACO_VERSION}.tgz /monaco-editor.tgz
 
+# Mago, the static analyser Infection runs on escaped mutants when a run turns it on.
+# The version is Runner::CURRENT_MAGO_VERSION. Mago publishes no checksums: they are of the downloaded archives.
+FROM scratch AS mago_amd64
+ADD --checksum=sha256:eb9ae2c0c013cda11858221f9f939f5e60dc9be5c66f6ff905816f5db6f0d336 \
+	https://github.com/carthage-software/mago/releases/download/1.57.0/mago-1.57.0-x86_64-unknown-linux-musl.tar.gz /mago.tar.gz
+
+FROM scratch AS mago_arm64
+ADD --checksum=sha256:2e16e324599564647f29bcafef5324a3e372f86a3f20d28c5f2848ebadf0455e \
+	https://github.com/carthage-software/mago/releases/download/1.57.0/mago-1.57.0-aarch64-unknown-linux-musl.tar.gz /mago.tar.gz
+
 ARG TARGETARCH
 # hadolint ignore=DL3006
 FROM tailwind_${TARGETARCH} AS tailwind
+
+# hadolint ignore=DL3006
+FROM mago_${TARGETARCH} AS mago
 
 # The different stages of this Dockerfile are meant to be built into separate images
 # https://docs.docker.com/build/building/multi-stage/#stop-at-a-specific-build-stage
@@ -56,6 +69,10 @@ RUN <<-EOF
 EOF
 
 COPY --link --chmod=755 --from=tailwind /tailwindcss /usr/local/bin/tailwindcss
+
+# the musl build is a static binary: the prod image copies it without collecting shared libraries
+RUN --mount=type=bind,from=mago,source=/mago.tar.gz,target=/mnt/mago.tar.gz \
+	tar -xzf /mnt/mago.tar.gz -C /usr/local/bin --strip-components=1 --no-same-owner --wildcards '*/mago'
 
 # Monaco Editor, served by Caddy under /monaco/ (see frankenphp/Caddyfile).
 # Its AMD build loads its own CSS, languages and web workers, which AssetMapper cannot bundle,
@@ -163,6 +180,7 @@ ENV PHP_INI_SCAN_DIR=":/usr/local/etc/php/app.conf.d"
 COPY --from=frankenphp_prod_builder /usr/local/bin/frankenphp /usr/local/bin/frankenphp
 COPY --from=frankenphp_prod_builder /usr/local/bin/php /usr/local/bin/php
 COPY --from=frankenphp_prod_builder /usr/local/bin/docker-php-entrypoint /usr/local/bin/docker-php-entrypoint
+COPY --from=frankenphp_prod_builder /usr/local/bin/mago /usr/local/bin/mago
 COPY --from=frankenphp_prod_builder /usr/local/lib/php/extensions /usr/local/lib/php/extensions
 COPY --from=frankenphp_prod_builder /tmp/libs /usr/lib
 

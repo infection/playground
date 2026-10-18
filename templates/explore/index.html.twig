@@ -76,6 +76,7 @@
                         {% if run.timedOut > 0 %}<span class="m-timeout">{{ run.timedOut }} timed out</span>{% endif %}
                         {% if run.notCovered > 0 %}<span class="m-uncovered">{{ run.notCovered }} not covered</span>{% endif %}
                         <span>Covered MSI <b class="{{ _self.level(run.coveredMsi) }}">{{ _self.percent(run.coveredMsi) }}</b></span>
+                        {% if run.staticAnalysis is not null %}<span class="tag tag-analysis" title="Static analysis">{{ run.staticAnalysis }}</span>{% endif %}
                         {% for change in run.configChanges|slice(0, 4) %}<span class="tag tag-config">{{ change }}</span>{% endfor %}
                         {% if run.configChanges|length > 4 %}<span class="tag tag-config">+{{ run.configChanges|length - 4 }} more</span>{% endif %}
                         {% if run.infectionVersion != currentInfectionVersion %}<span class="tag">Infection {{ run.infectionVersion ?? 'unknown' }}</span>{% endif %}

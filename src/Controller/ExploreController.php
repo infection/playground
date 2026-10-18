@@ -49,6 +49,7 @@ use function is_string;
 use function ksort;
 use function max;
 use function mb_strlen;
+use function sprintf;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -126,6 +127,9 @@ class ExploreController extends AbstractController
             'msi' => $example->getMsi(),
             'coveredMsi' => $example->getCoveredMsi(),
             'configChanges' => ConfigChanges::fromConfig($example->getConfig()),
+            'staticAnalysis' => $example->getStaticAnalysisTool() === null
+                ? null
+                : sprintf('%s %s', $example->getStaticAnalysisTool()->getLabel(), $example->getStaticAnalysisToolVersion()),
         ];
     }
 }

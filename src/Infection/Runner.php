@@ -40,6 +40,8 @@ use function array_keys;
 use function file_exists;
 use function file_get_contents;
 use function getenv;
+use const PHP_MAJOR_VERSION;
+use const PHP_MINOR_VERSION;
 use const PHP_VERSION;
 use function sprintf;
 use Symfony\Component\Filesystem\Filesystem;
@@ -52,6 +54,8 @@ class Runner
     public const CURRENT_PHPUNIT_VERSION = '13.4.1';
     // the PHP binary the playground runs Infection with, i.e. the one of the Docker image
     public const CURRENT_PHP_VERSION = PHP_VERSION;
+    // the Mago binary of the Docker image, see the mago stage of the Dockerfile
+    public const CURRENT_MAGO_VERSION = '1.57.0';
 
     private const PROCESS_TIMEOUT_SEC = 30;
 
@@ -78,7 +82,7 @@ class Runner
         $this->classesExtractor = $classesExtractor;
     }
 
-    public function run(string $idHash, string $code, string $test, string $config): RunResult
+    public function run(string $idHash, string $code, string $test, string $config, ?StaticAnalysisTool $staticAnalysisTool = null): RunResult
     {
         $rootDir = __DIR__ . '/../../infection-builds/' . $idHash;
 
@@ -93,6 +97,11 @@ class Runner
         $this->filesystem->dumpFile(sprintf('%s/infection.json', $rootDir), $config);
         $this->filesystem->dumpFile(sprintf('%s/autoload.php', $rootDir), $this->getAutoload());
         $this->filesystem->dumpFile(sprintf('%s/SourceClassTest.php', $testsDir), $test);
+
+        if ($staticAnalysisTool === StaticAnalysisTool::Mago) {
+            // Infection does not start Mago without a configuration file
+            $this->filesystem->dumpFile(sprintf('%s/mago.toml', $rootDir), $this->getMagoConfig());
+        }
 
         $extractedClasses = $this->classesExtractor->extract($code);
 
@@ -189,6 +198,21 @@ class Runner
     </source>
 </phpunit>
 XML;
+    }
+
+    /**
+     * Mago analyses the classes only: the tests use PHPUnit, which it does not see.
+     */
+    private function getMagoConfig(): string
+    {
+        $phpVersion = sprintf('%d.%d', PHP_MAJOR_VERSION, PHP_MINOR_VERSION);
+
+        return <<<TOML
+php-version = "{$phpVersion}"
+
+[source]
+paths = ["src"]
+TOML;
     }
 
     private function getAutoload(): string
