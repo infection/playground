@@ -39,6 +39,7 @@ use App\Entity\Example;
 use App\Entity\ExampleMutator;
 use App\Explore\ExampleStatsUpdater;
 use App\Infection\Runner;
+use App\Infection\StaticAnalysisTool;
 use function assert;
 use function count;
 use Doctrine\ORM\EntityManagerInterface;
@@ -75,6 +76,7 @@ trait ExampleFixtures
         string $test = '<?php // test',
         string $infectionVersion = Runner::CURRENT_INFECTION_VERSION,
         bool $withLog = true,
+        ?StaticAnalysisTool $staticAnalysisTool = null,
     ): Example {
         $entityManager = self::entityManager();
 
@@ -85,6 +87,8 @@ trait ExampleFixtures
             $infectionVersion,
             Runner::CURRENT_PHPUNIT_VERSION,
             Runner::CURRENT_PHP_VERSION,
+            $staticAnalysisTool,
+            $staticAnalysisTool?->getCurrentVersion(),
         );
 
         $entityManager->persist($example);
