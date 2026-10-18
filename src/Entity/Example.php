@@ -231,6 +231,15 @@ class Example
         $this->idHash = $idHash;
     }
 
+    /**
+     * The id hash is set once the result of the run is saved: a run the request died in,
+     * e.g. on a fatal error, has none.
+     */
+    public function hasFinishedRun(): bool
+    {
+        return $this->idHash !== null;
+    }
+
     public function getInfectionVersion(): ?string
     {
         return $this->infectionVersion;

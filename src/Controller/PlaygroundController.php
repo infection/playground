@@ -115,14 +115,19 @@ class PlaygroundController extends AbstractController
                 Example::hashInput($code, $test, $originalConfig, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION, $staticAnalysisTool, $staticAnalysisToolVersion)
             );
 
-            if ($existingExample instanceof Example) {
+            if ($existingExample instanceof Example && $existingExample->hasFinishedRun()) {
                 return $this->redirectToRoute('playground_display_example', ['exampleIdHash' => $this->hashids->encode($existingExample->getId())]);
             }
 
-            $example = new Example($code, $test, $originalConfig, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION, $staticAnalysisTool, $staticAnalysisToolVersion);
+            // the same input, but its run never finished: it runs again, or the input could never be run
+            $example = $existingExample;
 
-            $em->persist($example);
-            $em->flush();
+            if (!$example instanceof Example) {
+                $example = new Example($code, $test, $originalConfig, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION, $staticAnalysisTool, $staticAnalysisToolVersion);
+
+                $em->persist($example);
+                $em->flush();
+            }
 
             $idHash = $this->hashids->encode($example->getId());
 
