@@ -1,7 +1,8 @@
 #syntax=docker/dockerfile:1
 
 # Versions
-FROM dunglas/frankenphp:1-php8.5 AS frankenphp_upstream
+# pinned to the patch release: 8.5.12 fixes CVE-2026-109618 and CVE-2026-109619 (remote code execution)
+FROM dunglas/frankenphp:1-php8.5.12 AS frankenphp_upstream
 
 # Tailwind CSS 3 standalone CLI (symfonycasts/tailwind-bundle runs it, see config/packages/symfonycasts_tailwind.yaml).
 # Checksums: https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.19/sha256sums.txt
