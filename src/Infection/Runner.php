@@ -36,12 +36,15 @@ declare(strict_types=1);
 namespace App\Infection;
 
 use App\Code\ClassesExtractor\ClassesExtractor;
+use App\Infection\Build\InfectionCommit;
+use App\Infection\Build\InfectionSourceBuilder;
 use function file_exists;
 use function file_get_contents;
 use function ini_get;
 use const PHP_MAJOR_VERSION;
 use const PHP_MINOR_VERSION;
 use const PHP_VERSION;
+use RuntimeException;
 use function set_time_limit;
 use function sprintf;
 use Symfony\Component\Filesystem\Filesystem;
@@ -70,14 +73,23 @@ class Runner
 
     private ClassesExtractor $classesExtractor;
 
-    public function __construct(Filesystem $filesystem, ClassesExtractor $classesExtractor)
-    {
+    public function __construct(
+        Filesystem $filesystem,
+        ClassesExtractor $classesExtractor,
+        private readonly InfectionSourceBuilder $infectionSourceBuilder,
+    ) {
         $this->filesystem = $filesystem;
         $this->classesExtractor = $classesExtractor;
     }
 
-    public function run(string $idHash, string $code, string $test, string $config, ?StaticAnalysisTool $staticAnalysisTool = null): RunResult
-    {
+    public function run(
+        string $idHash,
+        string $code,
+        string $test,
+        string $config,
+        ?StaticAnalysisTool $staticAnalysisTool = null,
+        ?InfectionCommit $infectionCommit = null,
+    ): RunResult {
         $rootDir = __DIR__ . '/../../infection-builds/' . $idHash;
 
         $srcDir = sprintf('%s/src', $rootDir);
@@ -108,6 +120,18 @@ class Runner
             $this->filesystem->dumpFile(sprintf('%s/%s.php', $srcDir, $extractedClass->getClassName()), $extractedClass->getCode());
         }
 
+        $infectionBinary = '../infection.phar';
+
+        if ($infectionCommit !== null) {
+            try {
+                $infectionBinary = $this->buildInfection($infectionCommit);
+            } catch (RuntimeException $e) {
+                return RunResult::fromError(
+                    sprintf('Infection could not be built from commit %s. %s', $infectionCommit->sha, $e->getMessage())
+                );
+            }
+        }
+
         $processTimeout = self::getProcessTimeoutSec($staticAnalysisTool);
         self::extendRequestTimeLimit($processTimeout);
 
@@ -116,7 +140,7 @@ class Runner
                 'php',
                 '--define',
                 'memory_limit=100M',
-                '../infection.phar',
+                $infectionBinary,
                 '--log-verbosity=all',
                 '--ansi',
                 '--no-progress',
@@ -150,6 +174,17 @@ class Runner
         return $staticAnalysisTool === StaticAnalysisTool::PHPStan
             ? self::PHPSTAN_PROCESS_TIMEOUT_SEC
             : self::PROCESS_TIMEOUT_SEC;
+    }
+
+    /**
+     * bin/infection of the sources of the commit, built by the first run of the commit.
+     */
+    private function buildInfection(InfectionCommit $infectionCommit): string
+    {
+        // the build is quick once the commit was built: the time limit is set again for the Infection process
+        self::extendRequestTimeLimit(InfectionSourceBuilder::BUILD_TIMEOUT_SEC);
+
+        return $this->infectionSourceBuilder->build($infectionCommit);
     }
 
     /**

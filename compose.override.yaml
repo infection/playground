@@ -16,7 +16,17 @@ services:
       #  from the bind-mount for better performance by enabling the next line:
       #- /app/vendor
     environment:
-      FRANKENPHP_WORKER_CONFIG: watch
+      # the default pattern watches all of /app: the playground runs, and the builds of Infection from a commit,
+      # write PHP files to infection-builds/, which would restart the worker in the middle of the request
+      FRANKENPHP_WORKER_CONFIG: |
+        watch ./bin/**/*.php
+        watch ./config/**/*.{php,yaml,yml}
+        watch ./migrations/**/*.php
+        watch ./public/**/*.php
+        watch ./src/**/*.php
+        watch ./templates/**/*.twig
+        watch ./vendor/**/*.php
+        watch ./.env*
       # See https://xdebug.org/docs/all_settings#mode
       XDEBUG_MODE: "${XDEBUG_MODE:-develop}"
       APP_ENV: "${APP_ENV:-dev}"

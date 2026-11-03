@@ -192,6 +192,8 @@ COPY --from=frankenphp_prod_builder /usr/local/bin/php /usr/local/bin/php
 COPY --from=frankenphp_prod_builder /usr/local/bin/docker-php-entrypoint /usr/local/bin/docker-php-entrypoint
 COPY --from=frankenphp_prod_builder /usr/local/bin/mago /usr/local/bin/mago
 COPY --from=frankenphp_prod_builder /usr/local/bin/phpstan.phar /usr/local/bin/phpstan.phar
+# installs the dependencies of the commits of Infection a run builds Infection from, see InfectionSourceBuilder
+COPY --from=frankenphp_prod_builder /usr/local/bin/composer /usr/local/bin/composer
 COPY --from=frankenphp_prod_builder /usr/local/lib/php/extensions /usr/local/lib/php/extensions
 COPY --from=frankenphp_prod_builder /tmp/libs /usr/lib
 
@@ -221,7 +223,8 @@ EOF
 COPY --link --exclude=var --exclude=infection-builds --from=frankenphp_prod_builder /app /app
 # Group 0 + g=u for arbitrary-UID runtimes (e.g. OpenShift).
 COPY --chown=www-data:0 --from=frankenphp_prod_builder /app/var /app/var
-# Every playground run writes its sources and Infection logs to infection-builds/<id>.
+# Every playground run writes its sources and Infection logs to infection-builds/<id>,
+# and Infection built from a commit goes to infection-builds/_commits/<sha>.
 COPY --chown=www-data:0 --from=frankenphp_prod_builder /app/infection-builds /app/infection-builds
 RUN chmod g=u /app/var /app/infection-builds
 

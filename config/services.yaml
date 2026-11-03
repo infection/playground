@@ -34,6 +34,18 @@ services:
             - 3
             - 'abcdefghijklmnopqrstuvwxyz1234567890'
 
+    # the playground ini disables curl_multi_exec, which the curl client of symfony/http-client needs
+    app.github_http_client:
+        class: Symfony\Component\HttpClient\NativeHttpClient
+
+    App\Infection\Build\InfectionCommitResolver:
+        arguments:
+            $httpClient: '@app.github_http_client'
+
+    App\Infection\Build\InfectionSourceBuilder:
+        arguments:
+            $httpClient: '@app.github_http_client'
+
     App\Code\CodeSanitizer:
         factory: [ 'App\Code\CodeSanitizerFactory', 'create' ]
 

@@ -35,14 +35,68 @@ declare(strict_types=1);
 
 namespace App\Tests\Unit\Infection;
 
+use App\Code\ClassesExtractor\ClassesExtractorFactory;
+use App\Infection\Build\InfectionCommit;
+use App\Infection\Build\InfectionSourceBuilder;
 use App\Infection\Runner;
 use App\Infection\StaticAnalysisTool;
 use Generator;
+use function ini_get;
+use function ini_set;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use RuntimeException;
+use function set_time_limit;
+use Symfony\Component\Filesystem\Filesystem;
 
 final class RunnerTest extends TestCase
 {
+    private const ID_HASH = '_runner-test';
+
+    private const SHA = 'dbc3013fc473271b4bd86f5ec103702a19d86e83';
+
+    protected function tearDown(): void
+    {
+        (new Filesystem())->remove(__DIR__ . '/../../../infection-builds/' . self::ID_HASH);
+    }
+
+    public function test_it_reports_a_commit_of_infection_that_cannot_be_built(): void
+    {
+        $sourceBuilder = self::createStub(InfectionSourceBuilder::class);
+        $sourceBuilder->method('build')->willThrowException(new RuntimeException('The sources of the commit could not be downloaded.'));
+
+        $result = $this->createRunner($sourceBuilder)->run(self::ID_HASH, '<?php class SourceClass {}', '<?php', '{}', null, new InfectionCommit(self::SHA));
+
+        self::assertSame(
+            'Infection could not be built from commit dbc3013fc473271b4bd86f5ec103702a19d86e83. The sources of the commit could not be downloaded.',
+            $result->getAnsiOutput(),
+        );
+        self::assertNull($result->getJsonLog());
+    }
+
+    public function test_the_build_of_a_commit_outlives_the_request_time_limit(): void
+    {
+        $timeLimitDuringBuild = null;
+
+        $sourceBuilder = self::createStub(InfectionSourceBuilder::class);
+        $sourceBuilder->method('build')->willReturnCallback(static function () use (&$timeLimitDuringBuild): never {
+            $timeLimitDuringBuild = (int) ini_get('max_execution_time');
+
+            throw new RuntimeException('Stop before Infection runs.');
+        });
+
+        // the web server has a time limit, the CLI does not
+        ini_set('max_execution_time', '30');
+
+        try {
+            $this->createRunner($sourceBuilder)->run(self::ID_HASH, '<?php class SourceClass {}', '<?php', '{}', null, new InfectionCommit(self::SHA));
+        } finally {
+            set_time_limit(0);
+        }
+
+        self::assertGreaterThan(InfectionSourceBuilder::BUILD_TIMEOUT_SEC, $timeLimitDuringBuild);
+    }
+
     #[DataProvider('provideProcessTimeouts')]
     public function test_it_gives_the_infection_process_a_timeout(?StaticAnalysisTool $staticAnalysisTool, int $expectedTimeout): void
     {
@@ -59,5 +113,10 @@ final class RunnerTest extends TestCase
         yield 'Mago' => [StaticAnalysisTool::Mago, 30];
 
         yield 'PHPStan runs once per escaped mutant' => [StaticAnalysisTool::PHPStan, 90];
+    }
+
+    private function createRunner(InfectionSourceBuilder $sourceBuilder): Runner
+    {
+        return new Runner(new Filesystem(), ClassesExtractorFactory::create(), $sourceBuilder);
     }
 }

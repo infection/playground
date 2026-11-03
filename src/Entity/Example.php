@@ -36,6 +36,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Explore\RunStats;
+use App\Infection\Build\InfectionCommit;
 use App\Infection\StaticAnalysisTool;
 use DateTimeImmutable;
 use DateTimeInterface;
@@ -79,9 +80,14 @@ class Example
     #[ORM\Column(type: 'string', length: 10, nullable: true)]
     private ?string $idHash = null;
 
-    // rows created before the versions were recorded have NULL here
-    #[ORM\Column(type: 'string', length: 11, nullable: true)]
+    // rows created before the versions were recorded have NULL here;
+    // the SHA of the commit for a run of Infection built from a commit, see InfectionCommit
+    #[ORM\Column(type: 'string', length: 40, nullable: true)]
     private ?string $infectionVersion; // @phpstan-ignore property.unusedType
+
+    // the pull request the commit of Infection was picked from, NULL for a released version or a commit of the default branch
+    #[ORM\Column(type: 'integer', nullable: true)]
+    private ?int $infectionPullRequest;
 
     #[ORM\Column(type: 'string', length: 11, nullable: true)]
     private ?string $phpunitVersion; // @phpstan-ignore property.unusedType
@@ -133,13 +139,16 @@ class Example
         string $phpVersion,
         ?StaticAnalysisTool $staticAnalysisTool = null,
         ?string $staticAnalysisToolVersion = null,
+        ?int $infectionPullRequest = null,
     ) {
         Assert::same($staticAnalysisTool === null, $staticAnalysisToolVersion === null, 'A static analysis tool and its version go together.');
+        Assert::true($infectionPullRequest === null || InfectionCommit::isSha($infectionVersion), 'Only a commit of Infection comes from a pull request.');
 
         $this->code = $code;
         $this->test = $test;
         $this->config = $config;
         $this->infectionVersion = $infectionVersion;
+        $this->infectionPullRequest = $infectionPullRequest;
         $this->phpunitVersion = $phpunitVersion;
         $this->phpVersion = $phpVersion;
         $this->staticAnalysisTool = $staticAnalysisTool;
@@ -243,6 +252,16 @@ class Example
     public function getInfectionVersion(): ?string
     {
         return $this->infectionVersion;
+    }
+
+    /**
+     * The commit Infection was built from, NULL for a released version.
+     */
+    public function getInfectionCommit(): ?InfectionCommit
+    {
+        return InfectionCommit::isSha($this->infectionVersion)
+            ? new InfectionCommit((string) $this->infectionVersion, $this->infectionPullRequest)
+            : null;
     }
 
     public function getPhpunitVersion(): ?string
