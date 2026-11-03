@@ -36,6 +36,7 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Controller;
 
 use App\Entity\Example;
+use App\Infection\Build\InfectionCommitResolver;
 use App\Infection\Build\InfectionSourceBuilder;
 use App\Infection\Runner;
 use App\Infection\StaticAnalysisTool;
@@ -187,6 +188,29 @@ class PlaygroundControllerTest extends WebTestCase
         $client->submitForm('create_example[mutate]', $form);
 
         static::assertSame(302, $client->getResponse()->getStatusCode());
+    }
+
+    public function test_it_does_not_ask_github_about_the_link_when_the_rest_is_invalid(): void
+    {
+        $client = static::createClient();
+        $client->catchExceptions(false);
+        $client->disableReboot();
+
+        $resolver = $this->createMock(InfectionCommitResolver::class);
+        $resolver->expects(static::never())->method('resolve');
+        static::getContainer()->set(InfectionCommitResolver::class, $resolver);
+
+        $client->request('GET', '/');
+
+        $client->submitForm('create_example[mutate]', [
+            'create_example[code]' => '',
+            'create_example[test]' => 'test',
+            'create_example[config]' => '{"mutators": {"@default": true}}',
+            'create_example[infectionCommitUrl]' => 'https://github.com/infection/infection/pull/3717',
+        ]);
+
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertStringContainsString('This value should not be blank', (string) $client->getResponse()->getContent());
     }
 
     public function test_a_post_without_the_form_shows_the_form(): void

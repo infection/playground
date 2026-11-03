@@ -42,6 +42,8 @@ use App\Infection\StaticAnalysisTool;
 use App\Validator as AppAssert;
 use Symfony\Component\Validator\Constraints as Assert;
 
+// the link of the commit of Infection asks GitHub, which limits the requests: only when the rest is valid
+#[Assert\GroupSequence(['CreateExampleRequest', self::INFECTION_COMMIT_GROUP])]
 class CreateExampleRequest
 {
     /**
@@ -50,6 +52,7 @@ class CreateExampleRequest
     public const MAX_CODE_LENGTH = 10_000;
 
     public const MAX_CONFIG_LENGTH = 5_000;
+    private const INFECTION_COMMIT_GROUP = 'InfectionCommit';
 
     /** @var string|null */
     #[AppAssert\ValidPhpCode]
@@ -83,10 +86,11 @@ class CreateExampleRequest
 
     // the link to a pull request or a commit of Infection to build Infection from, NULL for the released version
     #[Assert\Length(max: 200)]
+    #[AppAssert\ValidInfectionCommitLink(groups: [self::INFECTION_COMMIT_GROUP])]
     public ?string $infectionCommitUrl = null;
 
-    // the commit of Infection a shown run used, NULL for a new run or a released version
-    public ?InfectionCommit $runInfectionCommit = null;
+    // the commit of Infection of a shown run, or of a new run once its link is valid, NULL for a released version
+    public ?InfectionCommit $infectionCommit = null;
 
     public static function fromEntity(Example $example): self
     {
@@ -100,9 +104,9 @@ class CreateExampleRequest
         $self->phpVersion = $example->getPhpVersion();
         $self->staticAnalysisTool = $example->getStaticAnalysisTool();
         $self->staticAnalysisToolVersion = $example->getStaticAnalysisToolVersion();
-        $self->runInfectionCommit = $example->getInfectionCommit();
+        $self->infectionCommit = $example->getInfectionCommit();
         // a new run of the shown one uses the same commit
-        $self->infectionCommitUrl = $self->runInfectionCommit?->getUrl();
+        $self->infectionCommitUrl = $self->infectionCommit?->getUrl();
 
         return $self;
     }
