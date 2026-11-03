@@ -72,7 +72,6 @@ class CreateExampleType extends AbstractType
                 'required' => false,
                 'placeholder' => 'None',
             ])
-            // in the toolchain popover too
             ->add('infectionCommitUrl', TextType::class, [
                 'required' => false,
             ])
