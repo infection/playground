@@ -36,6 +36,7 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Entity;
 
 use App\Entity\Example;
+use App\Infection\Build\InfectionCommit;
 use App\Infection\StaticAnalysisTool;
 use InvalidArgumentException;
 use function md5;
@@ -85,5 +86,36 @@ final class ExampleTest extends TestCase
         $this->expectExceptionMessage('A static analysis tool and its version go together.');
 
         new Example('code', 'test', '{}', '0.35.6', '13.4.1', '8.5.0', null, '1.56.3');
+    }
+
+    public function test_a_run_of_a_released_version_has_no_commit_of_infection(): void
+    {
+        $example = new Example('code', 'test', '{}', '0.35.6', '13.4.1', '8.5.0');
+
+        self::assertNull($example->getInfectionCommit());
+    }
+
+    public function test_it_records_the_commit_of_infection_and_its_pull_request(): void
+    {
+        $sha = 'dbc3013fc473271b4bd86f5ec103702a19d86e83';
+        $example = new Example('code', 'test', '{}', $sha, '13.4.1', '8.5.0', null, null, 3717);
+
+        self::assertCommit($sha, 3717, $example->getInfectionCommit());
+        self::assertSame(Example::hashInput('code', 'test', '{}', $sha, '13.4.1', '8.5.0'), $example->getInputHash());
+    }
+
+    public function test_a_pull_request_needs_a_commit_of_infection(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage('Only a commit of Infection comes from a pull request.');
+
+        new Example('code', 'test', '{}', '0.35.6', '13.4.1', '8.5.0', null, null, 3717);
+    }
+
+    private static function assertCommit(string $expectedSha, ?int $expectedPullRequest, ?InfectionCommit $commit): void
+    {
+        self::assertNotNull($commit);
+        self::assertSame($expectedSha, $commit->sha);
+        self::assertSame($expectedPullRequest, $commit->pullRequest);
     }
 }

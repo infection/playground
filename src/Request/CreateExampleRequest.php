@@ -36,6 +36,7 @@ declare(strict_types=1);
 namespace App\Request;
 
 use App\Entity\Example;
+use App\Infection\Build\InfectionCommit;
 use App\Infection\Runner;
 use App\Infection\StaticAnalysisTool;
 use App\Validator as AppAssert;
@@ -80,6 +81,13 @@ class CreateExampleRequest
     // the version a shown run used, NULL for a new run
     public ?string $staticAnalysisToolVersion = null;
 
+    // the link to a pull request or a commit of Infection to build Infection from, NULL for the released version
+    #[Assert\Length(max: 200)]
+    public ?string $infectionCommitUrl = null;
+
+    // the commit of Infection a shown run used, NULL for a new run or a released version
+    public ?InfectionCommit $runInfectionCommit = null;
+
     public static function fromEntity(Example $example): self
     {
         $self = new self();
@@ -92,6 +100,9 @@ class CreateExampleRequest
         $self->phpVersion = $example->getPhpVersion();
         $self->staticAnalysisTool = $example->getStaticAnalysisTool();
         $self->staticAnalysisToolVersion = $example->getStaticAnalysisToolVersion();
+        $self->runInfectionCommit = $example->getInfectionCommit();
+        // a new run of the shown one uses the same commit
+        $self->infectionCommitUrl = $self->runInfectionCommit?->getUrl();
 
         return $self;
     }

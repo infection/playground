@@ -42,6 +42,9 @@ use App\Explore\ExampleStatsUpdater;
 use App\Form\CreateExampleType;
 use App\Html\Ansi\AnsiToHtmlConverter;
 use App\Html\Ansi\InfectionAnsiHtmlTheme;
+use App\Infection\Build\InfectionCommit;
+use App\Infection\Build\InfectionCommitResolver;
+use App\Infection\Build\InvalidInfectionCommit;
 use App\Infection\ConfigBuilder;
 use App\Infection\Runner;
 use App\Repository\ExampleRepository;
@@ -50,9 +53,12 @@ use Doctrine\ORM\EntityManagerInterface;
 use Hashids\Hashids;
 use function json_encode;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use function trim;
 
 class PlaygroundController extends AbstractController
 {
@@ -74,6 +80,7 @@ class PlaygroundController extends AbstractController
         ExampleRepository $exampleRepository,
         private readonly LineMapBuilder $lineMapBuilder,
         private readonly ExampleStatsUpdater $exampleStatsUpdater,
+        private readonly InfectionCommitResolver $infectionCommitResolver,
     ) {
         $this->hashids = $hashids;
         $this->infectionRunner = $infectionRunner;
@@ -103,6 +110,12 @@ class PlaygroundController extends AbstractController
 
         $form->handleRequest($request);
 
+        $infectionCommit = null;
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $infectionCommit = $this->resolveInfectionCommit($form, $createExampleRequest);
+        }
+
         if ($form->isSubmitted() && $form->isValid()) {
             $code = $this->codeSanitizer->sanitize((string) $createExampleRequest->code);
             $test = $this->codeSanitizer->sanitize($createExampleRequest->test);
@@ -110,9 +123,10 @@ class PlaygroundController extends AbstractController
             $originalConfig = $createExampleRequest->config;
             $staticAnalysisTool = $createExampleRequest->staticAnalysisTool;
             $staticAnalysisToolVersion = $staticAnalysisTool?->getCurrentVersion();
+            $infectionVersion = $infectionCommit->sha ?? Runner::CURRENT_INFECTION_VERSION;
 
             $existingExample = $this->exampleRepository->findContentByHash(
-                Example::hashInput($code, $test, $originalConfig, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION, $staticAnalysisTool, $staticAnalysisToolVersion)
+                Example::hashInput($code, $test, $originalConfig, $infectionVersion, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION, $staticAnalysisTool, $staticAnalysisToolVersion)
             );
 
             if ($existingExample instanceof Example && $existingExample->hasFinishedRun()) {
@@ -123,7 +137,7 @@ class PlaygroundController extends AbstractController
             $example = $existingExample;
 
             if (!$example instanceof Example) {
-                $example = new Example($code, $test, $originalConfig, Runner::CURRENT_INFECTION_VERSION, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION, $staticAnalysisTool, $staticAnalysisToolVersion);
+                $example = new Example($code, $test, $originalConfig, $infectionVersion, Runner::CURRENT_PHPUNIT_VERSION, Runner::CURRENT_PHP_VERSION, $staticAnalysisTool, $staticAnalysisToolVersion, $infectionCommit?->pullRequest);
 
                 $em->persist($example);
                 $em->flush();
@@ -137,6 +151,7 @@ class PlaygroundController extends AbstractController
                 $test,
                 $this->configBuilder->build($originalConfig, $staticAnalysisTool),
                 $staticAnalysisTool,
+                $infectionCommit,
             );
 
             $example->setIdHash($idHash);
@@ -179,5 +194,25 @@ class PlaygroundController extends AbstractController
             'jsonLog' => $example->getJsonLog(),
             'lineMap' => json_encode($this->lineMapBuilder->build($example->getCode(), $example->getJsonLog())),
         ]);
+    }
+
+    /**
+     * The link to a pull request or a commit of Infection, checked against GitHub: its errors are the ones of the field.
+     */
+    private function resolveInfectionCommit(FormInterface $form, CreateExampleRequest $createExampleRequest): ?InfectionCommit
+    {
+        $infectionCommitUrl = trim((string) $createExampleRequest->infectionCommitUrl);
+
+        if ($infectionCommitUrl === '') {
+            return null;
+        }
+
+        try {
+            return $this->infectionCommitResolver->resolve($infectionCommitUrl);
+        } catch (InvalidInfectionCommit $exception) {
+            $form->get('infectionCommitUrl')->addError(new FormError($exception->getMessage()));
+
+            return null;
+        }
     }
 }

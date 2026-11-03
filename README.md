@@ -47,6 +47,17 @@ make docker-tailwind-watch
 Playground runs use the PHARs in `infection-builds/`, their versions are in `App\Infection\Runner`.
 The PHP version is the one of the Docker image.
 
+A run can use Infection built from a pull request or a commit of infection/infection instead of the released PHAR,
+e.g. to show a bug in a pull request and then its fix: paste the link of the pull request, or of one of its commits,
+in the toolchain popover. The first run of a commit downloads its sources and installs their dependencies with Composer
+(without scripts and plugins) in `infection-builds/_commits/<sha>`, which takes a few seconds; the next runs reuse it.
+Nothing removes these builds.
+
+Infection is not sandboxed like the code it tests, so only commits that need write access to infection/infection are
+built: the pull requests from a branch of infection/infection and their commits, and the commits of `master`.
+Pull requests from forks are refused. The links are checked with the GitHub API, without a token: it allows 60 requests
+an hour, which a commit that was already built does not need.
+
 ### Production
 
 Production runs `compose.yaml` + `compose.prod.yaml` on the droplet. Caddy gets and renews the

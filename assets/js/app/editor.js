@@ -389,9 +389,13 @@ function watchForChangesSinceRun() {
     const button = document.getElementById('js-submit');
     const runTitle = button.title;
 
+    // the link to the commit of Infection the run used, empty for the released version
+    const infectionCommitInput = document.getElementById('create_example_infectionCommitUrl');
+
     const update = () => {
         const stale = editors.some((editor, index) => editor.getValue() !== runValues[index])
-            || getStaticAnalysisTool() !== runStaticAnalysisTool;
+            || getStaticAnalysisTool() !== runStaticAnalysisTool
+            || infectionCommitInput.value.trim() !== infectionCommitInput.defaultValue;
 
         document.getElementById('editor-code').classList.toggle('is-stale', stale);
         document.getElementById('stale-note').hidden = !stale;
@@ -409,6 +413,7 @@ function watchForChangesSinceRun() {
     update();
     editors.forEach((editor) => editor.onDidChangeModelContent(update));
     getStaticAnalysisRadios().forEach((radio) => radio.addEventListener('change', update));
+    infectionCommitInput.addEventListener('input', update);
 }
 
 // ---- Mutants ---------------------------------------------------------------

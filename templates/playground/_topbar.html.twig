@@ -21,6 +21,19 @@
         <p>The tools of the next run.</p>
 
         <div class="tc-group">
+            <label class="tc-legend" for="{{ form.infectionCommitUrl.vars.id }}">Infection</label>
+            {{ form_widget(form.infectionCommitUrl, {attr: {
+                form: 'workbench',
+                class: 'tc-input',
+                placeholder: 'Released ' ~ constant('App\\Infection\\Runner::CURRENT_INFECTION_VERSION') ~ ', or a pull request link',
+                autocomplete: 'off',
+                spellcheck: 'false',
+                'aria-describedby': 'infection-commit-hint',
+            }}) }}
+            <p class="tc-hint" id="infection-commit-hint">To try a change to Infection, paste the link to a pull request of infection/infection, or to one of its commits. Pull requests from forks can't be run.</p>
+        </div>
+
+        <div class="tc-group">
             <div class="tc-legend">Test framework</div>
             <div class="tc-row">PHPUnit <span class="tc-ver">{{ constant('App\\Infection\\Runner::CURRENT_PHPUNIT_VERSION') }}</span></div>
         </div>
@@ -58,8 +71,9 @@
 {% endif %}
 
 {# the same code, test, config, static analysis and versions open the same run: the button waits for a change, see watchForChangesSinceRun() in editor.js #}
+{# a run of a commit of Infection is on the current version of it: the commit is in the toolchain #}
 {% set isRunOnCurrentVersions = resultOutput is defined
-    and infectionVersion == constant('App\\Infection\\Runner::CURRENT_INFECTION_VERSION')
+    and (example.runInfectionCommit is not null or infectionVersion == constant('App\\Infection\\Runner::CURRENT_INFECTION_VERSION'))
     and phpunitVersion == constant('App\\Infection\\Runner::CURRENT_PHPUNIT_VERSION')
     and phpVersion == constant('App\\Infection\\Runner::CURRENT_PHP_VERSION')
     and (example.staticAnalysisTool is null or staticAnalysisToolVersion == example.staticAnalysisTool.currentVersion) %}

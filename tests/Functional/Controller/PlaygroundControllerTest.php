@@ -108,6 +108,25 @@ class PlaygroundControllerTest extends WebTestCase
         static::assertGreaterThan(Runner::getProcessTimeoutSec(StaticAnalysisTool::PHPStan), $timeLimit);
     }
 
+    public function test_it_does_not_run_with_a_link_that_is_not_a_pull_request_or_a_commit_of_infection(): void
+    {
+        $client = static::createClient();
+        $client->followRedirects();
+        $client->catchExceptions(false);
+
+        $client->request('GET', '/');
+
+        $client->submitForm('create_example[mutate]', [
+            'create_example[code]' => 'code',
+            'create_example[test]' => 'test',
+            'create_example[config]' => '{"mutators": {"@default": true}}',
+            'create_example[infectionCommitUrl]' => 'https://github.com/someone/infection/pull/1',
+        ]);
+
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertStringContainsString('Must be a link to a pull request or a commit of infection/infection.', (string) $client->getResponse()->getContent());
+    }
+
     public function test_it_fails_with_when_code_is_blank(): void
     {
         $client = static::createClient();

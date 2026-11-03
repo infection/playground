@@ -41,6 +41,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\EnumType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -70,6 +71,10 @@ class CreateExampleType extends AbstractType
                 'expanded' => true,
                 'required' => false,
                 'placeholder' => 'None',
+            ])
+            // in the toolchain popover too
+            ->add('infectionCommitUrl', TextType::class, [
+                'required' => false,
             ])
             ->add('mutate', SubmitType::class, ['label' => 'Mutate']);
     }
