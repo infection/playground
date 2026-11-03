@@ -260,6 +260,13 @@ function getOutputName(mutant) {
 function initRun() {
     document.getElementById('js-submit').addEventListener('click', submit);
 
+    // Enter in a field of the form, e.g. the link to a commit of Infection, submits it natively: without the
+    // code of the editors. submit() sends it with form.submit(), which fires no submit event
+    document.getElementById('workbench').addEventListener('submit', (event) => {
+        event.preventDefault();
+        submit();
+    });
+
     // Back after a run can restore this page from the cache as it was when submitted
     window.addEventListener('pageshow', (event) => {
         if (event.persisted) {

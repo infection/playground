@@ -40,12 +40,10 @@ use App\Infection\Build\InfectionCommit;
 use App\Infection\Build\InfectionSourceBuilder;
 use function file_exists;
 use function file_get_contents;
-use function ini_get;
 use const PHP_MAJOR_VERSION;
 use const PHP_MINOR_VERSION;
 use const PHP_VERSION;
 use RuntimeException;
-use function set_time_limit;
 use function sprintf;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
@@ -66,8 +64,6 @@ class Runner
     // Infection starts PHPStan once per escaped mutant, one after the other: on the droplet
     // a handful of escaped mutants take longer than 30 seconds
     private const PHPSTAN_PROCESS_TIMEOUT_SEC = 90;
-    // what the request does after the Infection process: saving the result and redirecting
-    private const REQUEST_TIME_MARGIN_SEC = 30;
 
     private Filesystem $filesystem;
 
@@ -124,16 +120,17 @@ class Runner
 
         if ($infectionCommit !== null) {
             try {
-                $infectionBinary = $this->buildInfection($infectionCommit);
+                // bin/infection of the sources of the commit, built by the first run of the commit
+                $infectionBinary = $this->infectionSourceBuilder->build($infectionCommit);
             } catch (RuntimeException $e) {
-                return RunResult::fromError(
-                    sprintf('Infection could not be built from commit %s. %s', $infectionCommit->sha, $e->getMessage())
+                return RunResult::fromBuildFailure(
+                    sprintf('Infection could not be built from commit %s. %s Run again to retry.', $infectionCommit->sha, $e->getMessage())
                 );
             }
         }
 
         $processTimeout = self::getProcessTimeoutSec($staticAnalysisTool);
-        self::extendRequestTimeLimit($processTimeout);
+        RequestTimeLimit::extend($processTimeout);
 
         try {
             $process = new Process([
@@ -174,33 +171,6 @@ class Runner
         return $staticAnalysisTool === StaticAnalysisTool::PHPStan
             ? self::PHPSTAN_PROCESS_TIMEOUT_SEC
             : self::PROCESS_TIMEOUT_SEC;
-    }
-
-    /**
-     * bin/infection of the sources of the commit, built by the first run of the commit.
-     */
-    private function buildInfection(InfectionCommit $infectionCommit): string
-    {
-        // the build is quick once the commit was built: the time limit is set again for the Infection process
-        self::extendRequestTimeLimit(InfectionSourceBuilder::BUILD_TIMEOUT_SEC);
-
-        return $this->infectionSourceBuilder->build($infectionCommit);
-    }
-
-    /**
-     * FrankenPHP counts max_execution_time in wall-clock time, waiting for the Infection process included.
-     * With a limit not longer than the process timeout, the request dies with a fatal error, a 500,
-     * before the ProcessTimedOutException is caught.
-     */
-    private static function extendRequestTimeLimit(int $processTimeout): void
-    {
-        // 0 is no limit, e.g. in the CLI: setting one would end the process later
-        if ((int) ini_get('max_execution_time') === 0) {
-            return;
-        }
-
-        // restarts the count from now
-        set_time_limit($processTimeout + self::REQUEST_TIME_MARGIN_SEC);
     }
 
     private function getPhpUnitXmlConfig(): string

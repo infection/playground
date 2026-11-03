@@ -36,6 +36,7 @@ declare(strict_types=1);
 namespace App\Tests\Functional\Controller;
 
 use App\Entity\Example;
+use App\Infection\Build\InfectionSourceBuilder;
 use App\Infection\Runner;
 use App\Infection\StaticAnalysisTool;
 use App\Request\CreateExampleRequest;
@@ -56,6 +57,7 @@ use const PHP_MINOR_VERSION;
 use PHPUnit\Framework\Attributes\DataProvider;
 use function putenv;
 use function random_int;
+use RuntimeException;
 use function set_time_limit;
 use function sprintf;
 use function str_repeat;
@@ -106,6 +108,85 @@ class PlaygroundControllerTest extends WebTestCase
 
         static::assertSame(302, $client->getResponse()->getStatusCode());
         static::assertGreaterThan(Runner::getProcessTimeoutSec(StaticAnalysisTool::PHPStan), $timeLimit);
+    }
+
+    public function test_it_runs_infection_built_from_a_commit_of_a_pull_request(): void
+    {
+        $sha = 'dbc3013fc473271b4bd86f5ec103702a19d86e83';
+
+        $client = static::createClient();
+        $client->catchExceptions(false);
+        // the stub stays for the next requests
+        $client->disableReboot();
+
+        // the commit was built: neither GitHub nor Composer are needed, the released PHAR stands in for the build
+        $sourceBuilder = $this->createMock(InfectionSourceBuilder::class);
+        $sourceBuilder->method('isBuilt')->willReturn(true);
+        $sourceBuilder->expects(static::once())->method('build')->willReturn(__DIR__ . '/../../../infection-builds/infection.phar');
+        static::getContainer()->set(InfectionSourceBuilder::class, $sourceBuilder);
+
+        $client->request('GET', '/');
+
+        $client->submitForm('create_example[mutate]', [
+            'create_example[code]' => 'code ' . random_int(1, PHP_INT_MAX),
+            'create_example[test]' => 'test',
+            'create_example[config]' => '{"mutators": {"@default": true}}',
+            'create_example[infectionCommitUrl]' => 'https://github.com/infection/infection/pull/3717/commits/' . $sha,
+        ]);
+
+        static::assertSame(302, $client->getResponse()->getStatusCode());
+
+        $idHash = basename((string) $client->getResponse()->headers->get('Location'));
+        /** @var Hashids $hashids */
+        $hashids = static::getContainer()->get(Hashids::class);
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $example = $entityManager->find(Example::class, $hashids->decode($idHash)[0]);
+
+        static::assertInstanceOf(Example::class, $example);
+        static::assertSame($sha, $example->getInfectionVersion());
+        static::assertSame(3717, $example->getInfectionCommit()?->pullRequest);
+
+        // the run shows its commit, and a new run of it uses the same commit
+        $crawler = $client->request('GET', '/r/' . $idHash);
+
+        static::assertStringContainsString('Infection <b>#3717 dbc3013</b>', (string) $client->getResponse()->getContent());
+        static::assertSame(
+            'https://github.com/infection/infection/pull/3717/commits/' . $sha,
+            $crawler->filter('#create_example_infectionCommitUrl')->attr('value'),
+        );
+    }
+
+    public function test_a_run_whose_build_failed_runs_again(): void
+    {
+        $client = static::createClient();
+        $client->catchExceptions(false);
+        $client->disableReboot();
+
+        // e.g. GitHub or Composer failed: the next run of the same input builds again
+        $sourceBuilder = $this->createMock(InfectionSourceBuilder::class);
+        $sourceBuilder->method('isBuilt')->willReturn(true);
+        $sourceBuilder->expects(static::exactly(2))->method('build')->willThrowException(new RuntimeException('The sources of the commit could not be downloaded.'));
+        static::getContainer()->set(InfectionSourceBuilder::class, $sourceBuilder);
+
+        $form = [
+            'create_example[code]' => 'code ' . random_int(1, PHP_INT_MAX),
+            'create_example[test]' => 'test',
+            'create_example[config]' => '{"mutators": {"@default": true}}',
+            'create_example[infectionCommitUrl]' => 'https://github.com/infection/infection/commit/dbc3013fc473271b4bd86f5ec103702a19d86e83',
+        ];
+
+        $client->request('GET', '/');
+        $client->submitForm('create_example[mutate]', $form);
+
+        static::assertSame(302, $client->getResponse()->getStatusCode());
+        $client->followRedirect();
+        static::assertStringContainsString('Infection could not be built from commit dbc3013fc473271b4bd86f5ec103702a19d86e83. The sources of the commit could not be downloaded. Run again to retry.', (string) $client->getResponse()->getContent());
+
+        $client->request('GET', '/');
+        $client->submitForm('create_example[mutate]', $form);
+
+        static::assertSame(302, $client->getResponse()->getStatusCode());
     }
 
     public function test_it_does_not_run_with_a_link_that_is_not_a_pull_request_or_a_commit_of_infection(): void

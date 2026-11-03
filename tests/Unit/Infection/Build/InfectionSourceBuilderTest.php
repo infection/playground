@@ -37,15 +37,22 @@ namespace App\Tests\Unit\Infection\Build;
 
 use App\Infection\Build\InfectionCommit;
 use App\Infection\Build\InfectionSourceBuilder;
+use function array_slice;
+use function clearstatcache;
 use function file_get_contents;
+use function filemtime;
+use function ini_get;
+use function ini_set;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use function scandir;
+use function set_time_limit;
 use function sprintf;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 use function sys_get_temp_dir;
+use function time;
 use function uniqid;
 use ZipArchive;
 
@@ -58,6 +65,7 @@ final class InfectionSourceBuilderTest extends TestCase
         #!/bin/sh
         printf '%s\n' "$@" > composer-arguments
         printf '%s' "$COMPOSER_HOME" > composer-home
+        printf '%s' "$COMPOSER_AUTH" > composer-auth
         mkdir vendor
         SH;
 
@@ -102,12 +110,63 @@ final class InfectionSourceBuilderTest extends TestCase
             file_get_contents($buildDir . '/composer-arguments'),
         );
         self::assertSame($this->buildsDir . '/.composer', file_get_contents($buildDir . '/composer-home'));
+        // no token, no authentication
+        self::assertSame('', file_get_contents($buildDir . '/composer-auth'));
 
         self::assertSame('https://codeload.github.com/infection/infection/zip/' . self::SHA, $archiveResponse->getRequestUrl());
-        self::assertSame(30.0, $archiveResponse->getRequestOptions()['timeout']);
+        self::assertSame(30.0, $archiveResponse->getRequestOptions()['max_duration']);
 
         // the temporary directory is gone
-        self::assertSame(['.', '..', self::SHA, self::SHA . '.lock'], scandir($this->buildsDir));
+        self::assertSame(['.', '..', 'build.lock', self::SHA], scandir($this->buildsDir));
+    }
+
+    public function test_only_composer_gets_the_github_token(): void
+    {
+        $builder = $this->createBuilder(new MockHttpClient([new MockResponse($this->createArchive(), ['http_code' => 200])]), self::COMPOSER, 'github_pat_test');
+
+        $builder->build(new InfectionCommit(self::SHA));
+
+        self::assertSame(
+            '{"github-oauth":{"github.com":"github_pat_test"}}',
+            file_get_contents($this->buildsDir . '/' . self::SHA . '/composer-auth'),
+        );
+    }
+
+    public function test_the_build_restarts_the_request_time_limit(): void
+    {
+        $originalTimeLimit = ini_get('max_execution_time');
+        $builder = $this->createBuilder(new MockHttpClient([new MockResponse($this->createArchive(), ['http_code' => 200])]), self::COMPOSER);
+
+        // the web server has a time limit, the CLI does not
+        ini_set('max_execution_time', '30');
+
+        try {
+            $builder->build(new InfectionCommit(self::SHA));
+
+            $timeLimit = (int) ini_get('max_execution_time');
+        } finally {
+            set_time_limit((int) $originalTimeLimit);
+        }
+
+        // the download and Composer of the build of another run and of this one, and what the request does after them
+        self::assertSame(330, $timeLimit);
+    }
+
+    public function test_it_removes_what_a_request_that_died_during_its_build_left(): void
+    {
+        $this->filesystem->dumpFile(sprintf('%s/%s.tmp/infection-%s/left-by-a-dead-request', $this->buildsDir, self::SHA, self::SHA), '');
+
+        $this->createBuilder(new MockHttpClient([new MockResponse($this->createArchive(), ['http_code' => 200])]), self::COMPOSER)
+            ->build(new InfectionCommit(self::SHA));
+
+        self::assertFileDoesNotExist($this->buildsDir . '/' . self::SHA . '/left-by-a-dead-request');
+    }
+
+    public function test_it_refuses_a_commit_without_infection(): void
+    {
+        $builder = $this->createBuilder(new MockHttpClient([new MockResponse($this->createArchive(withBinary: false), ['http_code' => 200])]), self::COMPOSER);
+
+        $this->assertBuildFails($builder, 'The commit has no bin/infection.');
     }
 
     public function test_a_commit_is_built_once(): void
@@ -120,8 +179,62 @@ final class InfectionSourceBuilderTest extends TestCase
         self::assertTrue($builder->isBuilt(self::SHA));
         self::assertSame($this->buildsDir . '/' . self::SHA . '/bin/infection', $builder->build(new InfectionCommit(self::SHA)));
         self::assertSame(0, $httpClient->getRequestsCount());
-        // without waiting for the lock of the build
+        // without waiting for the lock of the builds
         self::assertSame(['.', '..', self::SHA], scandir($this->buildsDir));
+    }
+
+    public function test_a_cached_build_is_marked_used(): void
+    {
+        $buildDir = $this->createBuild(self::SHA, time() - 86400);
+
+        $this->createBuilder(new MockHttpClient([]), self::FAILING_COMPOSER)->build(new InfectionCommit(self::SHA));
+
+        clearstatcache();
+        self::assertGreaterThan(time() - 60, filemtime($buildDir));
+    }
+
+    public function test_a_new_build_removes_the_builds_used_least_recently_beyond_the_maximum(): void
+    {
+        $oldBuilds = [];
+
+        // the oldest first: the order of the directories is not the order of their use
+        for ($i = InfectionSourceBuilder::MAX_BUILDS; $i >= 1; --$i) {
+            $oldBuilds[] = $this->createBuild(sprintf('%040x', $i), time() - 86400 - $i);
+        }
+
+        $this->filesystem->mkdir($this->buildsDir . '/.composer');
+        $this->filesystem->touch($this->buildsDir . '/.composer', time() - 10 * 86400);
+
+        $this->createBuilder(new MockHttpClient([new MockResponse($this->createArchive(), ['http_code' => 200])]), self::COMPOSER)
+            ->build(new InfectionCommit(self::SHA));
+
+        // the new build and the MAX_BUILDS - 1 builds used last are kept
+        self::assertDirectoryDoesNotExist($oldBuilds[0]);
+
+        foreach (array_slice($oldBuilds, 1) as $oldBuild) {
+            self::assertDirectoryExists($oldBuild);
+        }
+        self::assertDirectoryExists($this->buildsDir . '/' . self::SHA);
+        // the cache of Composer and the locks are not builds
+        self::assertDirectoryExists($this->buildsDir . '/.composer');
+        self::assertFileExists($this->buildsDir . '/build.lock');
+    }
+
+    public function test_the_builds_used_in_the_last_minutes_are_kept(): void
+    {
+        $builds = [];
+
+        for ($i = 1; $i <= InfectionSourceBuilder::MAX_BUILDS; ++$i) {
+            // a run may be running them
+            $builds[] = $this->createBuild(sprintf('%040x', $i), time() - 60);
+        }
+
+        $this->createBuilder(new MockHttpClient([new MockResponse($this->createArchive(), ['http_code' => 200])]), self::COMPOSER)
+            ->build(new InfectionCommit(self::SHA));
+
+        foreach ($builds as $build) {
+            self::assertDirectoryExists($build);
+        }
     }
 
     public function test_it_reports_the_sources_that_cannot_be_downloaded(): void
@@ -160,32 +273,45 @@ final class InfectionSourceBuilderTest extends TestCase
 
         self::assertFalse($builder->isBuilt(self::SHA));
         // the temporary directory is gone, the next run builds again
-        self::assertSame(['.', '..', self::SHA . '.lock'], scandir($this->buildsDir));
+        self::assertSame(['.', '..', 'build.lock'], scandir($this->buildsDir));
     }
 
-    private function createBuilder(MockHttpClient $httpClient, string $composerScript): InfectionSourceBuilder
+    private function createBuilder(MockHttpClient $httpClient, string $composerScript, string $gitHubToken = ''): InfectionSourceBuilder
     {
         $composerBinary = $this->testDir . '/composer';
         $this->filesystem->dumpFile($composerBinary, $composerScript);
         $this->filesystem->chmod($composerBinary, 0o755);
 
-        return new InfectionSourceBuilder($httpClient, $this->filesystem, $this->buildsDir, $composerBinary);
+        return new InfectionSourceBuilder($httpClient, $this->filesystem, $this->buildsDir, $composerBinary, $gitHubToken);
     }
 
     /**
      * The archive of a commit, as GitHub makes it.
      */
-    private function createArchive(): string
+    private function createArchive(bool $withBinary = true): string
     {
         $archivePath = $this->testDir . '/source.zip';
         $this->filesystem->mkdir($this->testDir);
 
         $zip = new ZipArchive();
         $zip->open($archivePath, ZipArchive::CREATE);
-        $zip->addFromString('infection-' . self::SHA . '/bin/infection', '#!/usr/bin/env php');
+
+        if ($withBinary) {
+            $zip->addFromString('infection-' . self::SHA . '/bin/infection', '#!/usr/bin/env php');
+        }
+
         $zip->addFromString('infection-' . self::SHA . '/composer.json', '{}');
         $zip->close();
 
         return (string) file_get_contents($archivePath);
+    }
+
+    private function createBuild(string $sha, int $lastUse): string
+    {
+        $buildDir = $this->buildsDir . '/' . $sha;
+        $this->filesystem->dumpFile($buildDir . '/bin/infection', '');
+        $this->filesystem->touch($buildDir, $lastUse);
+
+        return $buildDir;
     }
 }

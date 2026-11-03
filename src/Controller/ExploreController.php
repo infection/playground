@@ -118,7 +118,8 @@ class ExploreController extends AbstractController
             'idHash' => $example->getIdHash(),
             'title' => $this->runSubject->describe($example->getCode()) ?? 'Untitled run',
             'createdAt' => $example->getCreatedAt(),
-            'infectionVersion' => $example->getInfectionVersion(),
+            // a run of a commit shows its pull request and the short SHA, not the 40 characters of the version
+            'infectionVersion' => $example->getInfectionCommit()?->getLabel() ?? $example->getInfectionVersion(),
             'total' => $example->getMutantsTotal(),
             'killed' => $example->getKilled(),
             'escaped' => $example->getEscaped(),

@@ -29,6 +29,7 @@
                 autocomplete: 'off',
                 spellcheck: 'false',
                 'aria-describedby': 'infection-commit-hint',
+                'aria-invalid': form.infectionCommitUrl.vars.errors is empty ? 'false' : 'true',
             }}) }}
             <p class="tc-hint" id="infection-commit-hint">To try a change to Infection, paste the link to a pull request of infection/infection, or to one of its commits. Pull requests from forks can't be run.</p>
         </div>
