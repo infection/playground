@@ -74,7 +74,7 @@
 {# the same code, test, config, static analysis and versions open the same run: the button waits for a change, see watchForChangesSinceRun() in editor.js #}
 {# a run of a commit of Infection is on the current version of it: the commit is in the toolchain #}
 {% set isRunOnCurrentVersions = resultOutput is defined
-    and (example.runInfectionCommit is not null or infectionVersion == constant('App\\Infection\\Runner::CURRENT_INFECTION_VERSION'))
+    and (example.infectionCommit is not null or infectionVersion == constant('App\\Infection\\Runner::CURRENT_INFECTION_VERSION'))
     and phpunitVersion == constant('App\\Infection\\Runner::CURRENT_PHPUNIT_VERSION')
     and phpVersion == constant('App\\Infection\\Runner::CURRENT_PHP_VERSION')
     and (example.staticAnalysisTool is null or staticAnalysisToolVersion == example.staticAnalysisTool.currentVersion) %}
