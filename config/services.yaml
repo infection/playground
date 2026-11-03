@@ -46,3 +46,10 @@ when@test:
         # on the first stderr output, so the expected 404 in the functional tests would fail it.
         logger:
             class: Psr\Log\NullLogger
+
+        App\Tests\Functional\RefuseHttpRequests: ~
+
+        # public for RefuseHttpRequestsTest: the container removes a service nothing uses
+        Symfony\Contracts\HttpClient\HttpClientInterface:
+            alias: http_client
+            public: true
