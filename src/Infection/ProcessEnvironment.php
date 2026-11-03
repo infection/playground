@@ -99,8 +99,11 @@ final class ProcessEnvironment
     {
         $environment = [];
 
-        foreach (array_keys($_ENV + getenv()) as $name) {
-            $environment[(string) $name] = false;
+        /** @var array<string, mixed> $variables */
+        $variables = $_ENV + getenv();
+
+        foreach (array_keys($variables) as $name) {
+            $environment[$name] = false;
         }
 
         foreach (self::INHERITED_ENVIRONMENT_VARIABLES as $name) {
