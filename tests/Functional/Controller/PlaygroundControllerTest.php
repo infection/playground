@@ -44,6 +44,7 @@ use function basename;
 use Doctrine\ORM\EntityManagerInterface;
 use function file_get_contents;
 use Generator;
+use function getenv;
 use Hashids\Hashids;
 use function ini_get;
 use function ini_set;
@@ -53,6 +54,7 @@ use const PHP_INT_MAX;
 use const PHP_MAJOR_VERSION;
 use const PHP_MINOR_VERSION;
 use PHPUnit\Framework\Attributes\DataProvider;
+use function putenv;
 use function random_int;
 use function set_time_limit;
 use function sprintf;
@@ -755,6 +757,36 @@ class PlaygroundControllerTest extends WebTestCase
         );
     }
 
+    /**
+     * @return Generator<string, array{string}>
+     */
+    public static function provideXdebugModes(): Generator
+    {
+        // Infection restarts without Xdebug: its children get an ini file made of the ones it loaded
+        yield 'restarted without Xdebug, as in development' => ['develop'];
+
+        // no restart: its children read the ini files of PHP_INI_SCAN_DIR, which Infection passes on
+        yield 'without Xdebug, as in production' => ['off'];
+    }
+
+    /**
+     * The initial tests get the disabled functions from initialTestsPhpOptions, the mutants only from the ini file
+     * of the sandbox.
+     */
+    #[DataProvider('provideXdebugModes')]
+    public function test_a_mutant_cannot_call_a_forbidden_function(string $xdebugMode): void
+    {
+        $originalXdebugMode = getenv('XDEBUG_MODE');
+        // passed on to Infection, see ProcessEnvironment
+        putenv('XDEBUG_MODE=' . $xdebugMode);
+
+        try {
+            $this->assertMutantCannotCallForbiddenFunction();
+        } finally {
+            putenv($originalXdebugMode === false ? 'XDEBUG_MODE' : 'XDEBUG_MODE=' . $originalXdebugMode);
+        }
+    }
+
     public function test_the_code_does_not_see_the_environment_of_the_app(): void
     {
         $client = static::createClient();
@@ -817,5 +849,74 @@ class PlaygroundControllerTest extends WebTestCase
         yield 'shell_exec' => ['shell_exec'];
 
         yield 'system' => ['system'];
+    }
+
+    private function assertMutantCannotCallForbiddenFunction(): void
+    {
+        $client = static::createClient();
+        $client->catchExceptions(false);
+
+        $client->request('GET', '/');
+
+        $client->submitForm('create_example[mutate]', [
+            'create_example[code]' => <<<'PHP'
+                <?php
+
+                declare(strict_types=1);
+
+                namespace Infected;
+
+                class SourceClass
+                {
+                    public function add(int $a, int $b): int
+                    {
+                        // FalseValue makes it true: only the mutant calls exec()
+                        if (false) {
+                            $exec = 'exec';
+                            $exec('pwd');
+                        }
+
+                        return $a + $b;
+                    }
+                }
+                PHP
+                // a new run, not the one of the same input that ran before
+                . '// ' . random_int(1, PHP_INT_MAX),
+            'create_example[test]' => <<<'PHP'
+                <?php
+
+                declare(strict_types=1);
+
+                namespace Infected;
+
+                use PHPUnit\Framework\TestCase;
+
+                class SourceClassTest extends TestCase
+                {
+                    public function test_it_adds_2_numbers(): void
+                    {
+                        self::assertSame(3, (new SourceClass())->add(1, 2));
+                    }
+                }
+                PHP,
+            'create_example[config]' => '{"mutators": {"FalseValue": true}}',
+        ]);
+
+        static::assertSame(302, $client->getResponse()->getStatusCode());
+
+        /** @var Hashids $hashids */
+        $hashids = static::getContainer()->get(Hashids::class);
+        /** @var EntityManagerInterface $entityManager */
+        $entityManager = static::getContainer()->get(EntityManagerInterface::class);
+        $example = $entityManager->find(Example::class, $hashids->decode(basename((string) $client->getResponse()->headers->get('Location')))[0]);
+        static::assertInstanceOf(Example::class, $example);
+
+        /** @var array{killed: list<array{mutator: array{mutatorName: string}, processOutput: string}>, escaped: list<mixed>} $jsonLog */
+        $jsonLog = json_decode((string) $example->getJsonLog(), true, 512, JSON_THROW_ON_ERROR);
+
+        static::assertSame([], $jsonLog['escaped']);
+        static::assertCount(1, $jsonLog['killed']);
+        static::assertSame('FalseValue', $jsonLog['killed'][0]['mutator']['mutatorName']);
+        static::assertStringContainsString('Call to undefined function exec()', $jsonLog['killed'][0]['processOutput']);
     }
 }

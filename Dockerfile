@@ -104,6 +104,8 @@ RUN install-php-extensions pdo_mysql
 ###< recipes ###
 
 COPY --link frankenphp/conf.d/10-app.ini $PHP_INI_DIR/app.conf.d/
+# not in a directory PHP scans by default: only the processes that run the submitted code read it
+COPY --link frankenphp/playground.conf.d/playground.ini $PHP_INI_DIR/playground.conf.d/
 COPY --link --chmod=755 frankenphp/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
 COPY --link frankenphp/Caddyfile /etc/frankenphp/Caddyfile
 
@@ -127,7 +129,7 @@ RUN <<-EOF
 	git config --system --add safe.directory /app
 EOF
 
-COPY --link frankenphp/conf.d/20-app.dev.ini frankenphp/conf.d/30-app.playground.ini $PHP_INI_DIR/app.conf.d/
+COPY --link frankenphp/conf.d/20-app.dev.ini $PHP_INI_DIR/app.conf.d/
 
 CMD [ "frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile", "--watch" ]
 
@@ -160,8 +162,6 @@ RUN <<-EOF
 	chmod -R g=u var
 	sync
 EOF
-
-COPY --link frankenphp/conf.d/30-app.playground.ini $PHP_INI_DIR/app.conf.d/
 
 # Collect shared libraries needed by FrankenPHP and PHP extensions
 # hadolint ignore=DL3008,SC3054,DL4006
@@ -198,6 +198,7 @@ COPY --from=frankenphp_prod_builder /tmp/libs /usr/lib
 COPY --from=frankenphp_prod_builder /usr/local/etc/php/conf.d /usr/local/etc/php/conf.d
 COPY --from=frankenphp_prod_builder /usr/local/etc/php/php.ini /usr/local/etc/php/php.ini
 COPY --from=frankenphp_prod_builder /usr/local/etc/php/app.conf.d /usr/local/etc/php/app.conf.d
+COPY --from=frankenphp_prod_builder /usr/local/etc/php/playground.conf.d /usr/local/etc/php/playground.conf.d
 
 COPY --from=frankenphp_prod_builder /etc/frankenphp/Caddyfile /etc/frankenphp/Caddyfile
 COPY --from=frankenphp_prod_builder /opt/monaco /opt/monaco
