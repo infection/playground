@@ -91,6 +91,17 @@ final class ExploreControllerTest extends WebTestCase
         self::assertCount(0, $crawler->filter('.run-card')->eq(1)->filter('.tag-analysis'));
     }
 
+    public function test_a_run_of_a_commit_of_infection_shows_its_pull_request_and_short_sha(): void
+    {
+        self::createExample('OnACommit', infectionVersion: 'dbc3013fc473271b4bd86f5ec103702a19d86e83', infectionPullRequest: 3717);
+
+        $crawler = $this->client->request('GET', '/explore');
+
+        $card = $crawler->filter('.run-card')->eq(0)->text();
+        self::assertStringContainsString('Infection #3717 dbc3013', $card);
+        self::assertStringNotContainsString('dbc3013fc473271b4bd86f5ec103702a19d86e83', $card);
+    }
+
     public function test_it_names_a_run_after_its_class_and_method(): void
     {
         self::createExample(code: '<?php class Slugger { public function slugify(): string { return ""; } }');

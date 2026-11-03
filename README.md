@@ -50,7 +50,7 @@ The PHP version is the one of the Docker image.
 A run can use Infection built from a pull request or a commit of infection/infection instead of the released PHAR,
 e.g. to show a bug in a pull request and then its fix: paste the link of the pull request, or of one of its commits,
 in the toolchain popover. The first run of a commit downloads its sources and installs their dependencies with Composer
-(without scripts and plugins) in `var/infection-commits/<sha>`, which takes up to a minute; the next runs reuse it.
+(without scripts and plugins) in `var/infection-commits/<sha>`, which takes a few seconds; the next runs reuse it.
 One build runs at a time. A build is about 15 MB: after a new build, the builds used least recently beyond the 30 used
 last are removed, unless one was used in the last 10 minutes. A removed commit is built again by its next run.
 
