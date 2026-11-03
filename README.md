@@ -50,13 +50,18 @@ The PHP version is the one of the Docker image.
 A run can use Infection built from a pull request or a commit of infection/infection instead of the released PHAR,
 e.g. to show a bug in a pull request and then its fix: paste the link of the pull request, or of one of its commits,
 in the toolchain popover. The first run of a commit downloads its sources and installs their dependencies with Composer
-(without scripts and plugins) in `infection-builds/_commits/<sha>`, which takes a few seconds; the next runs reuse it.
-Nothing removes these builds.
+(without scripts and plugins) in `var/infection-commits/<sha>`, which takes up to a minute; the next runs reuse it.
+One build runs at a time. A build is about 15 MB: after a new build, the builds used least recently beyond the 30 used
+last are removed, unless one was used in the last 10 minutes. A removed commit is built again by its next run.
 
 Infection is not sandboxed like the code it tests, so only commits that need write access to infection/infection are
-built: the pull requests from a branch of infection/infection and their commits, and the commits of `master`.
-Pull requests from forks are refused. The links are checked with the GitHub API, without a token: it allows 60 requests
-an hour, which a commit that was already built does not need.
+built: the pull requests from a branch of infection/infection and the commits their head contains, and the commits of
+`master`. Pull requests from forks and the ones bots opened are refused, and so are the commits that do not contain the
+release the playground runs (`App\Infection\Runner::CURRENT_INFECTION_VERSION`): their pull request must be rebased.
+
+The links are checked with the GitHub API, 2 or 3 requests each, except for a commit that was already built. Without a
+token GitHub allows 60 requests an hour: in production, put a fine-grained token without any permission in
+`secrets/github_token` (optional), which Composer uses too.
 
 ### Production
 

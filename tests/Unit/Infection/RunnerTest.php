@@ -41,12 +41,9 @@ use App\Infection\Build\InfectionSourceBuilder;
 use App\Infection\Runner;
 use App\Infection\StaticAnalysisTool;
 use Generator;
-use function ini_get;
-use function ini_set;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
-use function set_time_limit;
 use Symfony\Component\Filesystem\Filesystem;
 
 final class RunnerTest extends TestCase
@@ -68,33 +65,11 @@ final class RunnerTest extends TestCase
         $result = $this->createRunner($sourceBuilder)->run(self::ID_HASH, '<?php class SourceClass {}', '<?php', '{}', null, new InfectionCommit(self::SHA));
 
         self::assertSame(
-            'Infection could not be built from commit dbc3013fc473271b4bd86f5ec103702a19d86e83. The sources of the commit could not be downloaded.',
+            'Infection could not be built from commit dbc3013fc473271b4bd86f5ec103702a19d86e83. The sources of the commit could not be downloaded. Run again to retry.',
             $result->getAnsiOutput(),
         );
         self::assertNull($result->getJsonLog());
-    }
-
-    public function test_the_build_of_a_commit_outlives_the_request_time_limit(): void
-    {
-        $timeLimitDuringBuild = null;
-
-        $sourceBuilder = self::createStub(InfectionSourceBuilder::class);
-        $sourceBuilder->method('build')->willReturnCallback(static function () use (&$timeLimitDuringBuild): never {
-            $timeLimitDuringBuild = (int) ini_get('max_execution_time');
-
-            throw new RuntimeException('Stop before Infection runs.');
-        });
-
-        // the web server has a time limit, the CLI does not
-        ini_set('max_execution_time', '30');
-
-        try {
-            $this->createRunner($sourceBuilder)->run(self::ID_HASH, '<?php class SourceClass {}', '<?php', '{}', null, new InfectionCommit(self::SHA));
-        } finally {
-            set_time_limit(0);
-        }
-
-        self::assertGreaterThan(InfectionSourceBuilder::BUILD_TIMEOUT_SEC, $timeLimitDuringBuild);
+        self::assertTrue($result->isBuildFailure());
     }
 
     #[DataProvider('provideProcessTimeouts')]

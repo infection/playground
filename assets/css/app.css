@@ -289,6 +289,17 @@ label.tc-row:hover {
     font-size: 12px;
 }
 
+.tc-input[aria-invalid="true"] {
+    border-color: var(--escaped);
+}
+
+/* iOS zooms into a focused field with a smaller font, which pushes the popover off screen */
+@media (pointer: coarse) {
+    .tc-input {
+        font-size: 16px;
+    }
+}
+
 .toolchain .tc-hint {
     margin: 4px 0 0;
     font-size: 12px;

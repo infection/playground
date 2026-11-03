@@ -13,6 +13,8 @@ services:
       target: frankenphp_prod
     environment:
       APP_SECRET: ${APP_SECRET:?}
+      # optional, see InfectionCommitResolver: a fine-grained token without any permission is enough
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       # Caddy gets and renews the Let's Encrypt certificate for SERVER_NAME by itself;
       # it keeps it in the caddy_data volume.
       SERVER_NAME: ${SERVER_NAME:-infection-php.dev}, php:80

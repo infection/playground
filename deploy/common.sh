@@ -18,6 +18,8 @@ export MYSQL_DATABASE="$(secret mysql_db_name)"
 export MYSQL_USER="$(secret mysql_db_user)"
 export MYSQL_PASSWORD="$(secret mysql_password)"
 export MYSQL_ROOT_PASSWORD="$(secret mysql_root_password)"
+# optional: without it, GitHub allows the builds of Infection from a commit 60 API requests an hour
+export GITHUB_TOKEN="$([ -f "$SECRETS_DIR/github_token" ] && secret github_token || true)"
 MYSQL_PASSWORD_URLENCODED="$(python3 -c 'import sys, urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$MYSQL_PASSWORD")"
 export MYSQL_PASSWORD_URLENCODED
 

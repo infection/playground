@@ -41,8 +41,11 @@ final class RunResult
 
     private ?string $jsonLog;
 
-    public function __construct(string $ansiOutput, ?string $jsonLog)
-    {
+    public function __construct(
+        string $ansiOutput,
+        ?string $jsonLog,
+        private readonly bool $isBuildFailure = false,
+    ) {
         $this->ansiOutput = $ansiOutput;
         $this->jsonLog = $jsonLog;
     }
@@ -50,6 +53,19 @@ final class RunResult
     public static function fromError(string $output): self
     {
         return new self($output, null);
+    }
+
+    /**
+     * Infection could not be built from a commit, e.g. GitHub or Composer failed: not the result of the input.
+     */
+    public static function fromBuildFailure(string $output): self
+    {
+        return new self($output, null, true);
+    }
+
+    public function isBuildFailure(): bool
+    {
+        return $this->isBuildFailure;
     }
 
     public function getAnsiOutput(): string

@@ -52,6 +52,8 @@ final class Version20261103000000 extends AbstractMigration
 
     public function down(Schema $schema): void
     {
+        // the SHAs do not fit: these runs get the unknown version of the runs made before the versions were recorded
+        $this->addSql('UPDATE example SET infection_version = NULL WHERE CHAR_LENGTH(infection_version) > 11');
         $this->addSql('ALTER TABLE example MODIFY infection_version VARCHAR(11) DEFAULT NULL, DROP infection_pull_request');
     }
 

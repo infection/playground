@@ -154,7 +154,11 @@ class PlaygroundController extends AbstractController
                 $infectionCommit,
             );
 
-            $example->setIdHash($idHash);
+            // a run whose build failed is not finished: the same input runs again, and builds again
+            if (!$runResult->isBuildFailure()) {
+                $example->setIdHash($idHash);
+            }
+
             $example->updateResultOutput($runResult->getAnsiOutput());
             $example->updateJsonLog($runResult->getJsonLog());
             $this->exampleStatsUpdater->update($example);
