@@ -60,12 +60,12 @@ class CreateExampleRequest
     #[AppAssert\ValidPhpCode]
     #[Assert\NotBlank]
     #[Assert\Length(max: self::MAX_CODE_LENGTH)]
-    public string $test;
+    public string $test = '';
 
     #[AppAssert\JsonSchema(schemaFile: 'infection-config-schema.json')]
     #[Assert\NotBlank]
     #[Assert\Length(max: self::MAX_CONFIG_LENGTH)]
-    public string $config;
+    public string $config = '';
 
     #[Assert\NotBlank]
     public ?string $infectionVersion = Runner::CURRENT_INFECTION_VERSION;

@@ -77,6 +77,7 @@ trait ExampleFixtures
         string $infectionVersion = Runner::CURRENT_INFECTION_VERSION,
         bool $withLog = true,
         ?StaticAnalysisTool $staticAnalysisTool = null,
+        ?int $infectionPullRequest = null,
     ): Example {
         $entityManager = self::entityManager();
 
@@ -89,6 +90,7 @@ trait ExampleFixtures
             Runner::CURRENT_PHP_VERSION,
             $staticAnalysisTool,
             $staticAnalysisTool?->getCurrentVersion(),
+            $infectionPullRequest,
         );
 
         $entityManager->persist($example);

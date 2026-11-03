@@ -58,7 +58,6 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use function trim;
 
 class PlaygroundController extends AbstractController
 {
@@ -205,7 +204,8 @@ class PlaygroundController extends AbstractController
      */
     private function resolveInfectionCommit(FormInterface $form, CreateExampleRequest $createExampleRequest): ?InfectionCommit
     {
-        $infectionCommitUrl = trim((string) $createExampleRequest->infectionCommitUrl);
+        // TextType trims it
+        $infectionCommitUrl = (string) $createExampleRequest->infectionCommitUrl;
 
         if ($infectionCommitUrl === '') {
             return null;

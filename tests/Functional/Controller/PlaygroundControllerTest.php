@@ -189,6 +189,42 @@ class PlaygroundControllerTest extends WebTestCase
         static::assertSame(302, $client->getResponse()->getStatusCode());
     }
 
+    public function test_a_post_without_the_form_shows_the_form(): void
+    {
+        $client = static::createClient();
+        $client->catchExceptions(false);
+
+        $client->request('POST', '/r');
+
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+    }
+
+    public function test_the_link_to_a_commit_of_infection_is_optional(): void
+    {
+        $client = static::createClient();
+
+        $crawler = $client->request('GET', '/');
+
+        static::assertNull($crawler->filter('#create_example_infectionCommitUrl')->attr('required'));
+    }
+
+    public function test_a_link_of_spaces_runs_the_released_infection(): void
+    {
+        $client = static::createClient();
+        $client->catchExceptions(false);
+
+        $client->request('GET', '/');
+
+        $client->submitForm('create_example[mutate]', [
+            'create_example[code]' => 'code ' . random_int(1, PHP_INT_MAX),
+            'create_example[test]' => 'test',
+            'create_example[config]' => '{"mutators": {"@default": true}}',
+            'create_example[infectionCommitUrl]' => '   ',
+        ]);
+
+        static::assertSame(302, $client->getResponse()->getStatusCode());
+    }
+
     public function test_it_does_not_run_with_a_link_that_is_not_a_pull_request_or_a_commit_of_infection(): void
     {
         $client = static::createClient();

@@ -66,6 +66,8 @@ final class InfectionCommitTest extends TestCase
         self::assertFalse(InfectionCommit::isSha('0.35.6'));
         self::assertFalse(InfectionCommit::isSha('dbc3013'));
         self::assertFalse(InfectionCommit::isSha(null));
+        self::assertFalse(InfectionCommit::isSha('v' . self::SHA));
+        self::assertFalse(InfectionCommit::isSha(self::SHA . '0'));
     }
 
     public function test_it_needs_the_full_sha(): void
