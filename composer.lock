@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fd0a7925f9b046e6c401f22a149bca66",
+    "content-hash": "8d58dad38ca707a4707f0e3ab339dc6a",
     "packages": [
         {
             "name": "brick/math",
@@ -10907,16 +10907,16 @@
         },
         {
             "name": "twigstan/twigstan",
-            "version": "0.2.2",
+            "version": "0.2.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigstan/twigstan.git",
-                "reference": "ec485cf8d41f9c031469e45ba67f4c5505e794fb"
+                "reference": "f39aba08f92f6cd0bf4431dd06b0f4279a091459"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigstan/twigstan/zipball/ec485cf8d41f9c031469e45ba67f4c5505e794fb",
-                "reference": "ec485cf8d41f9c031469e45ba67f4c5505e794fb",
+                "url": "https://api.github.com/repos/twigstan/twigstan/zipball/f39aba08f92f6cd0bf4431dd06b0f4279a091459",
+                "reference": "f39aba08f92f6cd0bf4431dd06b0f4279a091459",
                 "shasum": ""
             },
             "require": {
@@ -10983,7 +10983,7 @@
             ],
             "support": {
                 "issues": "https://github.com/twigstan/twigstan/issues",
-                "source": "https://github.com/twigstan/twigstan/tree/0.2.2"
+                "source": "https://github.com/twigstan/twigstan/tree/0.2.3"
             },
             "funding": [
                 {
@@ -10991,7 +10991,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-11-03T17:29:45+00:00"
+            "time": "2026-11-06T19:28:54+00:00"
         }
     ],
     "aliases": [],
