@@ -286,6 +286,33 @@ class PlaygroundControllerTest extends WebTestCase
         static::assertStringContainsString('This value should not be blank', (string) $client->getResponse()->getContent());
     }
 
+    #[DataProvider('provideFieldsThatMustNotBeBlank')]
+    public function test_it_fails_when_a_field_is_blank(string $field): void
+    {
+        $client = static::createClient();
+        $client->catchExceptions(false);
+
+        $crawler = $client->request('POST', '/r', ['create_example' => [
+            'code' => '<?php $a = $b;',
+            'test' => '<?php $a = $b;',
+            'config' => '{"mutators": {"@default": true}}',
+            $field => '',
+        ]]);
+
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertStringContainsString('This value should not be blank', $crawler->filterXPath('//ul[@class="errors"]')->text());
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function provideFieldsThatMustNotBeBlank(): iterable
+    {
+        yield 'test' => ['test'];
+
+        yield 'config' => ['config'];
+    }
+
     public function test_it_fails_with_when_code_is_invalid(): void
     {
         $client = static::createClient();
