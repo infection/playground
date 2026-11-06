@@ -206,9 +206,6 @@ class PlaygroundController extends AbstractController
             'phpVersion' => $example->phpVersion ?? Runner::CURRENT_PHP_VERSION,
             // NULL when the run used no static analysis, or for a new run: the toolchain shows the current versions
             'staticAnalysisToolVersion' => $example?->staticAnalysisToolVersion,
-            'currentInfectionVersion' => Runner::CURRENT_INFECTION_VERSION,
-            'currentPhpunitVersion' => Runner::CURRENT_PHPUNIT_VERSION,
-            'currentPhpVersion' => Runner::CURRENT_PHP_VERSION,
             'example' => $example,
             'resultOutput' => $resultOutput,
             'jsonLog' => $jsonLog,
