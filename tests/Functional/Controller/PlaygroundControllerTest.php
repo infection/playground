@@ -63,6 +63,7 @@ use function set_time_limit;
 use function sprintf;
 use function str_repeat;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\DomCrawler\Crawler;
 
 class PlaygroundControllerTest extends WebTestCase
 {
@@ -859,6 +860,23 @@ class PlaygroundControllerTest extends WebTestCase
         static::assertSame(200, $client->getResponse()->getStatusCode());
         static::assertStringContainsString('This form should not contain extra fields.', $crawler->filterXPath('//ul[@class="errors"]')->text());
         static::assertCount(0, $crawler->filterXPath('//ul[@class="errors"]/li/b'));
+    }
+
+    public function test_it_shows_the_errors_of_every_invalid_field(): void
+    {
+        $client = static::createClient();
+        $client->catchExceptions(false);
+
+        $crawler = $client->request('POST', '/r', ['create_example' => [
+            'code' => '',
+            'test' => '<?php $a = ;',
+            'config' => '{"mutators": {"@default": true}}',
+        ]]);
+
+        static::assertSame(
+            ['Source code', 'Test'],
+            $crawler->filterXPath('//ul[@class="errors"]/li/b')->each(static fn (Crawler $label): string => $label->text()),
+        );
     }
 
     public function test_it_fails_when_config_is_not_a_valid_json(): void
