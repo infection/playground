@@ -45,6 +45,7 @@ use App\Repository\ExploreRepository;
 use function array_map;
 use function array_slice;
 use function count;
+use DateTimeInterface;
 use function is_string;
 use function ksort;
 use function max;
@@ -110,7 +111,21 @@ class ExploreController extends AbstractController
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array{
+     *     idHash: string|null,
+     *     title: string,
+     *     createdAt: DateTimeInterface,
+     *     infectionVersion: string|null,
+     *     total: int|null,
+     *     killed: int|null,
+     *     escaped: int|null,
+     *     timedOut: int|null,
+     *     notCovered: int|null,
+     *     msi: float|null,
+     *     coveredMsi: float|null,
+     *     configChanges: list<string>,
+     *     staticAnalysis: string|null,
+     * }
      */
     private function describeRun(Example $example): array
     {
