@@ -1,21 +1,12 @@
-{% if example is defined %}
+{% if example is not null %}
     <div id="loaded-code" data-code="{{ example.code }}"></div>
     <div id="loaded-test" data-code="{{ example.test }}"></div>
     <div id="loaded-config" data-code="{{ example.config }}"></div>
 {% endif %}
 
-{% set hasRun = resultOutput is defined %}
+{% set hasRun = resultOutput is not null %}
 
 {# the errors of a rejected run, shown in the results pane: on phones the page opens on it #}
-{% set fieldErrors = [] %}
-{% for error in form.vars.errors %}
-    {% set fieldErrors = fieldErrors|merge([{field: null, message: error.message}]) %}
-{% endfor %}
-{% for field in ['code', 'test', 'config', 'staticAnalysisTool', 'infectionCommitUrl'] %}
-    {% for error in attribute(form, field).vars.errors %}
-        {% set fieldErrors = fieldErrors|merge([{field: field, message: error.message}]) %}
-    {% endfor %}
-{% endfor %}
 {% set showResults = hasRun or fieldErrors is not empty %}
 
 {{ form_start(form, {attr: {class: 'ws', id: 'workbench', 'data-tab': showResults ? 'results' : 'code'}}) }}

@@ -1,9 +1,9 @@
 {# The right column: the results of a run, the errors of a rejected run, or what a run will show #}
 {% set fieldLabels = {code: 'Source code', test: 'Test', config: 'infection.json5', staticAnalysisTool: 'Static analysis', infectionCommitUrl: 'Infection pull request or commit'} %}
 
-{% if resultOutput is defined %}
+{% if resultOutput is not null %}
     {# without a JSON log Infection stopped before it generated mutants: the console output says why #}
-    {% set hasLog = jsonLog is defined and jsonLog is not empty %}
+    {% set hasLog = jsonLog is not empty %}
     <div class="pane-h" role="tablist">
         <button class="tab" type="button" role="tab" data-result-tab="mutants" aria-selected="{{ hasLog ? 'true' : 'false' }}" aria-controls="results-mutants">
             Mutants <span class="tab-count" id="mutants-count"></span>

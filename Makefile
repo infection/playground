@@ -18,7 +18,7 @@ CI ?=
 DOCKER_PHP=docker compose exec $(if $(CI),-T,) php
 
 #style checks / static analysis
-.PHONY: analyze cs-fix cs-check phpstan twigstan twigstan-update-baseline validate tests schema-validate
+.PHONY: analyze cs-fix cs-check phpstan twigstan validate tests schema-validate
 analyze: cs-check phpstan twigstan validate schema-validate tests
 
 cs-fix: prerequisites
@@ -35,9 +35,6 @@ phpstan-update-baseline: prerequisites ## Runs PHPStan and update baseline
 
 twigstan: prerequisites
 	$(TWIGSTAN)
-
-twigstan-update-baseline: prerequisites ## Runs TwigStan and update baseline
-	$(TWIGSTAN) --generate-baseline=twigstan-baseline.php
 
 validate:
 	composer validate --strict
