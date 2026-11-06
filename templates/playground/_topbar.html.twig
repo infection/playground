@@ -25,7 +25,7 @@
             {{ form_widget(form.infectionCommitUrl, {attr: {
                 form: 'workbench',
                 class: 'tc-input',
-                placeholder: 'Released ' ~ currentInfectionVersion ~ ', or a pull request link',
+                placeholder: 'Released ' ~ constant('App\\Infection\\Runner::CURRENT_INFECTION_VERSION') ~ ', or a pull request link',
                 autocomplete: 'off',
                 spellcheck: 'false',
                 'aria-describedby': 'infection-commit-hint',
@@ -36,7 +36,7 @@
 
         <div class="tc-group">
             <div class="tc-legend">Test framework</div>
-            <div class="tc-row">PHPUnit <span class="tc-ver">{{ currentPhpunitVersion }}</span></div>
+            <div class="tc-row">PHPUnit <span class="tc-ver">{{ constant('App\\Infection\\Runner::CURRENT_PHPUNIT_VERSION') }}</span></div>
         </div>
 
         <fieldset class="tc-group">
@@ -75,9 +75,9 @@
 {# a run of a commit of Infection is on the current version of it: the commit is in the toolchain #}
 {% set isRunOnCurrentVersions = resultOutput is not null
     and example is not null
-    and (example.infectionCommit is not null or infectionVersion == currentInfectionVersion)
-    and phpunitVersion == currentPhpunitVersion
-    and phpVersion == currentPhpVersion
+    and (example.infectionCommit is not null or infectionVersion == constant('App\\Infection\\Runner::CURRENT_INFECTION_VERSION'))
+    and phpunitVersion == constant('App\\Infection\\Runner::CURRENT_PHPUNIT_VERSION')
+    and phpVersion == constant('App\\Infection\\Runner::CURRENT_PHP_VERSION')
     and (example.staticAnalysisTool is null or staticAnalysisToolVersion == example.staticAnalysisTool.currentVersion) %}
 <button id="js-submit" class="btn btn-run" type="button" title="Run Infection (Ctrl/⌘ + Enter)"{% if isRunOnCurrentVersions %} data-run-on-current-versions{% endif %}>
     <svg class="run-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5Z"/></svg>
