@@ -103,6 +103,6 @@
         "symfony/css-selector": "8.1.*",
         "symfony/stopwatch": "8.1.*",
         "symfony/web-profiler-bundle": "8.1.*",
-        "twigstan/twigstan": "^0.2.2"
+        "twigstan/twigstan": "^0.2.3"
     }
 }
