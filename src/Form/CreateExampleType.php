@@ -62,8 +62,9 @@ class CreateExampleType extends AbstractType
     {
         $builder
             ->add('code', TextareaType::class)
-            ->add('test', TextareaType::class)
-            ->add('config', TextareaType::class)
+            // these properties are not nullable: a blank field fails their validation instead of the form
+            ->add('test', TextareaType::class, ['empty_data' => ''])
+            ->add('config', TextareaType::class, ['empty_data' => ''])
             // the radios are in the toolchain popover of the top bar, outside of the form
             ->add('staticAnalysisTool', EnumType::class, [
                 'class' => StaticAnalysisTool::class,
