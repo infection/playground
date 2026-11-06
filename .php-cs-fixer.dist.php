@@ -86,7 +86,6 @@ $finder = Finder::create()
         'vendor',
     ])
     ->notPath('importmap.php')
-    ->notPath('twigstan-baseline.php')
     ->ignoreDotFiles(false)
     ->name('*php')
 ;

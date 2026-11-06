@@ -44,12 +44,18 @@ use App\Html\Ansi\AnsiToHtmlConverter;
 use App\Html\Ansi\InfectionAnsiHtmlTheme;
 use App\Infection\ConfigBuilder;
 use App\Infection\Runner;
+use App\Infection\StaticAnalysisTool;
 use App\Repository\ExampleRepository;
 use App\Request\CreateExampleRequest;
+use function array_column;
 use Doctrine\ORM\EntityManagerInterface;
 use Hashids\Hashids;
 use function json_encode;
+use const JSON_THROW_ON_ERROR;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormErrorIterator;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -89,9 +95,7 @@ class PlaygroundController extends AbstractController
 
         $form = $this->createForm(CreateExampleType::class, $createExampleRequest);
 
-        return $this->render('playground/index.html.twig', [
-            'form' => $form->createView(),
-        ]);
+        return $this->renderPlayground($form);
     }
 
     #[Route('/r', name: 'playground_create_example', methods: ['POST'])]
@@ -156,10 +160,7 @@ class PlaygroundController extends AbstractController
             return $this->redirectToRoute('playground_display_example', ['exampleIdHash' => $idHash]);
         }
 
-        return $this->render('playground/index.html.twig', [
-            'form' => $form->createView(),
-            'example' => $createExampleRequest,
-        ]);
+        return $this->renderPlayground($form, $createExampleRequest);
     }
 
     #[Route('/r/{exampleIdHash}', name: 'playground_display_example', methods: ['GET'])]
@@ -179,12 +180,63 @@ class PlaygroundController extends AbstractController
         $converter = new AnsiToHtmlConverter(new InfectionAnsiHtmlTheme(), false);
         $converter->setInvertBackground(true);
 
+        return $this->renderPlayground(
+            $form,
+            $createExampleRequest,
+            $converter->convert($example->getResultOutput()),
+            $example->getJsonLog(),
+            json_encode($this->lineMapBuilder->build($example->getCode(), $example->getJsonLog()), JSON_THROW_ON_ERROR),
+        );
+    }
+
+    private function renderPlayground(
+        FormInterface $form,
+        ?CreateExampleRequest $example = null,
+        ?string $resultOutput = null,
+        ?string $jsonLog = null,
+        ?string $lineMap = null,
+    ): Response {
         return $this->render('playground/index.html.twig', [
             'form' => $form->createView(),
-            'resultOutput' => $converter->convert($example->getResultOutput()),
-            'example' => $createExampleRequest,
-            'jsonLog' => $example->getJsonLog(),
-            'lineMap' => json_encode($this->lineMapBuilder->build($example->getCode(), $example->getJsonLog())),
+            'fieldErrors' => $this->describeErrors($form),
+            'staticAnalysisTools' => array_column(StaticAnalysisTool::cases(), null, 'value'),
+            // the versions of this run, or of a new one: a run of Infection built from a commit shows the pull request and the commit
+            'infectionVersion' => $example?->infectionCommit?->getLabel() ?? $example->infectionVersion ?? Runner::CURRENT_INFECTION_VERSION,
+            'phpunitVersion' => $example->phpunitVersion ?? Runner::CURRENT_PHPUNIT_VERSION,
+            'phpVersion' => $example->phpVersion ?? Runner::CURRENT_PHP_VERSION,
+            // NULL when the run used no static analysis, or for a new run: the toolchain shows the current versions
+            'staticAnalysisToolVersion' => $example?->staticAnalysisToolVersion,
+            'currentInfectionVersion' => Runner::CURRENT_INFECTION_VERSION,
+            'currentPhpunitVersion' => Runner::CURRENT_PHPUNIT_VERSION,
+            'currentPhpVersion' => Runner::CURRENT_PHP_VERSION,
+            'example' => $example,
+            'resultOutput' => $resultOutput,
+            'jsonLog' => $jsonLog,
+            'lineMap' => $lineMap,
         ]);
+    }
+
+    /**
+     * @return list<array{field: string|null, message: string}> field is NULL for an error of the whole form
+     */
+    private function describeErrors(FormInterface $form): array
+    {
+        $errors = [];
+
+        /** @var FormErrorIterator<FormError> $formErrors */
+        $formErrors = $form->getErrors(true);
+
+        foreach ($formErrors as $error) {
+            // a form sets itself as the origin of an error added to it
+            /** @var FormInterface $origin */
+            $origin = $error->getOrigin();
+
+            $errors[] = [
+                'field' => $origin === $form ? null : $origin->getName(),
+                'message' => $error->getMessage(),
+            ];
+        }
+
+        return $errors;
     }
 }

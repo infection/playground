@@ -817,6 +817,23 @@ class PlaygroundControllerTest extends WebTestCase
         static::assertStringContainsString('Static analysis', $crawler->filterXPath('//ul[@class="errors"]')->text());
     }
 
+    public function test_an_error_of_the_whole_form_has_no_field_label(): void
+    {
+        $client = static::createClient();
+        $client->catchExceptions(false);
+
+        $crawler = $client->request('POST', '/r', ['create_example' => [
+            'code' => '<?php $a = $b;',
+            'test' => '<?php $a = $b;',
+            'config' => '{"mutators": {"@default": true}}',
+            'notAField' => 'value',
+        ]]);
+
+        static::assertSame(200, $client->getResponse()->getStatusCode());
+        static::assertStringContainsString('This form should not contain extra fields.', $crawler->filterXPath('//ul[@class="errors"]')->text());
+        static::assertCount(0, $crawler->filterXPath('//ul[@class="errors"]/li/b'));
+    }
+
     public function test_it_fails_when_config_is_not_a_valid_json(): void
     {
         $client = static::createClient();

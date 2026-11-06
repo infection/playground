@@ -7,7 +7,7 @@
 {% macro level(score) %}{{ score < 50 ? 'level-low' : (score < 90 ? 'level-medium' : 'level-high') }}{% endmacro %}
 
 {# rounded down to a tenth: 99.96 is not a perfect score #}
-{% macro percent(score) %}{% set tenths = (score * 10 + 0.000001)|round(0, 'floor') %}{{ tenths % 10 == 0 ? (tenths / 10)|number_format(0) : (tenths / 10)|number_format(1) }}%{% endmacro %}
+{% macro percent(score) %}{% set tenths = ((score ?: 0) * 10 + 0.000001)|round(0, 'floor') %}{{ tenths % 10 == 0 ? (tenths / 10)|number_format(0) : (tenths / 10)|number_format(1) }}%{% endmacro %}
 
 {% block body %}
     {% set escapedQuery = escapedMutator is not null ? {escaped: escapedMutator} : {} %}
@@ -63,7 +63,6 @@
                     </div>
                     {% if run.total > 0 %}
                         <div class="run-bar" role="img" aria-label="{{ run.killed }} killed, {{ run.escaped }} escaped, {{ run.timedOut }} timed out, {{ run.notCovered }} not covered">
-                            {% set counted = run.killed + run.escaped + run.timedOut + run.notCovered %}
                             {% for part in [['killed', run.killed], ['escaped', run.escaped], ['timeout', run.timedOut], ['uncovered', run.notCovered]] %}
                                 {% if part[1] > 0 %}<i style="--c: var(--{{ part[0] }}); flex-grow: {{ part[1] }}"></i>{% endif %}
                             {% endfor %}

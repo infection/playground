@@ -1,13 +1,5 @@
 {% extends 'base.html.twig' %}
 
-{# the versions of this run, or of a new one: in the top bar, and in the menu on narrow screens #}
-{# a run of Infection built from a commit shows the pull request and the commit #}
-{% set infectionVersion = example.infectionCommit.label ?? example.infectionVersion ?? constant('App\\Infection\\Runner::CURRENT_INFECTION_VERSION') %}
-{% set phpunitVersion = example.phpunitVersion ?? constant('App\\Infection\\Runner::CURRENT_PHPUNIT_VERSION') %}
-{% set phpVersion = example.phpVersion ?? constant('App\\Infection\\Runner::CURRENT_PHP_VERSION') %}
-{# NULL when the run used no static analysis, or for a new run: the toolchain shows the current versions #}
-{% set staticAnalysisToolVersion = example.staticAnalysisToolVersion ?? null %}
-
 {% block title %}Infection Playground{% endblock %}
 
 {% block body_class %}workbench-page{% endblock %}

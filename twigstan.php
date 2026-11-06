@@ -37,7 +37,6 @@ use TwigStan\Config\TwigStanConfig;
 
 return TwigStanConfig::configure(__DIR__)
     ->tempDirectory(__DIR__ . '/var/twigstan')
-    ->baselineFile(__DIR__ . '/twigstan-baseline.php')
     ->reportUnmatchedIgnoredErrors(true)
     ->phpstanConfigurationFile(__DIR__ . '/phpstan.dist.neon')
     ->phpstanMemoryLimit(false)
