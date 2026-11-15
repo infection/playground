@@ -1,5 +1,13 @@
 {# The right column: the results of a run, the errors of a rejected run, or what a run will show #}
-{% set fieldLabels = {code: 'Source code', test: 'Test', config: 'infection.json5', staticAnalysisTool: 'Static analysis', infectionCommitUrl: 'Infection pull request or commit'} %}
+{%
+    set fieldLabels = {
+        code: 'Source code',
+        test: 'Test',
+        config: 'infection.json5',
+        staticAnalysisTool: 'Static analysis',
+        infectionCommitUrl: 'Infection pull request or commit'
+    }
+%}
 
 {% if resultOutput is not null %}
     {# without a JSON log Infection stopped before it generated mutants: the console output says why #}

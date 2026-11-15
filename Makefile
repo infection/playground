@@ -19,8 +19,8 @@ CI ?=
 DOCKER_PHP=docker compose exec $(if $(CI),-T,) php
 
 #style checks / static analysis
-.PHONY: analyze cs-fix cs-check phpstan twigstan twig-lint validate tests schema-validate
-analyze: cs-check phpstan twigstan twig-lint validate schema-validate tests
+.PHONY: analyze cs-fix cs-check phpstan twigstan twig-lint twig-fmt twig-fmt-check validate tests schema-validate
+analyze: cs-check phpstan twigstan twig-lint twig-fmt-check validate schema-validate tests
 
 cs-fix: prerequisites
 	$(PHP-CS-FIXER) fix -v --allow-risky=yes
@@ -39,6 +39,12 @@ twigstan: prerequisites
 
 twig-lint: prerequisites
 	$(MAGO) twig:lint
+
+twig-fmt: prerequisites
+	$(MAGO) twig:fmt
+
+twig-fmt-check: prerequisites
+	$(MAGO) twig:fmt --check
 
 validate:
 	composer validate --strict

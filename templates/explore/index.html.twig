@@ -63,7 +63,14 @@
                     </div>
                     {% if run.total > 0 %}
                         <div class="run-bar" role="img" aria-label="{{ run.killed }} killed, {{ run.escaped }} escaped, {{ run.timedOut }} timed out, {{ run.notCovered }} not covered">
-                            {% for part in [['killed', run.killed], ['escaped', run.escaped], ['timeout', run.timedOut], ['uncovered', run.notCovered]] %}
+                            {%
+                                for part in [
+                                    ['killed', run.killed],
+                                    ['escaped', run.escaped],
+                                    ['timeout', run.timedOut],
+                                    ['uncovered', run.notCovered]
+                                ]
+                            %}
                                 {% if part[1] > 0 %}<i style="--c: var(--{{ part[0] }}); flex-grow: {{ part[1] }}"></i>{% endif %}
                             {% endfor %}
                         </div>
