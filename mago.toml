@@ -1,0 +1,12 @@
+#:schema ./vendor/carthage-software/mago/schema.json
+
+# Mago checks the Twig templates only: PHP-CS-Fixer and PHPStan check the PHP code.
+# The playground runs submitted code with its own mago.toml, see App\Infection\Runner::getMagoConfig().
+[source]
+paths = ["templates"]
+
+[twig.linter]
+# the version of twig/twig in composer.lock: the rules of the newer Twig features run
+version = "3.30"
+# a warning or a help message fails `make twig-lint` too, not only an error
+minimum-fail-level = "note"
