@@ -4,6 +4,7 @@ PHP-CS-FIXER=vendor/bin/php-cs-fixer
 PHPSTAN=vendor/bin/phpstan
 PHPSTAN_ARGS=analyse -c phpstan.dist.neon --memory-limit=1G
 TWIGSTAN=vendor/bin/twigstan
+MAGO=vendor/bin/mago
 INFECTION=php -d memory_limit=1G vendor/bin/infection
 INFECTION_THREADS ?= 4
 
@@ -18,8 +19,8 @@ CI ?=
 DOCKER_PHP=docker compose exec $(if $(CI),-T,) php
 
 #style checks / static analysis
-.PHONY: analyze cs-fix cs-check phpstan twigstan validate tests schema-validate
-analyze: cs-check phpstan twigstan validate schema-validate tests
+.PHONY: analyze cs-fix cs-check phpstan twigstan twig-lint validate tests schema-validate
+analyze: cs-check phpstan twigstan twig-lint validate schema-validate tests
 
 cs-fix: prerequisites
 	$(PHP-CS-FIXER) fix -v --allow-risky=yes
@@ -35,6 +36,9 @@ phpstan-update-baseline: prerequisites ## Runs PHPStan and update baseline
 
 twigstan: prerequisites
 	$(TWIGSTAN)
+
+twig-lint: prerequisites
+	$(MAGO) twig:lint
 
 validate:
 	composer validate --strict

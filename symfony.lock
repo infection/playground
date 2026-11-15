@@ -1,4 +1,7 @@
 {
+    "carthage-software/mago": {
+        "version": "1.60.1"
+    },
     "doctrine/deprecations": {
         "version": "1.1",
         "recipe": {
