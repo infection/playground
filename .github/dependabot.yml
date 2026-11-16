@@ -1,12 +1,17 @@
 version: 2
 
 updates:
+  # Every ecosystem waits 7 days after a release before proposing it, so a compromised
+  # release is usually yanked before it reaches master. Security updates ignore the cooldown.
+
   # PHP dependencies: composer.json + composer.lock
   - package-ecosystem: composer
     directory: /
     schedule:
       interval: weekly
       day: monday
+    cooldown:
+      default-days: 7
     versioning-strategy: increase
     open-pull-requests-limit: 10
     groups:
@@ -32,6 +37,8 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    cooldown:
+      default-days: 7
 
   # Actions used in .github/workflows and the local composite action
   - package-ecosystem: github-actions
@@ -41,6 +48,8 @@ updates:
     schedule:
       interval: weekly
       day: monday
+    cooldown:
+      default-days: 7
     groups:
       github-actions:
         patterns:
