@@ -2,7 +2,7 @@
 
 # Versions
 # pinned to the patch release: 8.5.12 fixes CVE-2026-109618 and CVE-2026-109619 (remote code execution)
-FROM dunglas/frankenphp:1-php8.5.12 AS frankenphp_upstream
+FROM dunglas/frankenphp:1-php8.5.12@sha256:667c5fffd348d9c3c260803d75956f1d9aace7e4b7331d8893de6f101d7e0e57 AS frankenphp_upstream
 
 # Tailwind CSS 3 standalone CLI (symfonycasts/tailwind-bundle runs it, see config/packages/symfonycasts_tailwind.yaml).
 # Checksums: https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.19/sha256sums.txt
@@ -180,7 +180,7 @@ RUN <<-'EOF'
 EOF
 
 # Prod FrankenPHP image
-FROM debian:13-slim AS frankenphp_prod
+FROM debian:13-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 AS frankenphp_prod
 
 SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
 
