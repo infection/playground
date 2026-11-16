@@ -50,6 +50,11 @@ updates:
       day: monday
     cooldown:
       default-days: 7
+    # This action receives the auto-merge GitHub App private key. On a Dependabot PR the workflow
+    # runs from the PR itself, so a bumped version would get the key before anyone reviewed it.
+    # Update it by hand after reviewing the release.
+    ignore:
+      - dependency-name: actions/create-github-app-token
     groups:
       github-actions:
         patterns:
