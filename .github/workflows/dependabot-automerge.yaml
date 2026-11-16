@@ -11,7 +11,9 @@ jobs:
   # once the required checks (see ci.yaml) pass, so a failing build blocks the merge.
   automerge:
     name: Enable auto-merge
-    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'infection/playground' }}
+    # github.actor too: Dependabot secrets are only passed to runs Dependabot triggered, so a run that
+    # someone else triggers on a Dependabot PR (e.g. by pushing to it) would fail without them.
+    if: ${{ github.event.pull_request.user.login == 'dependabot[bot]' && github.actor == 'dependabot[bot]' && github.repository == 'infection/playground' }}
     runs-on: ubuntu-latest
 
     steps:
