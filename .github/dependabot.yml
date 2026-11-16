@@ -9,7 +9,7 @@ updates:
     directory: /
     schedule:
       interval: weekly
-      day: monday
+      day: friday
     cooldown:
       default-days: 7
     versioning-strategy: increase
@@ -36,7 +36,7 @@ updates:
     directory: /
     schedule:
       interval: weekly
-      day: monday
+      day: friday
     cooldown:
       default-days: 7
 
@@ -47,7 +47,7 @@ updates:
       - /.github/merge-queue-ci-skipper
     schedule:
       interval: weekly
-      day: monday
+      day: friday
     cooldown:
       default-days: 7
     # This action receives the auto-merge GitHub App private key. On a Dependabot PR the workflow
