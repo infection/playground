@@ -92,9 +92,9 @@
         }
     },
     "require-dev": {
-        "carthage-software/mago": "^1.60.0",
+        "carthage-software/mago": "^1.60.2",
         "friendsofphp/php-cs-fixer": "^3.95",
-        "infection/infection": "^0.35.10",
+        "infection/infection": "^0.35.12",
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.3",
         "phpstan/phpstan-strict-rules": "^2.1",
