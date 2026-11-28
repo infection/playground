@@ -1,0 +1,319 @@
+variant = "loose"
+
+[[issues]]
+file = "src/Code/ClassesExtractor/ClassesExtractor.php"
+code = "possible-method-access-on-null"
+message = "Attempting to call a method on `null`."
+count = 1
+
+[[issues]]
+file = "src/Code/ClassesExtractor/LineMapBuilder.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 4
+
+[[issues]]
+file = "src/Controller/AstController.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 2
+
+[[issues]]
+file = "src/Controller/AstController.php"
+code = "redundant-docblock-type"
+message = "Redundant docblock type for variable `$astRun`."
+count = 1
+
+[[issues]]
+file = "src/Controller/ExploreController.php"
+code = "possible-method-access-on-null"
+message = "Attempting to call a method on `null`."
+count = 1
+
+[[issues]]
+file = "src/Controller/PlaygroundController.php"
+code = "possibly-undefined-int-array-index"
+message = "Possibly undefined array index accessed on `array<int, int>|array{}`."
+count = 1
+
+[[issues]]
+file = "src/Controller/PlaygroundController.php"
+code = "redundant-docblock-type"
+message = "Redundant docblock type for variable `$example`."
+count = 1
+
+[[issues]]
+file = "src/Entity/Example.php"
+code = "possibly-null-operand"
+message = "Possibly null right operand used in string concatenation (type `null|string`)."
+count = 1
+
+[[issues]]
+file = "src/Explore/ConfigChanges.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 2
+
+[[issues]]
+file = "src/Explore/RunStats.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 3
+
+[[issues]]
+file = "src/Explore/RunStats.php"
+code = "mixed-assignment"
+message = "Assigning `nonnull` type to a variable may lead to unexpected behavior."
+count = 2
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "impossible-condition"
+message = "This condition (type `false`) will always evaluate to false."
+count = 3
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "invalid-iterator"
+message = "The expression provided to `foreach` is not iterable. It resolved to type `mixed`, which is not iterable."
+count = 2
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "invalid-operand"
+message = "Invalid type for left operand."
+count = 3
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "invalid-property-assignment-value"
+message = "Invalid type for property `$cssPrefix`: expected `string`, but got `null|string`."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "mixed-argument"
+message = "Invalid argument type for argument #1 of `strlen`: expected `string`, but found `mixed`."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "mixed-argument"
+message = "Invalid argument type for argument #1 of `substr`: expected `string`, but found `mixed`."
+count = 3
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "mixed-argument"
+message = "Invalid argument type for argument #2 of `explode`: expected `string`, but found `mixed`."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "mixed-argument"
+message = "Invalid argument type for argument #2 of `preg_match_all`: expected `string`, but found `mixed`."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "mixed-argument"
+message = "Invalid argument type for argument #2 of `substr`: expected `int`, but found `mixed`."
+count = 2
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "mixed-argument"
+message = "Invalid argument type for argument #3 of `preg_replace`: expected `array<('K.preg_replace() extends array-key), string>|string`, but found `mixed`."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "mixed-argument"
+message = "Invalid argument type for argument #3 of `substr`: expected `int|null`, but found `mixed`."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "mixed-array-access"
+message = "Unsafe array access on type `mixed`."
+count = 7
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "mixed-array-assignment"
+message = "Unsafe array assignment on type `mixed`."
+count = 2
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "mixed-array-index"
+message = "Invalid index type `mixed` used in array assignment on `mixed`."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 14
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "mixed-operand"
+message = "Cannot reliably decrement a `mixed` operand."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "mixed-operand"
+message = "Invalid right operand: type `mixed` cannot be reliably used in string concatenation."
+count = 2
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "mixed-operand"
+message = "Left operand in `<` comparison has `mixed` type."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "mixed-operand"
+message = "Left operand in `>=` comparison has `mixed` type."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "mixed-operand"
+message = "Left operand in `>` comparison has `mixed` type."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "mixed-operand"
+message = "Left operand in binary operation has type `mixed`."
+count = 2
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "mixed-operand"
+message = "Right operand in binary operation has type `mixed`."
+count = 2
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "mixed-property-type-coercion"
+message = "A value with a less specific type `mixed` is being assigned to property `$inlineColors` (array<array-key, string>)."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "possibly-invalid-argument"
+message = "Possible argument type mismatch for argument #1 of `htmlspecialchars`: expected `string`, but possibly received `array<array-key, string>|null|string`."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "redundant-cast"
+message = "Redundant cast to `(bool)`: the expression already has this type."
+count = 2
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "redundant-comparison"
+message = "Redundant `===` comparison: left-hand side is never identical to right-hand side."
+count = 3
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "reference-to-undefined-variable"
+message = "Reference created from a previously undefined variable `$matches`."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/Theme.php"
+code = "invalid-iterator"
+message = "The expression provided to `foreach` is not iterable. It resolved to type `mixed`, which is not iterable."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/Theme.php"
+code = "mixed-argument"
+message = "Invalid argument type for argument #3 of `sprintf`: expected `Stringable|null|scalar`, but found `mixed`."
+count = 2
+
+[[issues]]
+file = "src/Html/Ansi/Theme.php"
+code = "mixed-argument"
+message = "Invalid argument type for argument #4 of `sprintf`: expected `Stringable|null|scalar`, but found `mixed`."
+count = 2
+
+[[issues]]
+file = "src/Html/Ansi/Theme.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 2
+
+[[issues]]
+file = "src/Html/Ansi/Theme.php"
+code = "mixed-property-type-coercion"
+message = "A value with a less specific type `mixed` is being assigned to property `$prefix` (null|string)."
+count = 1
+
+[[issues]]
+file = "src/Infection/Build/InfectionCommitResolver.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 3
+
+[[issues]]
+file = "src/Infection/Build/InfectionCommitResolver.php"
+code = "redundant-cast"
+message = "Redundant cast to `(string)`: the expression already has this type."
+count = 1
+
+[[issues]]
+file = "src/Infection/Build/InfectionCommitResolver.php"
+code = "reference-to-undefined-variable"
+message = "Reference created from a previously undefined variable `$matches`."
+count = 1
+
+[[issues]]
+file = "src/Infection/Build/InfectionSourceBuilder.php"
+code = "possibly-false-operand"
+message = "Left operand in `<` comparison might be `false` (type `false|int`)."
+count = 1
+
+[[issues]]
+file = "src/Infection/ConfigBuilder.php"
+code = "mixed-array-assignment"
+message = "Unsafe array assignment on type `mixed`."
+count = 1
+
+[[issues]]
+file = "src/PhpParser/XRay/MutatorTargetNodeResolver.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 2
+
+[[issues]]
+file = "src/PhpParser/XRay/XRayBuilder.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 3
+
+[[issues]]
+file = "src/Validator/JsonSchemaValidator.php"
+code = "mixed-assignment"
+message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
+count = 2
+
+[[issues]]
+file = "src/Validator/ValidInfectionCommitLinkValidator.php"
+code = "incompatible-parameter-name"
+message = 'Parameter #1 of `App\Validator\ValidInfectionCommitLinkValidator::validate()` is named `$link` but parent `Symfony\Component\Validator\ConstraintValidator::validate()` names it `$value`'
+count = 1
+
+[[issues]]
+file = "src/Validator/ValidPhpCodeValidator.php"
+code = "incompatible-parameter-name"
+message = 'Parameter #1 of `App\Validator\ValidPhpCodeValidator::validate()` is named `$phpCode` but parent `Symfony\Component\Validator\ConstraintValidator::validate()` names it `$value`'
+count = 1

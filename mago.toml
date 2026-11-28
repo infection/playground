@@ -1,9 +1,16 @@
 #:schema ./vendor/carthage-software/mago/schema.json
 
-# Mago checks the Twig templates only: PHP-CS-Fixer and PHPStan check the PHP code.
+# Mago lints and formats the Twig templates and analyzes src/:
+# PHP-CS-Fixer and PHPStan remain the style and type checks of the PHP code.
 # The playground runs submitted code with its own mago.toml, see App\Infection\Runner::getMagoConfig().
 [source]
-paths = ["templates"]
+paths = ["src", "templates"]
+# read for the types only, never reported on
+includes = ["vendor"]
+
+[analyzer]
+# the issues src/ had when Mago started analyzing it: `make mago-analyze` fails on a new one
+baseline = "mago-analyze-baseline.toml"
 
 [twig.linter]
 # the version of twig/twig in composer.lock: the rules of the newer Twig features run
