@@ -56,7 +56,7 @@ final class ConfigBuilder
     // starts slower than PHPUnit: on a busy machine it does not finish one file in 3 seconds
     private const PHPSTAN_TIMEOUT = 10;
 
-    private const NAMESPACE = 'Infected';
+    private const CODE_NAMESPACE = 'Infected';
 
     // installed by the Dockerfile
     private const MAGO_PATH = '/usr/local/bin/mago';
@@ -144,7 +144,7 @@ final class ConfigBuilder
 
     private function getStaticNamespace(): string
     {
-        return sprintf('%s\\', self::NAMESPACE);
+        return sprintf('%s\\', self::CODE_NAMESPACE);
     }
 
     private function isCustomMutatorName(string $mutatorName): bool

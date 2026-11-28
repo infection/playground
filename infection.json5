@@ -1,6 +1,8 @@
 {
     "$schema": "./vendor/infection/infection/resources/schema.json",
     "timeout": 60,
+    // turbocov collects the coverage: no ini file loads it, see the Dockerfile
+    "initialTestsPhpOptions": "-d extension=turbocov",
     "source": {
         "directories": ["src"]
     },

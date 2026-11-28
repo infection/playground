@@ -78,9 +78,16 @@ final class ProcessEnvironmentTest extends TestCase
 
     public function test_the_sandboxed_processes_read_the_ini_file_of_the_sandbox_too(): void
     {
-        $environment = ProcessEnvironment::createSandboxed($this->createSandboxIniDir());
+        $originalScanDir = getenv('PHP_INI_SCAN_DIR');
+        putenv('PHP_INI_SCAN_DIR=:/usr/local/etc/php/app.conf.d');
 
-        self::assertSame(getenv('PHP_INI_SCAN_DIR') . ':' . $this->sandboxIniDir, $environment['PHP_INI_SCAN_DIR']);
+        try {
+            $environment = ProcessEnvironment::createSandboxed($this->createSandboxIniDir());
+        } finally {
+            putenv($originalScanDir === false ? 'PHP_INI_SCAN_DIR' : 'PHP_INI_SCAN_DIR=' . $originalScanDir);
+        }
+
+        self::assertSame(':/usr/local/etc/php/app.conf.d:' . $this->sandboxIniDir, $environment['PHP_INI_SCAN_DIR']);
         self::assertFalse($environment['APP_SECRET_OF_THE_TEST'] ?? false);
     }
 
@@ -97,6 +104,31 @@ final class ProcessEnvironmentTest extends TestCase
 
         // an empty directory is the default one of PHP
         self::assertSame(':' . $this->sandboxIniDir, $environment['PHP_INI_SCAN_DIR']);
+    }
+
+    public function test_the_sandboxed_processes_do_not_load_xdebug_which_stops_turbocov(): void
+    {
+        $originalScanDir = getenv('PHP_INI_SCAN_DIR');
+        putenv('PHP_INI_SCAN_DIR=:/usr/local/etc/php/app.conf.d:' . ProcessEnvironment::XDEBUG_INI_DIR);
+
+        try {
+            $environment = ProcessEnvironment::createSandboxed($this->createSandboxIniDir());
+        } finally {
+            putenv($originalScanDir === false ? 'PHP_INI_SCAN_DIR' : 'PHP_INI_SCAN_DIR=' . $originalScanDir);
+        }
+
+        self::assertSame(':/usr/local/etc/php/app.conf.d:' . $this->sandboxIniDir, $environment['PHP_INI_SCAN_DIR']);
+    }
+
+    /**
+     * The image has turbocov and its ini file in the directory of the sandbox, see the Dockerfile.
+     */
+    public function test_a_sandboxed_process_collects_coverage_with_turbocov(): void
+    {
+        $process = new Process(['php', '-r', 'echo extension_loaded("turbocov") ? "turbocov" : "", extension_loaded("xdebug") ? " xdebug" : "";'], null, ProcessEnvironment::createSandboxed());
+        $process->mustRun();
+
+        self::assertSame('turbocov', $process->getOutput());
     }
 
     public function test_the_submitted_code_never_runs_without_the_ini_file_of_the_sandbox(): void

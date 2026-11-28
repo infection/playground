@@ -5,7 +5,10 @@ PHPSTAN=vendor/bin/phpstan
 PHPSTAN_ARGS=analyse -c phpstan.dist.neon --memory-limit=1G
 TWIGSTAN=vendor/bin/twigstan
 MAGO=vendor/bin/mago
-INFECTION=php -d memory_limit=1G vendor/bin/infection
+# The PHAR of the playground runs: turbocov needs Infection 0.35.13, which Composer cannot install next to
+# php-cs-fixer yet (ergebnis/agent-detector ^3, see PHP-CS-Fixer/PHP-CS-Fixer#9964).
+# turbocov does not collect coverage when Xdebug is loaded: the ini file of Xdebug of the dev image is left out.
+INFECTION=PHP_INI_SCAN_DIR=":$(PHP_INI_DIR)/app.conf.d" php -d memory_limit=1G infection-builds/infection.phar
 INFECTION_THREADS ?= 4
 
 # Compare changed lines against the PR base branch, or master for local runs.

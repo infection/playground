@@ -23,6 +23,8 @@
       <directory>tests</directory>
     </testsuite>
   </testsuites>
+  <!-- Infection loads turbocov for its initial test run, see infection.json5 -->
+  <coverage driver="ShipMonk\Turbocov\TurbocovDriver"/>
   <source>
     <include>
       <directory suffix=".php">src</directory>
