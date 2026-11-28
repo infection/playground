@@ -1,6 +1,6 @@
 #:schema ./vendor/carthage-software/mago/schema.json
 
-# Mago lints and formats the Twig templates and analyzes src/ and tests/:
+# Mago lints and formats the Twig templates, and its analyzer checks src/ and tests/ and kills Infection's escaped mutants:
 # PHP-CS-Fixer and PHPStan remain the style and type checks of the PHP code.
 # The playground runs submitted code with its own mago.toml, see App\Infection\Runner::getMagoConfig().
 [source]
