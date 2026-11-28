@@ -251,6 +251,13 @@ final class CodeValidator
                 // php-code-coverage 13 hashes the covered files and checks the XML report directory is writable
                 'sha1_file',
                 'is_writable',
+                // PHPUnit 13.4.8 creates the code coverage cache directory as a private one: it gets the id of the
+                // current user from a temporary file, then checks the directory is not a link, is owned by that user
+                // and cannot be written to by other users
+                'tmpfile',
+                'is_link',
+                'fileowner',
+                'fileperms',
             ]
         ));
     }
