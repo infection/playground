@@ -19,8 +19,8 @@ CI ?=
 DOCKER_PHP=docker compose exec $(if $(CI),-T,) php
 
 #style checks / static analysis
-.PHONY: analyze cs-fix cs-check phpstan twigstan twig-lint twig-fmt twig-fmt-check validate tests schema-validate
-analyze: cs-check phpstan twigstan twig-lint twig-fmt-check validate schema-validate tests
+.PHONY: analyze cs-fix cs-check phpstan mago-analyze mago-analyze-baseline twigstan twig-lint twig-fmt twig-fmt-check validate tests schema-validate
+analyze: cs-check phpstan mago-analyze twigstan twig-lint twig-fmt-check validate schema-validate tests
 
 cs-fix: prerequisites
 	$(PHP-CS-FIXER) fix -v --allow-risky=yes
@@ -33,6 +33,13 @@ phpstan: prerequisites
 
 phpstan-update-baseline: prerequisites ## Runs PHPStan and update baseline
 	$(PHPSTAN) $(PHPSTAN_ARGS) --generate-baseline
+
+# also fails on a baseline entry that no longer matches an issue: regenerate the baseline after a Mago upgrade
+mago-analyze: prerequisites
+	$(MAGO) analyze --fail-on-out-of-sync-baseline
+
+mago-analyze-baseline: prerequisites ## Regenerates mago-analyze-baseline.toml
+	$(MAGO) analyze --generate-baseline
 
 twigstan: prerequisites
 	$(TWIGSTAN)
