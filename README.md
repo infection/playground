@@ -13,7 +13,7 @@ Please read documentation here: [infection.github.io](http://infection.github.io
 ### Developing
 
 The project is based on [dunglas/symfony-docker](https://github.com/dunglas/symfony-docker):
-FrankenPHP (Caddy) and MySQL, PHP 8.5, Symfony 8. There is no Node.js: the frontend is served by
+FrankenPHP (Caddy) and MySQL, PHP 8.6, Symfony 8. There is no Node.js: the frontend is served by
 [AssetMapper](https://symfony.com/doc/current/frontend/asset_mapper.html), Tailwind CSS is built by
 [symfonycasts/tailwind-bundle](https://symfony.com/bundles/TailwindBundle/current/index.html) and the
 Monaco Editor is taken from its npm package by the `Dockerfile`.

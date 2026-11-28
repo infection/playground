@@ -35,8 +35,11 @@ declare(strict_types=1);
 
 namespace App\Infection;
 
+use function array_filter;
 use function array_keys;
+use function explode;
 use function getenv;
+use function implode;
 use function is_file;
 use RuntimeException;
 use function sprintf;
@@ -51,6 +54,11 @@ final class ProcessEnvironment
      * this directory by default: the web server and the tools, e.g. Composer, need curl_multi_exec.
      */
     public const SANDBOX_INI_DIR = '/usr/local/etc/php/playground.conf.d';
+
+    /**
+     * The ini file of Xdebug in the dev image, see the Dockerfile. turbocov does not collect coverage when Xdebug is loaded.
+     */
+    public const XDEBUG_INI_DIR = '/usr/local/etc/php/xdebug.conf.d';
 
     private const SANDBOX_INI_FILE = 'playground.ini';
 
@@ -69,7 +77,8 @@ final class ProcessEnvironment
 
     /**
      * For the processes that run the submitted code: Infection, and what it starts with the same environment
-     * (PHPUnit, the mutants, PHPStan, Mago). They read the ini file of the sandbox on top of the ones of the app.
+     * (PHPUnit, the mutants, PHPStan, Mago). They read the ini files of the sandbox on top of the ones of the app,
+     * and not the one of Xdebug: the sandbox loads turbocov for the coverage.
      *
      * @throws RuntimeException without the ini file of the sandbox: the code never runs without it
      *
@@ -83,7 +92,11 @@ final class ProcessEnvironment
 
         $environment = self::create();
         // the directories are separated by ":", and an empty one, also without PHP_INI_SCAN_DIR, is the default one of PHP
-        $environment['PHP_INI_SCAN_DIR'] = sprintf('%s:%s', getenv('PHP_INI_SCAN_DIR'), $sandboxIniDir);
+        $scanDirs = array_filter(
+            explode(':', (string) getenv('PHP_INI_SCAN_DIR')),
+            static fn (string $dir): bool => $dir !== self::XDEBUG_INI_DIR,
+        );
+        $environment['PHP_INI_SCAN_DIR'] = sprintf('%s:%s', implode(':', $scanDirs), $sandboxIniDir);
 
         return $environment;
     }

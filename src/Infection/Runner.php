@@ -51,7 +51,7 @@ use Symfony\Component\Process\Process;
 
 class Runner
 {
-    public const CURRENT_INFECTION_VERSION = '0.35.12';
+    public const CURRENT_INFECTION_VERSION = '0.35.13';
     public const CURRENT_PHPUNIT_VERSION = '13.4.8';
     // the PHP binary the playground runs Infection with, i.e. the one of the Docker image
     public const CURRENT_PHP_VERSION = PHP_VERSION;
@@ -189,7 +189,7 @@ class Runner
         </testsuite>
     </testsuites>
     
-    <coverage />
+    <coverage driver="ShipMonk\Turbocov\TurbocovDriver" />
 
     <source>
         <include>
@@ -248,6 +248,15 @@ $loader->register();
 // register the base directories for the namespace prefix
 $loader->addNamespace('Infected', __DIR__ . '/src');
 $loader->addNamespace('Infected\Tests', __DIR__ . '/tests');
+// the coverage driver of PHPUnit, see the turbocov_phpunit stage of the Dockerfile
+$loader->addNamespace('ShipMonk\Turbocov', '/opt/turbocov-phpunit/src');
+
+// The PHAR of PHPUnit prefixes php-code-coverage, which the driver extends: it gets the classes of the PHAR.
+spl_autoload_register(static function (string $class): void {
+    if (str_starts_with($class, 'SebastianBergmann\\CodeCoverage\\') && class_exists('PHPUnitPHAR\\' . $class)) {
+        class_alias('PHPUnitPHAR\\' . $class, $class);
+    }
+});
 PHP;
     }
 }

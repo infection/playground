@@ -93,6 +93,8 @@ $finder = Finder::create()
 return (new Config())
     ->setParallelConfig(ParallelConfigFactory::detect())
     ->setRiskyAllowed(true)
+    // PHP CS Fixer supports the syntax up to PHP 8.5: the code uses none of PHP 8.6 (PHP-CS-Fixer/PHP-CS-Fixer#9954)
+    ->setUnsupportedPhpVersionAllowed(true)
     ->setRules([
         '@PHP7x1Migration' => true,
         '@PHP7x1Migration:risky' => true,

@@ -1,8 +1,8 @@
 #syntax=docker/dockerfile:1
 
 # Versions
-# pinned to the patch release: 8.5.12 fixes CVE-2026-109618 and CVE-2026-109619 (remote code execution)
-FROM dunglas/frankenphp:1-php8.5.13@sha256:17ff6554ba6de527d17aa5ec37e2a3bc3b182d7dbea9362f9a02eb5b4a1c4b95 AS frankenphp_upstream
+# pinned to the patch release
+FROM dunglas/frankenphp:1-php8.6.0@sha256:a583367e9f332588e67d6a18c51d8c5f7edcc8cb27715a0138a1bc0ccc116807 AS frankenphp_upstream
 
 # Tailwind CSS 3 standalone CLI (symfonycasts/tailwind-bundle runs it, see config/packages/symfonycasts_tailwind.yaml).
 # Checksums: https://github.com/tailwindlabs/tailwindcss/releases/download/v3.4.19/sha256sums.txt
@@ -37,12 +37,45 @@ FROM scratch AS phpstan
 ADD --checksum=sha256:85157dba3d95d77ca603d2b7303aa78a538f9e3b56ccad07dd794c53aa96d1ae \
 	https://github.com/phpstan/phpstan/releases/download/2.3.1/phpstan.phar /phpstan.phar
 
+# turbocov, the coverage driver of the playground runs and of the mutation tests of the project.
+# A commit of master: 0.1.1 does not build on PHP 8.6, the fix (shipmonk-rnd/turbocov#6) is not in a release yet.
+# GitHub publishes no checksums of the archives: it is of the downloaded one.
+FROM scratch AS turbocov
+ADD --checksum=sha256:b19fe8bb7ac7a8d00dd072a16473788ee1d61a154e0310c47171fd07847a8c3a \
+	https://codeload.github.com/shipmonk-rnd/turbocov/tar.gz/3df0f5a46d7e2d9510f03ace935e23873adec2e6 /turbocov.tar.gz
+
+# The PHPUnit driver of turbocov, for the playground runs (see Runner::getAutoload()) and the project's own tests
+# (see autoload-dev in composer.json). It is not a Composer package of the project: that requires ext-turbocov,
+# which only the processes that collect coverage load.
+FROM scratch AS turbocov_phpunit
+ADD --checksum=sha256:d1ffc083deb20b806be77e632e54d0f69811c2d143d714c0f4e126a8ea380785 \
+	https://codeload.github.com/shipmonk-rnd/turbocov-phpunit/tar.gz/refs/tags/0.1.0 /turbocov-phpunit.tar.gz
+
 ARG TARGETARCH
 # hadolint ignore=DL3006
 FROM tailwind_${TARGETARCH} AS tailwind
 
 # hadolint ignore=DL3006
 FROM mago_${TARGETARCH} AS mago
+
+# Builds turbocov, which has no package that install-php-extensions knows.
+# The build tools stay in this stage: frankenphp_base copies the extension only.
+FROM frankenphp_upstream AS turbocov_builder
+
+SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
+
+# hadolint ignore=DL3008,SC2086
+RUN --mount=type=bind,from=turbocov,source=/turbocov.tar.gz,target=/mnt/turbocov.tar.gz <<-EOF
+	apt-get update
+	apt-get install -y --no-install-recommends $PHPIZE_DEPS
+	mkdir /usr/src/turbocov
+	tar -xzf /mnt/turbocov.tar.gz -C /usr/src/turbocov --strip-components=1
+	cd /usr/src/turbocov
+	phpize
+	./configure --enable-turbocov
+	make -j"$(nproc)"
+	make install INSTALL_ROOT=/turbocov
+EOF
 
 # The different stages of this Dockerfile are meant to be built into separate images
 # https://docs.docker.com/build/building/multi-stage/#stop-at-a-specific-build-stage
@@ -63,16 +96,24 @@ RUN <<-EOF
 	apt-get install -y --no-install-recommends \
 		file \
 		git
-	# pcov collects the code coverage that Infection needs for the playground runs.
+	# the images of PHP 8.6 do not have mbstring anymore
 	install-php-extensions \
 		@composer \
-		apcu \
 		bcmath \
 		intl \
+		mbstring \
 		opcache \
-		pcov \
 		zip
 	rm -rf /var/lib/apt/lists/*
+EOF
+
+# turbocov collects the code coverage that Infection needs. No ini file of the image loads it:
+# only the processes that collect coverage do, see frankenphp/playground.conf.d/turbocov.ini and infection.json5.
+COPY --link --from=turbocov_builder /turbocov/ /
+
+RUN --mount=type=bind,from=turbocov_phpunit,source=/turbocov-phpunit.tar.gz,target=/mnt/turbocov-phpunit.tar.gz <<-EOF
+	mkdir -p /opt/turbocov-phpunit
+	tar -xzf /mnt/turbocov-phpunit.tar.gz -C /opt/turbocov-phpunit --strip-components=1 --wildcards '*/src'
 EOF
 
 COPY --link --chmod=755 --from=tailwind /tailwindcss /usr/local/bin/tailwindcss
@@ -105,7 +146,7 @@ RUN install-php-extensions pdo_mysql
 
 COPY --link frankenphp/conf.d/10-app.ini $PHP_INI_DIR/app.conf.d/
 # not in a directory PHP scans by default: only the processes that run the submitted code read it
-COPY --link frankenphp/playground.conf.d/playground.ini $PHP_INI_DIR/playground.conf.d/
+COPY --link frankenphp/playground.conf.d/ $PHP_INI_DIR/playground.conf.d/
 COPY --link --chmod=755 frankenphp/docker-entrypoint.sh /usr/local/bin/docker-entrypoint
 COPY --link frankenphp/Caddyfile /etc/frankenphp/Caddyfile
 
@@ -119,12 +160,18 @@ FROM frankenphp_base AS frankenphp_dev
 
 ENV APP_ENV=dev
 ENV XDEBUG_MODE=off
+ENV PHP_INI_SCAN_DIR=":$PHP_INI_DIR/app.conf.d:$PHP_INI_DIR/xdebug.conf.d"
 ENV FRANKENPHP_WORKER_CONFIG=watch
 
 # dev dependencies
 RUN <<-EOF
 	mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
-	install-php-extensions xdebug
+	# a commit of master: the releases of Xdebug do not support PHP 8.6 yet, back to "xdebug" with 3.6
+	install-php-extensions xdebug/xdebug@5e19866c1766e38c527f9f94faa170370dc4209f
+	# turbocov does not collect coverage when Xdebug is loaded: the processes that collect coverage leave this directory out,
+	# see ProcessEnvironment::createSandboxed() and the Makefile
+	mkdir "$PHP_INI_DIR/xdebug.conf.d"
+	mv "$PHP_INI_DIR/conf.d/docker-php-ext-xdebug.ini" "$PHP_INI_DIR/xdebug.conf.d/"
 	useradd -m -s /bin/bash nonroot
 	git config --system --add safe.directory /app
 EOF
@@ -204,6 +251,7 @@ COPY --from=frankenphp_prod_builder /usr/local/etc/php/playground.conf.d /usr/lo
 
 COPY --from=frankenphp_prod_builder /etc/frankenphp/Caddyfile /etc/frankenphp/Caddyfile
 COPY --from=frankenphp_prod_builder /opt/monaco /opt/monaco
+COPY --from=frankenphp_prod_builder /opt/turbocov-phpunit /opt/turbocov-phpunit
 
 # CA certificates for TLS, file/libmagic for Symfony MIME type detection
 COPY --from=frankenphp_prod_builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
