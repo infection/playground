@@ -20,6 +20,7 @@
             ],
         },
     },
+    "staticAnalysisTool": "mago",
     "logs": {
         "text": "var/infection.log"
     }
