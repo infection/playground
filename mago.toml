@@ -1,16 +1,48 @@
 #:schema ./vendor/carthage-software/mago/schema.json
 
-# Mago lints and formats the Twig templates and analyzes src/:
+# Mago lints and formats the Twig templates and analyzes src/ and tests/:
 # PHP-CS-Fixer and PHPStan remain the style and type checks of the PHP code.
 # The playground runs submitted code with its own mago.toml, see App\Infection\Runner::getMagoConfig().
 [source]
-paths = ["src", "templates"]
+paths = ["src", "tests", "templates"]
 # read for the types only, never reported on
 includes = ["vendor"]
 
+# the settings of infection/infection's mago.toml
 [analyzer]
-# the issues src/ had when Mago started analyzing it: `make mago-analyze` fails on a new one
+# the issues src/ and tests/ had when Mago started analyzing them: `make mago-analyze` fails on a new one
 baseline = "mago-analyze-baseline.toml"
+# a missing type hint is a warning, and new code must still have one
+minimum-fail-level = "warning"
+
+find-unused-definitions = true
+find-unused-expressions = true
+find-unused-parameters = true
+analyze-dead-code = true
+memoize-properties = true
+allow-possibly-undefined-array-keys = true
+strict-list-index-checks = false
+no-boolean-literal-comparison = true
+check-missing-type-hints = true
+check-missing-override = false
+register-super-globals = true
+
+check-throws = true
+unchecked-exceptions = [
+    "LogicException",
+    "Error",
+    "Psr\\Container\\ContainerExceptionInterface",
+    "Symfony\\Component\\Filesystem\\Exception\\ExceptionInterface",
+    # Symfony answers them with a 400 and a 404: a @throws on every controller action says nothing
+    "Symfony\\Component\\HttpFoundation\\Exception\\BadRequestException",
+    "Symfony\\Component\\HttpKernel\\Exception\\NotFoundHttpException",
+]
+
+ignore = [
+    # a test fails on an exception it does not expect: declaring them says nothing
+    { code = "unhandled-thrown-type", in = ["tests/"] },
+    { code = "imprecise-type", in = ["tests/"] },
+]
 
 [twig.linter]
 # the version of twig/twig in composer.lock: the rules of the newer Twig features run

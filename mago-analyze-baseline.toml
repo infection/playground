@@ -13,6 +13,42 @@ message = "Assigning `mixed` type to a variable may lead to unexpected behavior.
 count = 4
 
 [[issues]]
+file = "src/Code/Validator/CodeValidator.php"
+code = "missing-constant-type"
+message = "Class constant `FORBIDDEN_FUNCTIONS` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Code/Visitor/ForbiddenCodeCollectorVisitor.php"
+code = "missing-constant-type"
+message = "Class constant `INCLUDE_TYPE_MAP` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Code/Visitor/ReplaceNamespaceVisitor.php"
+code = "missing-property-type"
+message = "Property `$desiredNamespaceName` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Command/BackfillExampleStatsCommand.php"
+code = "missing-constant-type"
+message = "Class constant `BATCH_SIZE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Command/BackfillExampleStatsCommand.php"
+code = "missing-constant-type"
+message = "Class constant `FIRST_ID_BEFORE_ALL` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Controller/AstController.php"
+code = "missing-constant-type"
+message = "Class constant `MAX_CODE_LENGTH` is missing a type hint."
+count = 1
+
+[[issues]]
 file = "src/Controller/AstController.php"
 code = "mixed-assignment"
 message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
@@ -22,6 +58,36 @@ count = 2
 file = "src/Controller/AstController.php"
 code = "redundant-docblock-type"
 message = "Redundant docblock type for variable `$astRun`."
+count = 1
+
+[[issues]]
+file = "src/Controller/AstController.php"
+code = "unhandled-thrown-type"
+message = 'Potentially unhandled exception `Doctrine\ORM\Exception\ORMException` in `App\Controller\AstController::display`.'
+count = 1
+
+[[issues]]
+file = "src/Controller/AstController.php"
+code = "unhandled-thrown-type"
+message = 'Potentially unhandled exception `Doctrine\ORM\OptimisticLockException` in `App\Controller\AstController::display`.'
+count = 1
+
+[[issues]]
+file = "src/Controller/ExploreController.php"
+code = "missing-constant-type"
+message = "Class constant `LEADERBOARD_MIN_MUTANTS` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Controller/ExploreController.php"
+code = "missing-constant-type"
+message = "Class constant `LEADERBOARD_SIZE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Controller/ExploreController.php"
+code = "missing-constant-type"
+message = "Class constant `PAGE_SIZE` is missing a type hint."
 count = 1
 
 [[issues]]
@@ -43,9 +109,27 @@ message = "Redundant docblock type for variable `$example`."
 count = 1
 
 [[issues]]
+file = "src/Controller/PlaygroundController.php"
+code = "unhandled-thrown-type"
+message = 'Potentially unhandled exception `Doctrine\ORM\Exception\ORMException` in `App\Controller\PlaygroundController::displayExample`.'
+count = 1
+
+[[issues]]
+file = "src/Controller/PlaygroundController.php"
+code = "unhandled-thrown-type"
+message = 'Potentially unhandled exception `Doctrine\ORM\OptimisticLockException` in `App\Controller\PlaygroundController::displayExample`.'
+count = 1
+
+[[issues]]
 file = "src/Entity/Example.php"
 code = "possibly-null-operand"
 message = "Possibly null right operand used in string concatenation (type `null|string`)."
+count = 1
+
+[[issues]]
+file = "src/Entity/ExampleMutator.php"
+code = "missing-constant-type"
+message = "Class constant `MAX_MUTATOR_LENGTH` is missing a type hint."
 count = 1
 
 [[issues]]
@@ -53,6 +137,60 @@ file = "src/Explore/ConfigChanges.php"
 code = "mixed-assignment"
 message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
 count = 2
+
+[[issues]]
+file = "src/Explore/DefaultExample.php"
+code = "missing-constant-type"
+message = "Class constant `CODE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Explore/DefaultExample.php"
+code = "missing-constant-type"
+message = "Class constant `CONFIG` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Explore/DefaultExample.php"
+code = "missing-constant-type"
+message = "Class constant `TEST` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Explore/Ranking.php"
+code = "missing-constant-type"
+message = "Class constant `MIN_MUTANTS` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Explore/RunStats.php"
+code = "missing-constant-type"
+message = "Class constant `LOG_LISTS` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Explore/RunStats.php"
+code = "missing-constant-type"
+message = "Class constant `STATUS_ESCAPED` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Explore/RunStats.php"
+code = "missing-constant-type"
+message = "Class constant `STATUS_KILLED` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Explore/RunStats.php"
+code = "missing-constant-type"
+message = "Class constant `STATUS_NOT_COVERED` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Explore/RunStats.php"
+code = "missing-constant-type"
+message = "Class constant `STATUS_TIMED_OUT` is missing a type hint."
+count = 1
 
 [[issues]]
 file = "src/Explore/RunStats.php"
@@ -65,6 +203,12 @@ file = "src/Explore/RunStats.php"
 code = "mixed-assignment"
 message = "Assigning `nonnull` type to a variable may lead to unexpected behavior."
 count = 2
+
+[[issues]]
+file = "src/Form/CreateExampleType.php"
+code = "missing-property-type"
+message = "Property `$urlGenerator` is missing a type hint."
+count = 1
 
 [[issues]]
 file = "src/Html/Ansi/AnsiToHtmlConverter.php"
@@ -88,6 +232,126 @@ count = 3
 file = "src/Html/Ansi/AnsiToHtmlConverter.php"
 code = "invalid-property-assignment-value"
 message = "Invalid type for property `$cssPrefix`: expected `string`, but got `null|string`."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "missing-parameter-type"
+message = "Parameter `$ansi` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "missing-parameter-type"
+message = "Parameter `$charset` is missing a type hint."
+count = 2
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "missing-parameter-type"
+message = "Parameter `$cssPrefix` is missing a type hint."
+count = 2
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "missing-parameter-type"
+message = "Parameter `$inlineStyles` is missing a type hint."
+count = 2
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "missing-parameter-type"
+message = "Parameter `$invertBackground` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "missing-parameter-type"
+message = "Parameter `$text` is missing a type hint."
+count = 2
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "missing-property-type"
+message = "Property `$charset` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "missing-property-type"
+message = "Property `$colorNames` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "missing-property-type"
+message = "Property `$cssPrefix` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "missing-property-type"
+message = "Property `$inlineColors` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "missing-property-type"
+message = "Property `$inlineStyles` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "missing-property-type"
+message = "Property `$invertBackground` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "missing-property-type"
+message = "Property `$theme` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "missing-return-type"
+message = "Function `convertAnsiToColor` is missing a return type hint."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "missing-return-type"
+message = "Function `convert` is missing a return type hint."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "missing-return-type"
+message = "Function `getCharset` is missing a return type hint."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "missing-return-type"
+message = "Function `getTheme` is missing a return type hint."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "missing-return-type"
+message = "Function `isInlineStyles` is missing a return type hint."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "missing-return-type"
+message = "Function `isInvertBackground` is missing a return type hint."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/AnsiToHtmlConverter.php"
+code = "missing-return-type"
+message = "Function `tokenize` is missing a return type hint."
 count = 1
 
 [[issues]]
@@ -236,6 +500,36 @@ count = 1
 
 [[issues]]
 file = "src/Html/Ansi/Theme.php"
+code = "missing-parameter-type"
+message = "Parameter `$prefix` is missing a type hint."
+count = 2
+
+[[issues]]
+file = "src/Html/Ansi/Theme.php"
+code = "missing-property-type"
+message = "Property `$prefix` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/Theme.php"
+code = "missing-return-type"
+message = "Function `asArray` is missing a return type hint."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/Theme.php"
+code = "missing-return-type"
+message = "Function `asCss` is missing a return type hint."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/Theme.php"
+code = "missing-return-type"
+message = "Function `getPrefix` is missing a return type hint."
+count = 1
+
+[[issues]]
+file = "src/Html/Ansi/Theme.php"
 code = "mixed-argument"
 message = "Invalid argument type for argument #3 of `sprintf`: expected `Stringable|null|scalar`, but found `mixed`."
 count = 2
@@ -259,6 +553,30 @@ message = "A value with a less specific type `mixed` is being assigned to proper
 count = 1
 
 [[issues]]
+file = "src/Infection/Build/InfectionCommit.php"
+code = "missing-constant-type"
+message = "Class constant `REPOSITORY` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/Build/InfectionCommitResolver.php"
+code = "missing-constant-type"
+message = "Class constant `API_URL` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/Build/InfectionCommitResolver.php"
+code = "missing-constant-type"
+message = "Class constant `DEFAULT_BRANCH` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/Build/InfectionCommitResolver.php"
+code = "missing-constant-type"
+message = "Class constant `REFERENCE_REGEX` is missing a type hint."
+count = 1
+
+[[issues]]
 file = "src/Infection/Build/InfectionCommitResolver.php"
 code = "mixed-assignment"
 message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
@@ -277,15 +595,201 @@ message = "Reference created from a previously undefined variable `$matches`."
 count = 1
 
 [[issues]]
+file = "src/Infection/Build/InfectionCommitResolver.php"
+code = "unhandled-thrown-type"
+message = 'Potentially unhandled exception `App\Infection\Build\InvalidInfectionCommit` in `App\Infection\Build\InfectionCommitResolver::findCommitOf`.'
+count = 1
+
+[[issues]]
+file = "src/Infection/Build/InfectionCommitResolver.php"
+code = "unhandled-thrown-type"
+message = 'Potentially unhandled exception `App\Infection\Build\InvalidInfectionCommit` in `App\Infection\Build\InfectionCommitResolver::findPullRequestHeadSha`.'
+count = 1
+
+[[issues]]
+file = "src/Infection/Build/InfectionCommitResolver.php"
+code = "unhandled-thrown-type"
+message = 'Potentially unhandled exception `App\Infection\Build\InvalidInfectionCommit` in `App\Infection\Build\InfectionCommitResolver::request`.'
+count = 1
+
+[[issues]]
+file = "src/Infection/Build/InfectionSourceBuilder.php"
+code = "missing-constant-type"
+message = "Class constant `ARCHIVE_URL` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/Build/InfectionSourceBuilder.php"
+code = "missing-constant-type"
+message = "Class constant `COMPOSER_TIMEOUT_SEC` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/Build/InfectionSourceBuilder.php"
+code = "missing-constant-type"
+message = "Class constant `DOWNLOAD_TIMEOUT_SEC` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/Build/InfectionSourceBuilder.php"
+code = "missing-constant-type"
+message = "Class constant `IN_USE_SEC` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/Build/InfectionSourceBuilder.php"
+code = "missing-constant-type"
+message = "Class constant `MAX_BUILDS` is missing a type hint."
+count = 1
+
+[[issues]]
 file = "src/Infection/Build/InfectionSourceBuilder.php"
 code = "possibly-false-operand"
 message = "Left operand in `<` comparison might be `false` (type `false|int`)."
 count = 1
 
 [[issues]]
+file = "src/Infection/Build/InfectionSourceBuilder.php"
+code = "unhandled-thrown-type"
+message = 'Potentially unhandled exception `RuntimeException` in `App\Infection\Build\InfectionSourceBuilder::buildInTemporaryDirectory`.'
+count = 1
+
+[[issues]]
+file = "src/Infection/Build/InfectionSourceBuilder.php"
+code = "unhandled-thrown-type"
+message = 'Potentially unhandled exception `RuntimeException` in `App\Infection\Build\InfectionSourceBuilder::extractArchive`.'
+count = 1
+
+[[issues]]
+file = "src/Infection/Build/InfectionSourceBuilder.php"
+code = "unhandled-thrown-type"
+message = 'Potentially unhandled exception `RuntimeException` in `App\Infection\Build\InfectionSourceBuilder::installDependencies`.'
+count = 1
+
+[[issues]]
+file = "src/Infection/ConfigBuilder.php"
+code = "missing-constant-type"
+message = "Class constant `MAGO_PATH` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/ConfigBuilder.php"
+code = "missing-constant-type"
+message = "Class constant `NAMESPACE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/ConfigBuilder.php"
+code = "missing-constant-type"
+message = "Class constant `PHPSTAN_PATH` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/ConfigBuilder.php"
+code = "missing-constant-type"
+message = "Class constant `PHPSTAN_TIMEOUT` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/ConfigBuilder.php"
+code = "missing-constant-type"
+message = "Class constant `TIMEOUT` is missing a type hint."
+count = 1
+
+[[issues]]
 file = "src/Infection/ConfigBuilder.php"
 code = "mixed-array-assignment"
 message = "Unsafe array assignment on type `mixed`."
+count = 1
+
+[[issues]]
+file = "src/Infection/ProcessEnvironment.php"
+code = "missing-constant-type"
+message = "Class constant `INHERITED_ENVIRONMENT_VARIABLES` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/ProcessEnvironment.php"
+code = "missing-constant-type"
+message = "Class constant `SANDBOX_INI_DIR` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/ProcessEnvironment.php"
+code = "missing-constant-type"
+message = "Class constant `SANDBOX_INI_FILE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/RequestTimeLimit.php"
+code = "missing-constant-type"
+message = "Class constant `MARGIN_SEC` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/Runner.php"
+code = "missing-constant-type"
+message = "Class constant `CURRENT_INFECTION_VERSION` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/Runner.php"
+code = "missing-constant-type"
+message = "Class constant `CURRENT_MAGO_VERSION` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/Runner.php"
+code = "missing-constant-type"
+message = "Class constant `CURRENT_PHPSTAN_VERSION` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/Runner.php"
+code = "missing-constant-type"
+message = "Class constant `CURRENT_PHPUNIT_VERSION` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/Runner.php"
+code = "missing-constant-type"
+message = "Class constant `CURRENT_PHP_VERSION` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/Runner.php"
+code = "missing-constant-type"
+message = "Class constant `PHPSTAN_PROCESS_TIMEOUT_SEC` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/Runner.php"
+code = "missing-constant-type"
+message = "Class constant `PROCESS_TIMEOUT_SEC` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Infection/Runner.php"
+code = "unhandled-thrown-type"
+message = 'Potentially unhandled exception `RuntimeException` in `App\Infection\Runner::run`.'
+count = 1
+
+[[issues]]
+file = "src/Infection/Runner.php"
+code = "unhandled-thrown-type"
+message = 'Potentially unhandled exception `Symfony\Component\Process\Exception\ProcessSignaledException` in `App\Infection\Runner::run`.'
+count = 1
+
+[[issues]]
+file = "src/Infection/Runner.php"
+code = "unhandled-thrown-type"
+message = 'Potentially unhandled exception `Symfony\Component\Process\Exception\ProcessStartFailedException` in `App\Infection\Runner::run`.'
+count = 1
+
+[[issues]]
+file = "src/Infection/Runner.php"
+code = "unhandled-thrown-type"
+message = 'Potentially unhandled exception `Symfony\Component\Process\Exception\RuntimeException` in `App\Infection\Runner::run`.'
 count = 1
 
 [[issues]]
@@ -296,9 +800,81 @@ count = 2
 
 [[issues]]
 file = "src/PhpParser/XRay/XRayBuilder.php"
+code = "missing-constant-type"
+message = "Class constant `MAX_SCALAR_LENGTH` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/PhpParser/XRay/XRayBuilder.php"
+code = "missing-constant-type"
+message = "Class constant `MODIFIERS` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/PhpParser/XRay/XRayBuilder.php"
 code = "mixed-assignment"
 message = "Assigning `mixed` type to a variable may lead to unexpected behavior."
 count = 3
+
+[[issues]]
+file = "src/Repository/ExploreRepository.php"
+code = "unhandled-thrown-type"
+message = 'Potentially unhandled exception `Doctrine\ORM\NoResultException` in `App\Repository\ExploreRepository::countAll`.'
+count = 1
+
+[[issues]]
+file = "src/Repository/ExploreRepository.php"
+code = "unhandled-thrown-type"
+message = 'Potentially unhandled exception `Doctrine\ORM\NoResultException` in `App\Repository\ExploreRepository::median`.'
+count = 1
+
+[[issues]]
+file = "src/Repository/ExploreRepository.php"
+code = "unhandled-thrown-type"
+message = 'Potentially unhandled exception `Doctrine\ORM\NonUniqueResultException` in `App\Repository\ExploreRepository::countAll`.'
+count = 1
+
+[[issues]]
+file = "src/Repository/ExploreRepository.php"
+code = "unhandled-thrown-type"
+message = 'Potentially unhandled exception `Doctrine\ORM\NonUniqueResultException` in `App\Repository\ExploreRepository::median`.'
+count = 1
+
+[[issues]]
+file = "src/Request/CreateExampleRequest.php"
+code = "missing-constant-type"
+message = "Class constant `INFECTION_COMMIT_GROUP` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Request/CreateExampleRequest.php"
+code = "missing-constant-type"
+message = "Class constant `MAX_CODE_LENGTH` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Request/CreateExampleRequest.php"
+code = "missing-constant-type"
+message = "Class constant `MAX_CONFIG_LENGTH` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Request/CreateExampleRequest.php"
+code = "missing-property-type"
+message = "Property `$code` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "src/Utils/DirectoryCreator.php"
+code = "unhandled-thrown-type"
+message = 'Potentially unhandled exception `RuntimeException` in `App\Utils\DirectoryCreator::create`.'
+count = 1
+
+[[issues]]
+file = "src/Validator/JsonSchema.php"
+code = "missing-property-type"
+message = "Property `$message` is missing a type hint."
+count = 1
 
 [[issues]]
 file = "src/Validator/JsonSchemaValidator.php"
@@ -313,7 +889,193 @@ message = 'Parameter #1 of `App\Validator\ValidInfectionCommitLinkValidator::val
 count = 1
 
 [[issues]]
+file = "src/Validator/ValidPhpCode.php"
+code = "missing-property-type"
+message = "Property `$message` is missing a type hint."
+count = 1
+
+[[issues]]
 file = "src/Validator/ValidPhpCodeValidator.php"
 code = "incompatible-parameter-name"
 message = 'Parameter #1 of `App\Validator\ValidPhpCodeValidator::validate()` is named `$phpCode` but parent `Symfony\Component\Validator\ConstraintValidator::validate()` names it `$value`'
+count = 1
+
+[[issues]]
+file = "tests/Functional/Controller/AstControllerTest.php"
+code = "missing-constant-type"
+message = "Class constant `OLD_EXAMPLE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "tests/Functional/Controller/PlaygroundControllerTest.php"
+code = "possibly-undefined-int-array-index"
+message = "Possibly undefined array index accessed on `array<int, int>|array{}`."
+count = 4
+
+[[issues]]
+file = "tests/Functional/RefuseHttpRequestsTest.php"
+code = "deprecated-method"
+message = 'Call to deprecated method: `PHPUnit\Framework\TestCase::expectExceptionMessage`.'
+count = 1
+
+[[issues]]
+file = "tests/Unit/AutoReview/DockerfileDownloadPermissionsTest.php"
+code = "reference-to-undefined-variable"
+message = "Reference created from a previously undefined variable `$copyMatches`."
+count = 1
+
+[[issues]]
+file = "tests/Unit/AutoReview/DockerfileDownloadPermissionsTest.php"
+code = "reference-to-undefined-variable"
+message = "Reference created from a previously undefined variable `$stageMatches`."
+count = 1
+
+[[issues]]
+file = "tests/Unit/Code/ClassesExtractor/LineMapBuilderTest.php"
+code = "missing-constant-type"
+message = "Class constant `CODE` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "tests/Unit/Code/CodeSanitizerTest.php"
+code = "missing-property-type"
+message = "Property `$codeSanitizer` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "tests/Unit/Entity/ExampleTest.php"
+code = "deprecated-method"
+message = 'Call to deprecated method: `PHPUnit\Framework\TestCase::expectExceptionMessage`.'
+count = 3
+
+[[issues]]
+file = "tests/Unit/Explore/DefaultExampleTest.php"
+code = "reference-to-undefined-variable"
+message = "Reference created from a previously undefined variable `$lines`."
+count = 1
+
+[[issues]]
+file = "tests/Unit/Explore/DefaultExampleTest.php"
+code = "reference-to-undefined-variable"
+message = "Reference created from a previously undefined variable `$matches`."
+count = 1
+
+[[issues]]
+file = "tests/Unit/Infection/Build/InfectionCommitResolverTest.php"
+code = "deprecated-method"
+message = 'Call to deprecated method: `PHPUnit\Framework\TestCase::expectExceptionMessage`.'
+count = 8
+
+[[issues]]
+file = "tests/Unit/Infection/Build/InfectionCommitResolverTest.php"
+code = "less-specific-nested-argument-type"
+message = "Argument type mismatch for argument #2 of `preg_grep`: expected `array<array-key, string>`, but provided type `array<array-key, mixed>` is less specific."
+count = 1
+
+[[issues]]
+file = "tests/Unit/Infection/Build/InfectionCommitResolverTest.php"
+code = "missing-constant-type"
+message = "Class constant `API_URL` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "tests/Unit/Infection/Build/InfectionCommitResolverTest.php"
+code = "missing-constant-type"
+message = "Class constant `HEAD_SHA` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "tests/Unit/Infection/Build/InfectionCommitResolverTest.php"
+code = "missing-constant-type"
+message = "Class constant `OLDER_SHA` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "tests/Unit/Infection/Build/InfectionCommitTest.php"
+code = "deprecated-method"
+message = 'Call to deprecated method: `PHPUnit\Framework\TestCase::expectExceptionMessage`.'
+count = 2
+
+[[issues]]
+file = "tests/Unit/Infection/Build/InfectionCommitTest.php"
+code = "missing-constant-type"
+message = "Class constant `SHA` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "tests/Unit/Infection/Build/InfectionSourceBuilderTest.php"
+code = "deprecated-method"
+message = 'Call to deprecated method: `PHPUnit\Framework\TestCase::expectExceptionMessage`.'
+count = 1
+
+[[issues]]
+file = "tests/Unit/Infection/Build/InfectionSourceBuilderTest.php"
+code = "missing-constant-type"
+message = "Class constant `COMPOSER` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "tests/Unit/Infection/Build/InfectionSourceBuilderTest.php"
+code = "missing-constant-type"
+message = "Class constant `FAILING_COMPOSER` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "tests/Unit/Infection/Build/InfectionSourceBuilderTest.php"
+code = "missing-constant-type"
+message = "Class constant `SHA` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "tests/Unit/Infection/ConfigBuilderTest.php"
+code = "invalid-type-cast"
+message = "Casting `mixed` to `array`."
+count = 1
+
+[[issues]]
+file = "tests/Unit/Infection/ProcessEnvironmentTest.php"
+code = "deprecated-method"
+message = 'Call to deprecated method: `PHPUnit\Framework\TestCase::expectExceptionMessage`.'
+count = 1
+
+[[issues]]
+file = "tests/Unit/Infection/ProcessEnvironmentTest.php"
+code = "possibly-false-operand"
+message = "Possibly false left operand used in string concatenation (type `false|string`)."
+count = 1
+
+[[issues]]
+file = "tests/Unit/Infection/ProcessEnvironmentTest.php"
+code = "possibly-null-operand"
+message = "Possibly null right operand used in string concatenation (type `null|string`)."
+count = 2
+
+[[issues]]
+file = "tests/Unit/Infection/RequestTimeLimitTest.php"
+code = "invalid-property-assignment-value"
+message = "Invalid type for property `$originalTimeLimit`: expected `string`, but got `false|string`."
+count = 1
+
+[[issues]]
+file = "tests/Unit/Infection/RunnerTest.php"
+code = "missing-constant-type"
+message = "Class constant `ID_HASH` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "tests/Unit/Infection/RunnerTest.php"
+code = "missing-constant-type"
+message = "Class constant `SHA` is missing a type hint."
+count = 1
+
+[[issues]]
+file = "tests/Unit/Validator/ValidInfectionCommitLinkValidatorTest.php"
+code = "deprecated-method"
+message = 'Call to deprecated method: `PHPUnit\Framework\TestCase::expectExceptionMessage`.'
+count = 3
+
+[[issues]]
+file = "tests/Unit/Validator/ValidInfectionCommitLinkValidatorTest.php"
+code = "missing-constant-type"
+message = "Class constant `LINK` is missing a type hint."
 count = 1
